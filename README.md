@@ -2,7 +2,7 @@
 
 ## Mod description
 
-This mod calculates the current and potential value of a tree or a piece of wood and displays that information while looking at the tree or piece of wood.
+This mod calculates the current value of a tree or a piece of wood and displays that information while looking at the tree or piece of wood.
 
 ![screenshots/screenshot1.png](screenshots/screen1.png)
 ![screenshots/screenshot1.png](screenshots/screen2.png)
