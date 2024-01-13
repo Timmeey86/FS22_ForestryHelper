@@ -1,6 +1,10 @@
 {
     "Lua.diagnostics.globals": [
         "PlayerHUDUpdater",
-        "Utils"
+        "Utils",
+        "entityExists",
+        "getSplitType",
+        "WoodUnloadTrigger",
+        "g_i18n"
     ]
 }
