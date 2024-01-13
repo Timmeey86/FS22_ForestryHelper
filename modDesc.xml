@@ -1,20 +1,44 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>0.1.0.0</version>
+    <version>1.0.0.0</version>
     <title>
         <en>Tree Value Info</en>
         <de>Baumpreis Info</de>
     </title>
     
     <description>
-        <en><![CDATA[This mod calculates the current and potential maximum value of a tree or a piece of wood and displays that information.]]></en>
-        <de><![CDATA[Diese mod berechnet den aktuellen und potentiellen Bestpreis für einen Baum oder ein Stück Holz und zeigt diese Informationen an.]]></de>
+        <en><![CDATA[This mod calculates the current value of a tree or a piece of wood and displays that information.
+
+The "current value" is the value of the tree or piece of wood when sold in its current state.
+
+Note that the value of wood depends on these three factors (default behavior for FS22):
+- The shape (best value if straight)
+- The number of side branches still attached (best value if fully delimbed)
+- The length (best value if between 6m and 11m)
+
+The mod therefore gives recommendations about the best cut length when applicable.
+
+It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
+]]></en>
+        <de><![CDATA[Diese Mod berechnet den aktuellen Preis für einen Baum oder ein Stück Holz und zeigt diese Informationen an.
+
+Der "Aktuelle Wert" ist der Preis, den man bekommen würde, wenn man den Baum oder das Stück Holz in seiner aktuellen Form verkauft.
+
+Beachtet, dass der Wert von Holz von diesen drei Faktoren abhängt (Standardverhalten von FS22):
+- Die Form (Am wertvollsten, wenn gerade)
+- Die Anzahl an Zweigen, die noch vorhanden sind (Am wertvollsten, wenn vollständig entastet)
+- Die Länge (Am wertvollsten zwischen 6m und 11m)
+
+Die Mod gibt daher Vorschläge für den besten Schnitt, wenn anwendbar.
+
+Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
+]]></de>
     </description>
     
     <multiplayer supported="true" />
 
-    <iconFilename>icon_TODO.dds</iconFilename>
+    <iconFilename>icon_TreeValueInfo.dds</iconFilename>
 
     <extraSourceFiles>
         <sourceFile filename="scripts/TreeValueInfo.lua" />

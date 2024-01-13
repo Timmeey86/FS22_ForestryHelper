@@ -5,6 +5,11 @@
         "entityExists",
         "getSplitType",
         "WoodUnloadTrigger",
-        "g_i18n"
+        "g_i18n",
+        "g_splitTypeManager",
+        "getSplitShapeStats",
+        "getIsSplitShapeSplit",
+        "getRigidBodyType",
+        "RigidBodyType"
     ]
 }
