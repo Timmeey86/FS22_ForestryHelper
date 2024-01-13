@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="79">
+    <author>Farmsim Tim (timmeey86)</author>
+    <version>0.1.0.0</version>
+    <title>
+        <en>Tree Value Info</en>
+        <de>Baumpreis Info</de>
+    </title>
+    
+    <description>
+        <en><![CDATA[This mod calculates the current and potential maximum value of a tree or a piece of wood and displays that information.]]></en>
+        <de><![CDATA[Diese mod berechnet den aktuellen und potentiellen Bestpreis für einen Baum oder ein Stück Holz und zeigt diese Informationen an.]]></de>
+    </description>
+    
+    <multiplayer supported="true" />
+
+    <iconFilename>icon_TODO.dds</iconFilename>
+
+    <extraSourceFiles>
+        <sourceFile filename="scripts/TreeValueInfo.lua" />
+    </extraSourceFiles>
+
+    <l10n filenamePrefix="i18n/locale" />
+</modDesc>
