@@ -5,7 +5,10 @@ TreeValueInfo = {
     I18N_IDS = {
         VOLUME = 'tvi_volume',
         CURRENT_VALUE = 'tvi_current_value',
-        CUT_RECOMMENDATION = 'tvi_cut_recommendation'
+        CUT_RECOMMENDATION = 'tvi_cut_recommendation',
+        LITERS_IF_CHIPPED = 'tvi_liters_if_chipped',
+        CURRENT_VALUE_IF_CHIPPED = 'tvi_current_value_if_chipped',
+        POTENTIAL_VALUE_IF_CHIPPED = 'tvi_potential_value_if_chipped'
     },
     -- Define constants for what the base game considers best value
     PROFITABLE_LENGTH_MIN = 6,
@@ -63,6 +66,33 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             local recommendedMaximumCutLength = math.min(TreeValueInfo.PROFITABLE_LENGTH_MAX, length - recommendedMinimumCutLength)
             playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CUT_RECOMMENDATION), ('%.1fm-%.1fm'):format(recommendedMinimumCutLength, recommendedMaximumCutLength))
         end
+
+        -- Get the amount of wood chips this piece of wood would produce
+        local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
+        local litersIfChipped = numberOfLiters * splitType.woodChipsPerLiter
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.LITERS_IF_CHIPPED), ('%d l'):format(litersIfChipped))
+
+        -- Calculate the price for the wood chips if sold right away
+        local currentWoodChipValue = g_currentMission.economyManager:getPricePerLiter(FillType.WOODCHIPS) * litersIfChipped
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE_IF_CHIPPED), ('%d %s'):format(currentWoodChipValue, currencySymbol))
+
+        -- Calculate the maximum price for the wood chips
+        local highestFactor = 0.1
+        local woodChipFillType = g_fillTypeManager:getFillTypeByIndex(FillType.WOODCHIPS)
+        for _, factor in pairs(woodChipFillType.economy.factors) do
+            if factor > highestFactor then
+                highestFactor = factor
+            end
+        end
+        -- Looks like economyManager:getPricePerLiter respects the game's difficulty setting, while FillType:pricePerLiter doesn't, so we need to
+        -- multiplay manually here.
+        -- Note: You can find functions like getPriceMultiplier while debugging if you unfold the class name (like EconomyManager) in the globals tab
+        -- of GIANTS Studio and make sure the "Filter" dropdown has "function" enabled. You won't know the syntax, but you'll get lua errors if you got it wrong,
+        -- so just try it out until you get it right.
+        local difficultyMultiplier = g_currentMission.economyManager:getPriceMultiplier()
+        local maximumPricePerLiter = woodChipFillType.pricePerLiter * highestFactor * difficultyMultiplier
+        local potentialWoodChipValue = litersIfChipped * maximumPricePerLiter
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.POTENTIAL_VALUE_IF_CHIPPED), ('%d %s'):format(potentialWoodChipValue, currencySymbol))
     end
 end
 

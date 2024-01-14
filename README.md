@@ -4,9 +4,16 @@
 
 This mod calculates the current value of a tree or a piece of wood and displays that information while looking at the tree or piece of wood.
 
-![screenshots/screenshot1.png](screenshots/screen1.png)
-![screenshots/screenshot1.png](screenshots/screen2.png)
-![screenshots/screenshot1.png](screenshots/screen3.png)
+Before cutting:
+![](screenshots/screen1.png)
+After cutting:
+![](screenshots/screen2.png)
+After delimbing
+![](screenshots/screen3.png)
+Value increase through splitting:
+![](screenshots/screen4.png)
+Information for wood chipping:
+![](screenshots/screen5.png)
 
 ## How to install
 

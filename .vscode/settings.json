@@ -10,6 +10,9 @@
         "getSplitShapeStats",
         "getIsSplitShapeSplit",
         "getRigidBodyType",
-        "RigidBodyType"
+        "RigidBodyType",
+        "g_currentMission",
+        "FillType",
+        "g_fillTypeManager"
     ]
 }

@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.0.0</version>
+    <version>1.0.1.0</version>
     <title>
         <en>Tree Value Info</en>
         <de>Baumpreis Info</de>
     </title>
     
     <description>
-        <en><![CDATA[This mod calculates the current value of a tree or a piece of wood and displays that information.
+        <en><![CDATA[This mod calculates information for trees and pieces of wood and displays them in the info box:
 
-The "current value" is the value of the tree or piece of wood when sold in its current state.
+- The volume of the tree or piece of wood in liters
+- The current value, which is the amount of money you would get if you sold the tree in its current form
+- A recommendation for a cut if splitting the piece of wood would result in more total money
+- The amount of liters you would get when processing the tree with a wood chipper
+- The amount of money you would get if you sold the wood chips right now
+- An estimation of money you would get if you sold the wood chips at best price (sometimes you can get more than that, due to randonmness)
 
-Note that the value of wood depends on these three factors (default behavior for FS22):
+Note that the value of a piece of wood depends on these three factors (default behavior for FS22):
 - The shape (best value if straight)
 - The number of side branches still attached (best value if fully delimbed)
 - The length (best value if between 6m and 11m)
 
-The mod therefore gives recommendations about the best cut length when applicable.
-
 It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
+
+Changelog:
+Version 1.0.1.0:
+- Added wood chip info
 ]]></en>
         <de><![CDATA[Diese Mod berechnet den aktuellen Preis für einen Baum oder ein Stück Holz und zeigt diese Informationen an.
 
@@ -33,6 +40,10 @@ Beachtet, dass der Wert von Holz von diesen drei Faktoren abhängt (Standardverh
 Die Mod gibt daher Vorschläge für den besten Schnitt, wenn anwendbar.
 
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
+
+Changelog:
+Version 1.0.1.0:
+- Informationen für Hackschnitzel hinzugefügt
 ]]></de>
     </description>
     
