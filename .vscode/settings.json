@@ -13,6 +13,15 @@
         "RigidBodyType",
         "g_currentMission",
         "FillType",
-        "g_fillTypeManager"
+        "g_fillTypeManager",
+        "WoodHarvester",
+        "g_safeFrameOffsetX",
+        "g_safeFrameOffsetY",
+        "getVolume",
+        "g_currentWoodHarvester",
+        "DebugUtil",
+        "localToWorld",
+        "localDirectionToWorld",
+        "findSplitShape"
     ]
 }
