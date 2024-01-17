@@ -76,7 +76,6 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             local startOffset, cutOffset
             if spec.automaticCuttingIsDirty then
                 -- the tree has already been moved to the cut position -> adjust the tree start
-                -- We add .1 since otherwise the following algorithm fails to find the tree
                 startOffset = -1 * spec.currentCutLength
                 cutOffset = 0
             else
@@ -90,7 +89,6 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             local cutX, cutY, cutZ = localToWorld(spec.cutNode, cutOffset,0,0)
 
             -- Get a unit vector from the (virtual) tree start along the X, Y and Z axis
-            --local cutNodeX, cutNodeY, cutNodeZ = localToWorld(spec.cutNode, 0,0,0)
             local unitX_X,unitX_Y,unitX_Z = localDirectionToWorld(spec.cutNode, 1,0,0)
             local unitY_X,unitY_Y,unitY_Z = localDirectionToWorld(spec.cutNode, 0,1,0)
             local unitZ_X,unitZ_Y,unitZ_Z = localDirectionToWorld(spec.cutNode, 0,0,1)
@@ -137,6 +135,7 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
                 cutRadius = cutDiameter / 2.0
                 playerHudUpdater.objectBox:addLine("Cut radius", ('%.3f'):format(cutRadius))
 
+                -- Draw a bounding rectangle for the start circle (didn't find out how to draw a circle which moves along with the object)
                 DebugUtil.drawDebugAreaRectangle(
                     treeCutX - treeUnitX_X * cutRadius - treeUnitZ_X * cutRadius,
                     treeCutY - treeUnitX_Y * cutRadius - treeUnitZ_Y * cutRadius,
