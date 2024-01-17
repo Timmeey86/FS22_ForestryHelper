@@ -100,3 +100,14 @@ end
 PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, TreeValueInfo.addTreeValueInfo)
 
 -- If the game would normally call the showSplitShapeInfo method, it will now call our method instead (which calls the original function first, and then adds stuff)
+
+
+
+-- DEBUG
+local chainsawTest = ChainsawTest.new()
+local function inj_update(chainsaw, superFunc, deltaTime, allowInput)
+    superFunc(chainsaw, deltaTime, allowInput)
+    chainsawTest:update(chainsaw)
+end
+--Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, ChainsawTest.updateRingSelector)
+Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, inj_update)

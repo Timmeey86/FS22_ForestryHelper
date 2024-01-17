@@ -52,6 +52,7 @@ Version 1.0.1.0:
     <iconFilename>icon_TreeValueInfo.dds</iconFilename>
 
     <extraSourceFiles>
+        <sourceFile filename="scripts/ChainsawTest.lua" />
         <sourceFile filename="scripts/TreeValueInfo.lua" />
     </extraSourceFiles>
 

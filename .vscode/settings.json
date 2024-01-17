@@ -13,6 +13,13 @@
         "RigidBodyType",
         "g_currentMission",
         "FillType",
-        "g_fillTypeManager"
-    ]
+        "g_fillTypeManager",
+        "Chainsaw",
+        "getVisibility",
+        "splitShape",
+        "localToWorld",
+        "localDirectionToWorld",
+        "clone",
+        "g_chainsawTest"
+    ],
 }
