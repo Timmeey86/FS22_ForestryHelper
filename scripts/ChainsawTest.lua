@@ -26,8 +26,9 @@ function ChainsawTest:update(chainsaw)
             -- split the shape, but don't remove the original
             local x,y,z, nx,ny,nz, yx,yy,yz = chainsaw:getCutShapeInformation()
             print(tostring(originalShape))
-            --local clonedShape = clone(originalShape, false, false, false) -- don't group unde rparent, don't call "onCreate", don't add physics
-            splitShape(originalShape, x,y,z, nx,ny,nz, yx,yy,yz, chainsaw.cutSizeY, chainsaw.cutSizeZ, "cutSplitShapeCallback", self)
+            local clonedShape = clone(originalShape, false, true, true) -- don't group under parent, don't call "onCreate", don't add physics
+            print(tostring(clonedShape))
+            splitShape(clonedShape, x,y,z, nx,ny,nz, yx,yy,yz, chainsaw.cutSizeY, chainsaw.cutSizeZ, "cutSplitShapeCallback", self)
         end
 
     elseif chainsaw.wasAlreadyCutting and not chainsaw.isCutting then
@@ -38,7 +39,7 @@ end
 
 
 function ChainsawTest:cutSplitShapeCallback(shape, isBelow, isAbove, minY, maxY, minZ, maxZ)
-    -- Add the shape temporarily to make sure all functions which access it work properly (might not be needed, not sure yet)    
+    -- Add the shape temporarily to make sure all functions which access it work properly (might not be needed, not sure yet)
 	g_currentMission:addKnownSplitShape(shape)
     print(tostring(shape))
     local x,y,z = localToWorld(shape, 0,0,0)
