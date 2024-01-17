@@ -72,11 +72,12 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
         local spec = g_currentMission.currentWoodHarvesterSpec
         if spec ~= nil and spec.currentCutLength < sizeX and spec.attachedSplitShape ~= nil then
             -- Get the world coordinates of the current start of the tree
+            -- TODO: This doesn't work while the tree is being delimbed by the harvester, only before and afterwards
             local startOffset, cutOffset
             if spec.automaticCuttingIsDirty then
                 -- the tree has already been moved to the cut position -> adjust the tree start
                 -- We add .1 since otherwise the following algorithm fails to find the tree
-                startOffset = -1 * spec.currentCutLength + 0.1
+                startOffset = -1 * spec.currentCutLength
                 cutOffset = 0
             else
                 startOffset = 0
@@ -84,7 +85,8 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             end
             -- Get the world coordinates of the start of the tree and the cut position. Note that the tree's Y axis corresponds to the harvester head's X axis
             -- so we supply the Y offset to the X axis here
-            local startX, startY, startZ = localToWorld(spec.cutNode, startOffset,0,0)
+            -- We add 0.3 to the start offset since there's a small gap between the cut position and the start of the remaining tree
+            local startX, startY, startZ = localToWorld(spec.cutNode, startOffset + 0.3,0,0)
             local cutX, cutY, cutZ = localToWorld(spec.cutNode, cutOffset,0,0)
 
             -- Get a unit vector from the (virtual) tree start along the X, Y and Z axis
@@ -93,6 +95,11 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             local unitY_X,unitY_Y,unitY_Z = localDirectionToWorld(spec.cutNode, 0,1,0)
             local unitZ_X,unitZ_Y,unitZ_Z = localDirectionToWorld(spec.cutNode, 0,0,1)
 
+            -- DEBUG: Draw the start and next cut positions, for visual confirmation
+            DebugUtil.drawDebugGizmoAtWorldPos(startX,startY,startZ, unitZ_X, unitZ_Y, unitZ_Z, unitY_X, unitY_Y, unitY_Z, "Start Pos", false)
+            DebugUtil.drawDebugGizmoAtWorldPos(cutX,cutY,cutZ, unitZ_X, unitZ_Y, unitZ_Z, unitY_X, unitY_Y, unitY_Z, "Next Cut", false)
+
+            -- DEBUG: Get vectors which point to the center of the tree at the start and cut locations, just for drawing debugging rectangles there 
             local treeStartX,treeStartY,treeStartZ = localToWorld(treeOrPieceOfWood, 0, startOffset + spec.attachedSplitShapeTargetY, 0)
             local treeCutX,treeCutY,treeCutZ = localToWorld(treeOrPieceOfWood, 0, cutOffset + spec.attachedSplitShapeTargetY, 0)
             local treeUnitX_X,treeUnitX_Y,treeUnitX_Z = localDirectionToWorld(treeOrPieceOfWood, 1,0,0)
@@ -105,9 +112,11 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             local cutRadius = nil
             local shapeStart, minYStart, maxYStart, minZStart, maxZStart = findSplitShape(startX,startY,startZ, unitX_X,unitX_Y,unitX_Z, unitY_X,unitY_Y,unitY_Z, spec.cutSizeY, spec.cutSizeZ)
             if shapeStart == spec.attachedSplitShape then
-                startDiameter = (maxYStart-minYStart + maxZStart-minZStart)*0.5
+                startDiameter = math.floor((maxYStart-minYStart + maxZStart-minZStart)*0.5*100 + 0.5) / 100.0
                 startRadius = startDiameter / 2.0
+                playerHudUpdater.objectBox:addLine("Start radius", ('%.3f'):format(startRadius))
 
+                -- Draw a bounding rectangle for the start circle (didn't find out how to draw a circle which moves along with the object)
                 DebugUtil.drawDebugAreaRectangle(
                     treeStartX - treeUnitX_X * startRadius - treeUnitZ_X * startRadius,
                     treeStartY - treeUnitX_Y * startRadius - treeUnitZ_Y * startRadius,
@@ -124,8 +133,9 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             end
             local shapeCut, minYCut, maxYCut, minZCut, maxZCut = findSplitShape(cutX,cutY,cutZ, unitX_X,unitX_Y,unitX_Z, unitY_X,unitY_Y,unitY_Z, spec.cutSizeY, spec.cutSizeZ)
             if shapeCut == spec.attachedSplitShape then
-                cutDiameter = (maxYCut-minYCut + maxZCut-minZCut)*0.5
+                cutDiameter = math.floor((maxYCut-minYCut + maxZCut-minZCut)*0.5*100 + 0.5) / 100.0
                 cutRadius = cutDiameter / 2.0
+                playerHudUpdater.objectBox:addLine("Cut radius", ('%.3f'):format(cutRadius))
 
                 DebugUtil.drawDebugAreaRectangle(
                     treeCutX - treeUnitX_X * cutRadius - treeUnitZ_X * cutRadius,
@@ -164,13 +174,18 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
 
                 -- Estimate the volume of the wood piece which will be cut
                 local averageRadius = (startDiameter + cutDiameter) / 4.0 -- divide by 2 for mean value and by 2 again to convert to radius
+                playerHudUpdater.objectBox:addLine("Average radius", ('%.3f'):format(averageRadius))
                 local averageArea = math.pi * averageRadius * averageRadius
+                playerHudUpdater.objectBox:addLine("Average area", ('%.3f'):format(averageArea))
                 local estimatedVolume = averageArea * spec.currentCutLength
+                playerHudUpdater.objectBox:addLine("Estimated volume", ('%.3f'):format(estimatedVolume))
                 -- Adjust the number of convexes to the same percentage as the volume, but round the value since it needs to be an integer
                 local estimatedNumberOfConvexes = math.floor((numConvexes * estimatedVolume / volume) + 0.5)
                 -- Calculate the price for the same piece of wood, but using the cut length and the estimated values. Also delimbed price since the harvester will do that
                 local estimatedLiters, estimatedValuePerLiter = TreeValueInfo.dummyWoodTrigger:calculateWoodBaseValueForData(estimatedVolume, splitType, spec.currentCutLength, maxYStart-minYStart, maxZStart-minZStart, estimatedNumberOfConvexes, 0)
                 local estimatedValue = estimatedLiters * estimatedValuePerLiter
+                playerHudUpdater.objectBox:addLine("Estimated liters", ('%d'):format(estimatedLiters))
+                playerHudUpdater.objectBox:addLine("Estimated value per liter", ('%.3f'):format(estimatedValuePerLiter))
                 playerHudUpdater.objectBox:addLine("Estimated piece value", ('%d %s'):format(estimatedValue, currencySymbol))
             end
         end
