@@ -32,6 +32,7 @@
         "getRootNode",
         "worldToLocal",
         "unlink",
-        "getCorrectTextSize"
+        "getCorrectTextSize",
+        "getSplitShapePlaneExtents"
     ],
 }

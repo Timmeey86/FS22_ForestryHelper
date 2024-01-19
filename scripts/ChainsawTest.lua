@@ -140,6 +140,15 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
 
         if shapeId ~= nil then
 
+            -- Retrieve data on the whole piece of wood
+            local sizeX, _, _, numConvexes, numAttachments = getSplitShapeStats(shapeId)
+
+            -- Retrieve the length above and below the cut ("above" and "below" from a tree perspective)
+            local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
+            Utils.renderTextAtWorldPosition(treeCoords.x,treeCoords.y+0.2,treeCoords.z, ('length: %.3f'):format(sizeX), getCorrectTextSize(0.02), 0)
+            Utils.renderTextAtWorldPosition(treeCoords.x,treeCoords.y+0.4,treeCoords.z, ('lenBelow: %.3f'):format(lenBelow), getCorrectTextSize(0.02), 0)
+            Utils.renderTextAtWorldPosition(treeCoords.x,treeCoords.y+0.6,treeCoords.z, ('lenAbove: %.3f'):format(lenAbove), getCorrectTextSize(0.02), 0)
+            -- Calculate data for both sides
             for xOffset = 0, 10 do
                 -- Probe the radius to the left 
                 local x = treeCoords.x + unitVectors.xx * xOffset
