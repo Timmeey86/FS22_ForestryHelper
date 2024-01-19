@@ -148,16 +148,19 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
 
             -- "Above" part: probe from the split point to the upper end
             local stepWidth = .5
+            lenAbove = lenAbove - 0.03 -- to avoid weird readings at the end
             local numberOfParts = math.ceil(lenAbove / stepWidth)
             local previousRadius = 0
             local totalVolume = 0
             local failedAt = -1
+
+            local previousCoords = {}
             for i = 0,numberOfParts do -- intentionally not numberOfParts-1 because 5 parts have 6 "borders"
                 local xOffset = i * stepWidth
                 local pieceLength = stepWidth
                 if i == numberOfParts then
                     -- Last part: make sure it does not exceed the tree dimensions
-                    pieceLength = lenAbove - (i-1) * stepWidth - 0.01
+                    pieceLength = lenAbove - (i-1) * stepWidth
                     xOffset = xOffset - stepWidth + pieceLength
                 end
 
@@ -182,10 +185,65 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
                     -- approximate volume of a cone stump: average circle area * length. circle area = pi * r²
                     totalVolume = totalVolume + math.pi * averageRadius * averageRadius * pieceLength
 
+                    -- DEBUG
+                    DebugUtil.drawDebugAreaRectangle(
+                        x - unitVectors.yx * radius - unitVectors.zx * radius,
+                        y - unitVectors.yy * radius - unitVectors.zy * radius,
+                        z - unitVectors.yz * radius - unitVectors.zz * radius,
+                        x - unitVectors.yx * radius + unitVectors.zx * radius,
+                        y - unitVectors.yy * radius + unitVectors.zy * radius,
+                        z - unitVectors.yz * radius + unitVectors.zz * radius,
+                        x + unitVectors.yx * radius - unitVectors.zx * radius,
+                        y + unitVectors.yy * radius - unitVectors.zy * radius,
+                        z + unitVectors.yz * radius - unitVectors.zz * radius,
+                        false,
+                        1,0,0)
+                    DebugUtil.drawDebugLine(
+                        x - unitVectors.yx * radius - unitVectors.zx * radius,
+                        y - unitVectors.yy * radius - unitVectors.zy * radius,
+                        z - unitVectors.yz * radius - unitVectors.zz * radius,
+                        previousCoords.x - unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
+                        previousCoords.y - unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
+                        previousCoords.z - unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
+                        1,0,0,
+                        nil,
+                        false)
+                    DebugUtil.drawDebugLine(
+                        x - unitVectors.yx * radius + unitVectors.zx * radius,
+                        y - unitVectors.yy * radius + unitVectors.zy * radius,
+                        z - unitVectors.yz * radius + unitVectors.zz * radius,
+                        previousCoords.x - unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
+                        previousCoords.y - unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
+                        previousCoords.z - unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
+                        1,0,0,
+                        nil,
+                        false)
+                    DebugUtil.drawDebugLine(
+                        x + unitVectors.yx * radius - unitVectors.zx * radius,
+                        y + unitVectors.yy * radius - unitVectors.zy * radius,
+                        z + unitVectors.yz * radius - unitVectors.zz * radius,
+                        previousCoords.x + unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
+                        previousCoords.y + unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
+                        previousCoords.z + unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
+                        1,0,0,
+                        nil,
+                        false)
+                    DebugUtil.drawDebugLine(
+                        x + unitVectors.yx * radius + unitVectors.zx * radius,
+                        y + unitVectors.yy * radius + unitVectors.zy * radius,
+                        z + unitVectors.yz * radius + unitVectors.zz * radius,
+                        previousCoords.x + unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
+                        previousCoords.y + unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
+                        previousCoords.z + unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
+                        1,0,0,
+                        nil,
+                        false)
+
                 -- else: just store the radius for the first piece
                 end
                 -- store the radius for the next calculation
                 previousRadius = radius
+                previousCoords = { x = x, y = y, z = z }
             end
 
             if failedAt < 0 then
