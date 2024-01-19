@@ -25,6 +25,11 @@
         "DebugUtil",
         "findSplitShape",
         "MathUtil",
-        "testSplitShape"
+        "testSplitShape",
+        "createTransformGroup",
+        "setTranslation",
+        "link",
+        "getRootNode",
+        "worldToLocal"
     ],
 }
