@@ -20,6 +20,11 @@
         "localToWorld",
         "localDirectionToWorld",
         "clone",
-        "g_chainsawTest"
+        "g_chainsawTest",
+        "getWorldTranslation",
+        "DebugUtil",
+        "findSplitShape",
+        "MathUtil",
+        "testSplitShape"
     ],
 }
