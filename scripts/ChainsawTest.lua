@@ -141,29 +141,57 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
         if shapeId ~= nil then
 
             -- Retrieve data on the whole piece of wood
-            local sizeX, _, _, numConvexes, numAttachments = getSplitShapeStats(shapeId)
+            --local _, _, _, numConvexes, numAttachments = getSplitShapeStats(shapeId)
 
             -- Retrieve the length above and below the cut ("above" and "below" from a tree perspective)
             local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
-            Utils.renderTextAtWorldPosition(treeCoords.x,treeCoords.y+0.2,treeCoords.z, ('length: %.3f'):format(sizeX), getCorrectTextSize(0.02), 0)
-            Utils.renderTextAtWorldPosition(treeCoords.x,treeCoords.y+0.4,treeCoords.z, ('lenBelow: %.3f'):format(lenBelow), getCorrectTextSize(0.02), 0)
-            Utils.renderTextAtWorldPosition(treeCoords.x,treeCoords.y+0.6,treeCoords.z, ('lenAbove: %.3f'):format(lenAbove), getCorrectTextSize(0.02), 0)
-            -- Calculate data for both sides
-            for xOffset = 0, 10 do
-                -- Probe the radius to the left 
+
+            -- "Above" part: probe from the split point to the upper end
+            local stepWidth = .5
+            local numberOfParts = math.ceil(lenAbove / stepWidth)
+            local previousRadius = 0
+            local totalVolume = 0
+            local failedAt = -1
+            for i = 0,numberOfParts do -- intentionally not numberOfParts-1 because 5 parts have 6 "borders"
+                local xOffset = i * stepWidth
+                local pieceLength = stepWidth
+                if i == numberOfParts then
+                    -- Last part: make sure it does not exceed the tree dimensions
+                    pieceLength = lenAbove - (i-1) * stepWidth - 0.01
+                    xOffset = xOffset - stepWidth + pieceLength
+                end
+
+                -- Get a point along the X axis from the tree, based on where the chainsaw is aiming
                 local x = treeCoords.x + unitVectors.xx * xOffset
                 local y = treeCoords.y + unitVectors.xy * xOffset
                 local z = treeCoords.z + unitVectors.xz * xOffset
 
-                shapeId, radius, _ = self:getRadiusAtLocation(shapeId,  { x = x, y = y, z = z }, unitVectors)
+                -- Retrieve the radius
+                shapeId, radius, _ = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, unitVectors)
 
-                if shapeId ~= nil then
-                    Utils.renderTextAtWorldPosition(x,y,z, ('%d: %.3f'):format(xOffset, radius), getCorrectTextSize(0.02), 0)
-                else
-                    Utils.renderTextAtWorldPosition(x,y,z, "No data", getCorrectTextSize(0.02), 0)
+                if shapeId == nil or shapeId == 0 then
+                    failedAt = i
+                    break
                 end
 
-                --Utils.renderTextAtWorldPosition(treeX,treeY,treeZ, ('ShapeId: %d, Radius: %.3f'):format(shapeId, radius), getCorrectTextSize(0.02), 0)
+                -- starting from the second radius:
+                if i > 0 then
+                    -- calculate the volume to the previous radius
+                    local averageRadius = (previousRadius + radius) / 2.0
+
+                    -- approximate volume of a cone stump: average circle area * length. circle area = pi * r²
+                    totalVolume = totalVolume + math.pi * averageRadius * averageRadius * pieceLength
+
+                -- else: just store the radius for the first piece
+                end
+                -- store the radius for the next calculation
+                previousRadius = radius
+            end
+
+            if failedAt < 0 then
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y, treeCoords.z, ("Volume above: %.3f"):format(totalVolume), getCorrectTextSize(0.02, 0))
+            else
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y, treeCoords.z, ("Failed at i = %d"):format(failedAt), getCorrectTextSize(0.02, 0))
             end
         end
     end
