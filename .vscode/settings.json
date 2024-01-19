@@ -30,6 +30,8 @@
         "setTranslation",
         "link",
         "getRootNode",
-        "worldToLocal"
+        "worldToLocal",
+        "unlink",
+        "getCorrectTextSize"
     ],
 }
