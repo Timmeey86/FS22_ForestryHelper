@@ -9,7 +9,7 @@ function ShapeMeasurementHelper.new()
     self.debugRadiusDetection = false
     self.debugRadiusResults = false
     self.debugShapeLength = false
-    self.debugVolumeCalculations = true
+    self.debugVolumeCalculations = false
     return self
 end
 
@@ -361,6 +361,17 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
                     Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.3, treeCoords.z, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), getCorrectTextSize(0.02, 0))
                 end
 
+            end
+
+            -- Make sure the info box in the player HUD is shown: With base game implementation, the player needs to look above the tree to get the ring marker,
+            -- but at the tree to get info about it.
+            -- There are constellations where both the ring and the info box are visible, but more often than not, the info box is not visible
+            -- We therefore ask the player HUD to draw the info box when the ring is visible, but the box is not already visible
+            local player = g_currentMission.player
+            if player ~= nil and player.hudUpdater ~= nil and player.hudUpdater.objectBox ~= nil then
+                if not player.hudUpdater.objectBox:canDraw() then
+                    player.hudUpdater:showSplitShapeInfo(shapeId)
+                end
             end
         end
     else
