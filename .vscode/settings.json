@@ -33,6 +33,7 @@
         "worldToLocal",
         "unlink",
         "getCorrectTextSize",
-        "getSplitShapePlaneExtents"
+        "getSplitShapePlaneExtents",
+        "getVolume"
     ],
 }

@@ -103,21 +103,19 @@ PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater
 
 
 
--- DEBUG
-local chainsawTest = ChainsawTest.new()
+local shapeMeasurementHelper = ShapeMeasurementHelper.new()
 local function inj_update(chainsaw, superFunc, deltaTime, allowInput)
     superFunc(chainsaw, deltaTime, allowInput)
-    chainsawTest:afterChainsawUpdate(chainsaw)
+    shapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 end
 local function inj_postLoad(chainsaw, superFunc, xmlFile)
     superFunc(chainsaw, xmlFile)
-    chainsawTest:afterChainsawPostLoad(chainsaw)
+    shapeMeasurementHelper:afterChainsawPostLoad(chainsaw)
 end
 local function inj_delete(chainsaw, superFunc)
-    chainsawTest:beforeChainsawDelete(chainsaw)
+    shapeMeasurementHelper:beforeChainsawDelete(chainsaw)
     superFunc(chainsaw)
 end
---Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, ChainsawTest.updateRingSelector)
 Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, inj_update)
 Chainsaw.postLoad = Utils.overwrittenFunction(Chainsaw.postLoad, inj_postLoad)
 Chainsaw.delete = Utils.overwrittenFunction(Chainsaw.delete, inj_delete)
