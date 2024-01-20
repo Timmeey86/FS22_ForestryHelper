@@ -16,6 +16,8 @@
         "g_fillTypeManager",
         "getVolume",
         "MathUtil",
-        "Class"
+        "Class",
+        "Chainsaw",
+        "getVisibility"
     ]
 }

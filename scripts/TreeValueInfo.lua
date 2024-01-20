@@ -23,6 +23,7 @@ function TreeValueInfo.new()
 
     self.debugValueDetails = true
     self.debugShapeDetails = true
+    self.currentShape = nil
     return self
 end
 
@@ -78,8 +79,10 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
         playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
         playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
         playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
-        playerHudUpdater.objectBox:addLine("Total Quality", ('%.3f'):format(totalQuality))
     end
+
+    -- Display the total quality of the tree, which is proportional to the sell price
+    playerHudUpdater.objectBox:addLine("Total Quality", ('%.3f'):format(totalQuality))
 
     -- Display the current value (if the tree/piece of wood was sold in its current shape)
     playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
@@ -121,3 +124,50 @@ end
 PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, TreeValueInfo.addTreeValueInfo)
 
 -- If the game would normally call the showSplitShapeInfo method, it will now call our method instead (which calls the original function first, and then adds stuff)
+
+-- When aiming a chainsaw at a tree, one often doesn't get the info window because the chainsaw needs to point above the tree, and the info window will only be
+-- displayed when looking right at the tree. We therefore hook into the chainsaw's update method to figure out if the info box should be displayed
+
+---Remembers the current shape when the chainsaw displays a ring around a tree to be cut
+---@param chainsaw table @The chainsaw instance
+---@param superFunc function @The base game function
+---@param shape any @The ID of the wood shape (or nil)
+local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape)
+    -- Always call the superFunc
+    superFunc(chainsaw, shape)
+
+    -- If the ring selector is displayed, and a shape was detected which is not the root shape
+    if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 then
+        -- Remember the shape
+        treeValueInfo.currentShape = shape
+    else
+        treeValueInfo.currentShape = nil
+    end
+end
+Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, onChainsawUpdateRingSelector)
+
+---Makes sure the info box is shown on the next frame while the chainsaw ring is visible
+---@param chainsaw table @The chainsaw instance
+---@param superFunc function @The base game function
+---@param deltaTime number @The time which has passed since the previous update call
+---@param allowInput boolean @True if input is currently allowed for the player
+local function onChainsawUpdate(chainsaw, superFunc, deltaTime, allowInput)
+    -- Always call the superFunc
+    superFunc(chainsaw, deltaTime, allowInput)
+
+    -- Check that everything is properly initialized
+    local player = g_currentMission.player
+    if player ~= nil and player.hudUpdater ~= nil and player.hudUpdater.objectBox ~= nil then
+
+        -- If the chainsaw is pointing at a tree and..
+        if treeValueInfo.currentShape ~= nil then
+            -- ... the info hud would not be displayed currently
+            if not player.hudUpdater.objectBox:canDraw() then
+                -- Display the info hud on the next frame
+                player.hudUpdater:showSplitShapeInfo(treeValueInfo.currentShape)
+            end
+            -- else: the box will be displayed already; nothing to do
+        end
+    end
+end
+Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, onChainsawUpdate)
