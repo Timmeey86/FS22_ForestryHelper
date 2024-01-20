@@ -14,9 +14,19 @@ TreeValueInfo = {
     PROFITABLE_LENGTH_MIN = 6,
     PROFITABLE_LENGTH_MAX = 11
 }
--- Define a dummy WoodUnloadTrigger to calculate price info
--- The bool arguments make it believe it's being created in a single player game - this info is not important for our use case
-TreeValueInfo.dummyWoodTrigger = WoodUnloadTrigger.new(true, true)
+
+-- Define a constructor, then create a new instance just so we can store some variables for the current session
+-- This is how you define a proper class with a metatable and a constructor in FS22 lua:
+local TreeValueInfo_mt = Class(TreeValueInfo)
+function TreeValueInfo.new()
+    local self = setmetatable({}, TreeValueInfo_mt)
+
+    self.debugValueDetails = true
+    self.debugShapeDetails = true
+    return self
+end
+
+local treeValueInfo = TreeValueInfo.new()
 
 -- Define a method which will add more information to the info box for trees or wood. The last argument is defined by the method we are extending
 
@@ -40,36 +50,47 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     end
     local treeOrPieceOfWood = splitShape -- alias for readability
 
+    -- Retrieve data about the tree or piece of wood
+    local data = WoodPriceCalculation.calculateWoodParameters(treeOrPieceOfWood)
+
     -- Retrieve the number of liters in the tree and the price per liter (adjusted to the current shape of the tree)
-    -- We reuse the function which is used by the sell trigger to get accurate price info
-    -- (Source: https://gdn.giants-software.com/documentation_scripting_fs22.php?version=script&category=58&class=628#calculateWoodBaseValue9352)
-    local numberOfLiters, valuePerLiter  = TreeValueInfo.dummyWoodTrigger:calculateWoodBaseValue(treeOrPieceOfWood)
-    local currentValue = numberOfLiters * valuePerLiter
+    local valueData = data.valueData
+    local shapeData = data.shapeData
+    local totalQuality = valueData.qualityScale * valueData.defoliageScale * valueData.lengthScale
+    local currentValue = shapeData.volume * valueData.pricePerLiter * totalQuality
 
     -- Display the number of liters
-    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.VOLUME), ('%d l'):format(numberOfLiters))
+    local currencySymbol = g_i18n:getCurrencySymbol(true)
+    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.VOLUME), ('%d l'):format(shapeData.volume))
+
+    -- Display detailed info if enabled
+    if treeValueInfo.debugShapeDetails then
+        playerHudUpdater.objectBox:addLine("Size X", ('%.3f'):format(shapeData.sizeX))
+        playerHudUpdater.objectBox:addLine("Size Y", ('%.3f'):format(shapeData.sizeY))
+        playerHudUpdater.objectBox:addLine("Size Z", ('%.3f'):format(shapeData.sizeZ))
+        playerHudUpdater.objectBox:addLine("# Convexes", ('%d'):format(shapeData.numConvexes))
+        playerHudUpdater.objectBox:addLine("# Attachments", ('%d'):format(shapeData.numAttachments))
+    end
+    if treeValueInfo.debugValueDetails then
+        playerHudUpdater.objectBox:addLine("Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
+        playerHudUpdater.objectBox:addLine("Volume Quality", ('%.3f'):format(valueData.volumeQuality))
+        playerHudUpdater.objectBox:addLine("Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
+        playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
+        playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
+        playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
+        playerHudUpdater.objectBox:addLine("Total Quality", ('%.3f'):format(totalQuality))
+    end
 
     -- Display the current value (if the tree/piece of wood was sold in its current shape)
-    local currencySymbol = g_i18n:getCurrencySymbol(true)
     playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
 
     -- If the player is looking at a piece of wood on the ground
     if getIsSplitShapeSplit(treeOrPieceOfWood) and getRigidBodyType(treeOrPieceOfWood) == RigidBodyType.DYNAMIC then
         local pieceOfWood = treeOrPieceOfWood -- alias for readability
 
-        -- Calculate the best cut position: Each piece needs to be between 6 and 11 meters (value decreases when shorter or longer)
-        local sizeX, sizeY, sizeZ, _, _ = getSplitShapeStats(pieceOfWood)
-        local length = math.max(sizeX, sizeY, sizeZ)
-        -- Only recommend a cut if the piece of wood is longer than 12 meters (otherwise one piece would be below 6m, so worth less)
-        if length > 12 then
-            local recommendedMinimumCutLength = TreeValueInfo.PROFITABLE_LENGTH_MIN
-            local recommendedMaximumCutLength = math.min(TreeValueInfo.PROFITABLE_LENGTH_MAX, length - recommendedMinimumCutLength)
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CUT_RECOMMENDATION), ('%.1fm-%.1fm'):format(recommendedMinimumCutLength, recommendedMaximumCutLength))
-        end
-
         -- Get the amount of wood chips this piece of wood would produce
         local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
-        local litersIfChipped = numberOfLiters * splitType.woodChipsPerLiter
+        local litersIfChipped = shapeData.volume * splitType.woodChipsPerLiter
         playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.LITERS_IF_CHIPPED), ('%d l'):format(litersIfChipped))
 
         -- Calculate the price for the wood chips if sold right away
@@ -85,7 +106,7 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             end
         end
         -- Looks like economyManager:getPricePerLiter respects the game's difficulty setting, while FillType:pricePerLiter doesn't, so we need to
-        -- multiplay manually here.
+        -- multiply manually here.
         -- Note: You can find functions like getPriceMultiplier while debugging if you unfold the class name (like EconomyManager) in the globals tab
         -- of GIANTS Studio and make sure the "Filter" dropdown has "function" enabled. You won't know the syntax, but you'll get lua errors if you got it wrong,
         -- so just try it out until you get it right.

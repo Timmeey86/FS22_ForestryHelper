@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.1.0</version>
+    <version>1.0.1.1</version>
     <title>
         <en>Tree Value Info</en>
         <de>Baumpreis Info</de>
@@ -52,6 +52,7 @@ Version 1.0.1.0:
     <iconFilename>icon_TreeValueInfo.dds</iconFilename>
 
     <extraSourceFiles>
+        <sourceFile filename="scripts/WoodPriceCalculation.lua" />
         <sourceFile filename="scripts/TreeValueInfo.lua" />
     </extraSourceFiles>
 

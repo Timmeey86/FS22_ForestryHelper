@@ -13,6 +13,9 @@
         "RigidBodyType",
         "g_currentMission",
         "FillType",
-        "g_fillTypeManager"
+        "g_fillTypeManager",
+        "getVolume",
+        "MathUtil",
+        "Class"
     ]
 }
