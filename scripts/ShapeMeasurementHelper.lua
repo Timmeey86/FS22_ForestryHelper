@@ -9,7 +9,7 @@ function ShapeMeasurementHelper.new()
     self.debugRadiusDetection = false
     self.debugRadiusResults = false
     self.debugShapeLength = false
-    self.debugVolumeCalculations = false
+    self.debugVolumeCalculations = true
     return self
 end
 
@@ -352,13 +352,18 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
                 Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.9, treeCoords.z, ("Volume (above): %d l"):format(volumeAbove * 1000), getCorrectTextSize(0.02, 0))
                 Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.8, treeCoords.z, ("Volume (total est'd): %d l"):format(estimatedVolume * 1000), getCorrectTextSize(0.02, 0))
                 Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.7, treeCoords.z, ("Volume (engine): %d l"):format(targetVolume * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.6, treeCoords.z, ("Bottom Y/Z: (%.3f, %.3f)"):format(sizeYBelow, sizeZBelow), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.5, treeCoords.z, ("Top Y/Z: (%.3f, %.3f)"):format(sizeYAbove, sizeZAbove), getCorrectTextSize(0.02, 0))
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.6, treeCoords.z, ("Length (below): %.2f m"):format(lenBelow), getCorrectTextSize(0.02, 0))
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.5, treeCoords.z, ("Length (above): %.2f m"):format(lenAbove), getCorrectTextSize(0.02, 0))
+
+                local _, _, _, numConvexes, _ = getSplitShapeStats(shapeId)
+
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.4, treeCoords.z, ("numConvexes: %d"):format(numConvexes), getCorrectTextSize(0.02, 0))              
+
                 if failedAtBelow >= 0 then
-                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.4, treeCoords.z, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), getCorrectTextSize(0.02, 0))
+                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.2, treeCoords.z, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), getCorrectTextSize(0.02, 0))
                 end
                 if failedAtAbove >= 0 then
-                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.3, treeCoords.z, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), getCorrectTextSize(0.02, 0))
+                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.1, treeCoords.z, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), getCorrectTextSize(0.02, 0))
                 end
 
             end

@@ -30,7 +30,7 @@ local shapeMeasurementHelper = ShapeMeasurementHelper.new()
 ---@return integer @The price per liter adjusted to the quality of the tree
 local function getPartialDelimbedValue(wholePieceData, partialPieceData)
     local volumeProportion = partialPieceData.volume / wholePieceData.volume
-    local partialNumConvexes = math.floor(wholePieceData.numConvexes * volumeProportion + .5)
+    local partialNumConvexes = wholePieceData.numConvexes * volumeProportion
 
     return TreeValueInfo.dummyWoodTrigger:calculateWoodBaseValueForData(
         partialPieceData.volume, wholePieceData.treeType, partialPieceData.length, wholePieceData.sizeY, wholePieceData.sizeZ, partialNumConvexes, 0)
@@ -110,6 +110,9 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
             }
             local delimbedTopVolume, topPricePerLiter = getPartialDelimbedValue(wholePieceData, topData)
             local topPrice = delimbedTopVolume * topPricePerLiter
+
+            -- Display length for the parts
+            playerHudUpdater.objectBox:addLine("Lengths after cutting", ('%.2f m | %.2f m'):format(bottomData.length, topData.length))
 
             -- Display the values
             playerHudUpdater.objectBox:addLine("Estimated value after cut", ('%d %s| %d %s'):format(bottomPrice, currencySymbol, topPrice, currencySymbol))
