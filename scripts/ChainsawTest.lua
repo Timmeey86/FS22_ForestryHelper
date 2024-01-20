@@ -41,8 +41,7 @@ end
 function ChainsawTest:getRadiusAtLocation(shapeId, worldCoordsNearShape, shapeUnitVectors)
 
     -- Define a reasonably large enough rectangle to find the tree
-    -- We already found a tree at this point so we don't need an overly large radius
-    local rectangleSize = 1.1
+    local rectangleSize = 2.0
     local halfRectangleSize = rectangleSize / 2.0
 
     -- Move the coordinates half a height in Y and Z direction so that the resulting rectangle will have the original y/z in its center
