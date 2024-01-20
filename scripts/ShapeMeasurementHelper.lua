@@ -3,26 +3,71 @@ local ShapeMeasurementHelper_mt = Class(ShapeMeasurementHelper)
 
 function ShapeMeasurementHelper.new()
     local self = setmetatable({}, ShapeMeasurementHelper_mt)
-    self.woodProbeNode = createTransformGroup("treeValueInfo_woodProbeNode")
-    self.debugNode = createTransformGroup("treeValueInfo_debugNode")
-    link(getRootNode(), self.debugNode)
 
+    self.futureWoodPartData = nil
 
     self.debugRadiusDetection = false
-    self.debugRadiusResults = true
-    self.debugShapeLength = true
+    self.debugRadiusResults = false
+    self.debugShapeLength = false
     self.debugVolumeCalculations = true
     return self
 end
 
-function ShapeMeasurementHelper:afterChainsawPostLoad(chainsaw)
-    print("afterChainsawPostLoad")
-    link(chainsaw.chainsawSplitShapeFocus, self.woodProbeNode) -- Use the point the player is looking at as a reference system
-end
+---Retrieves information about a wood shape at the focus point of the user
+---@param chainsaw table @The base game chainsaw object
+---@return any @The ID of the tree shape, or nil if it wasn't found
+---@return table @The world X/Y/Z coordinate of the center of the "ring" the player can see
+---@return number @The radius of the tree shape at the given coordinates
+---@return table @Unit vectors for the tree in X/Y/Z direction, where the tree is aligned around the X axis
+function ShapeMeasurementHelper:getWoodShapeDimensionsAtFocusPoint(chainsaw)
 
-function ShapeMeasurementHelper:beforeChainsawDelete(chainswa)
-    unlink(self.woodProbeNode)
-    print("beforeChainsawDelete")
+    -- Retrieve the following information from the focus point of the player:
+    -- The x,y,z coordinates of the focus point
+    -- A unit vector (length = 1) along the X axis of the focus point
+    -- A unit vector along the Y axis of the focus point
+    local x,y,z, nx,ny,nz, yx,yy,yz = chainsaw:getCutShapeInformation()
+
+    -- Find the wood shape at the given coordinates
+    local largeEnoughRectangleSize = 2.0
+    local shapeId, _, _, _, _ = findSplitShape(x,y,z, nx,ny,nz, yx,yy,yz, largeEnoughRectangleSize, largeEnoughRectangleSize)
+
+    local treeCoords, radius, treeUnitVectors
+    if shapeId ~= nil and shapeId ~= 0 then
+
+        -- Get the radius of the wood shape at the same position, but while ignoring the chainsaw cutting angle
+        -- instead, simulate a perfect perpendicular cut to get the actual radius of the tree
+        -- in order to properly find the shape again, we need to define a rectangle around the whole shape.
+
+        -- Retrieve unit vectors for the local tree coordinate system, but rotate it so that the tree's Y becomes the lookup X axis,
+        -- otherwise `testSplitShape` will fail to find anything later on.
+        -- The reason for this is that `testSplitShape` needs the split shape to intersect the Y/Z plane in X direction, while trees and pieces of wood
+        -- have their longest side along their Y axis
+        nx,ny,nz = localDirectionToWorld(shapeId, 0,1,0) -- unit vector along the local X axis of the shape, but in world coordinates
+        yx,yy,yz = localDirectionToWorld(shapeId, 1,0,0) -- unit vector along the local Y axis of the shape, but in world coordinates
+        local zx,zy,zz = localDirectionToWorld(shapeId, 0,0,-1) -- unit vector along the local Y axis of the shape, but in world coordinates
+
+        -- Put unit vectors in a table so other functions can use it afterwards
+        treeUnitVectors = {
+            xx = nx,
+            xy = ny,
+            xz = nz,
+            yx = yx,
+            yy = yy,
+            yz = yz,
+            zx = zx,
+            zy = zy,
+            zz = zz
+        }
+
+        -- Lazy approach: Just use the ring selector to find the tree center. This will also make sure everything is calculated from the center
+        -- of the exact cut location
+        treeCoords = {}
+        treeCoords.x, treeCoords.y, treeCoords.z = localToWorld(chainsaw.ringSelector, 0,0,0)
+
+        shapeId, radius, _, _, _, _, _ = self:getRadiusAtLocation(shapeId, treeCoords, treeUnitVectors)
+    end
+
+    return shapeId, treeCoords, radius, treeUnitVectors
 end
 
 ---Gets the radius of the tree at the given location
@@ -32,6 +77,10 @@ end
 ---@return any @The ID of the tree shape or nil if it wasn't found at the given location
 ---@return number @The radius at the given location
 ---@return table @The coordinates a the given location, centered on the tree shape in Y/Z direction
+---@return number @The minimum Y coordinate of the shape at that location, in world coordinates
+---@return number @The maximum Y coordinate of the shape at that location, in world coordinates
+---@return number @The minimum Z coordinate of the shape at that location, in world coordinates
+---@return number @The maximum Z coordinate of the shape at that location, in world coordinates
 function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShape, shapeUnitVectors)
 
     -- Define a reasonably large enough rectangle to find the tree
@@ -95,74 +144,17 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
                 false)
         end
 
+        -- Calculate the minimum and maximum world Y and Z coordinates for further processing
+        local minYWorld = y
+        local maxYWorld = y + math.abs(maxY - minY)
+        local minZWorld = z
+        local maxZWorld = z + math.abs(maxZ - minZ)
+
         -- Move the world coordinates by the specified Y and Z dimensions
-        return shapeId, radius, worldCoordsAtShape
+        return shapeId, radius, worldCoordsAtShape, minYWorld, maxYWorld, minZWorld, maxZWorld
     else
-        return nil, 0, {}
+        return nil, 0, {}, 0, 0, 0, 0
     end
-end
-
----Retrieves information about a wood shape at the focus point of the user
----@param chainsaw table @The base game chainsaw object
----@return any @The ID of the tree shape, or nil if it wasn't found
----@return table @The world X/Y/Z coordinate of the center of the "ring" the player can see
----@return number @The radius of the tree shape at the given coordinates
----@return table @Unit vectors for the tree in X/Y/Z direction, where the tree is aligned around the X axis
-function ShapeMeasurementHelper:getWoodShapeDimensionsAtFocusPoint(chainsaw)
-
-    -- Retrieve the following information from the focus point of the player:
-    -- The x,y,z coordinates of the focus point
-    -- A unit vector (length = 1) along the X axis of the focus point
-    -- A unit vector along the Y axis of the focus point
-    local x,y,z, nx,ny,nz, yx,yy,yz = chainsaw:getCutShapeInformation()
-
-    -- Find the wood shape at the given coordinates
-    local largeEnoughRectangleSize = 2.0
-    local shapeId, minY, maxY, minZ, maxZ = findSplitShape(x,y,z, nx,ny,nz, yx,yy,yz, largeEnoughRectangleSize, largeEnoughRectangleSize)
-
-    local treeCutXWorld, treeCutYWorld, treeCutZWorld, treeCoords, radius, treeUnitVectors
-    if shapeId ~= nil and shapeId ~= 0 then
-
-        -- Get the radius of the wood shape at the same position, but while ignoring the chainsaw cutting angle
-        -- instead, simulate a perfect perpendicular cut to get the actual radius of the tree
-        -- in order to properly find the shape again, we need to define a rectangle around the whole shape.
-
-        -- Translate our own probing node to the center of the retrieved tree shape rectangle (relative to its parent node, which is the focus point of the user)
-        setTranslation(self.woodProbeNode, 0, (minY+maxY)/2.0, (minZ+maxZ)/2.0)
-
-        -- Get the world coordinates for that point
-        treeCutXWorld, treeCutYWorld, treeCutZWorld = localToWorld(self.woodProbeNode, 0,0,0)
-        treeCoords = {
-            x = treeCutXWorld,
-            y = treeCutYWorld,
-            z = treeCutZWorld
-        }
-
-        -- Retrieve unit vectors for the local tree coordinate system, but rotate it so that the tree's Y becomes the lookup X axis,
-        -- otherwise `testSplitShape` will fail to find anything later on.
-        -- The reason for this is that `testSplitShape` needs the split shape to intersect the Y/Z plane in X direction, while trees and pieces of wood
-        -- have their longest side along their Y axis
-        nx,ny,nz = localDirectionToWorld(shapeId, 0,1,0) -- unit vector along the local X axis of the shape, but in world coordinates
-        yx,yy,yz = localDirectionToWorld(shapeId, 1,0,0) -- unit vector along the local Y axis of the shape, but in world coordinates
-        local zx,zy,zz = localDirectionToWorld(shapeId, 0,0,-1) -- unit vector along the local Y axis of the shape, but in world coordinates
-
-        -- Put unit vectors in a table so other functions can use it afterwards
-        treeUnitVectors = {
-            xx = nx,
-            xy = ny,
-            xz = nz,
-            yx = yx,
-            yy = yy,
-            yz = yz,
-            zx = zx,
-            zy = zy,
-            zz = zz
-        }
-
-        shapeId, radius, _ = self:getRadiusAtLocation(shapeId, treeCoords, treeUnitVectors)
-    end
-
-    return shapeId, treeCoords, radius, treeUnitVectors
 end
 
 ---Calculates the volume of a part of the tree
@@ -174,10 +166,12 @@ end
 ---@return integer @The volume of the part (in milliliters, just like getVolume())
 ---@return integer @If >= 0, the part at which processing could no longer find the tree
 ---@return integer @The number of parts which were analyzed
-function ShapeMeasurementHelper:calculatePartVolume(shapeId, treeCoords, unitVectors, length, directionFactor)
+---@return integer @The total Y size of the part bounding box
+---@return integer @The total Z size of the part bounding box
+function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVectors, length, directionFactor)
 
     if shapeId == nil then
-        return 0, 0, 0
+        return 0, 0, 0, 0, 0
     end
     local stepWidth = .1 * directionFactor
     -- Reduce the maximum length to avoid detection issues towards the end
@@ -187,12 +181,13 @@ function ShapeMeasurementHelper:calculatePartVolume(shapeId, treeCoords, unitVec
     local totalVolume = 0
     local failedAt = -1
     local previousCoords = {}
+    local maxRadius = 0
     for i = 0,numberOfParts do -- intentionally not numberOfParts-1 because 5 parts have 6 "borders"
         local xOffset = i * stepWidth
         local pieceLength = stepWidth
         if i == numberOfParts then
             -- Last part: make sure it does not exceed the tree dimensions
-            pieceLength = adjustedLength - (i-1) * stepWidth
+            pieceLength = adjustedLength - (i-1) * stepWidth * directionFactor
             xOffset = xOffset - stepWidth + directionFactor * pieceLength
         end
 
@@ -202,13 +197,14 @@ function ShapeMeasurementHelper:calculatePartVolume(shapeId, treeCoords, unitVec
         local z = treeCoords.z + unitVectors.xz * xOffset
 
         -- Retrieve the radius
-        local foundShapeId, radius, newTreeCoords = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, unitVectors)
+        local foundShapeId, radius, newTreeCoords, yMinWorld, yMaxWorld, zMinWorld, zMaxWorld = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, unitVectors)
 
         -- Stop processing if the shape was no longer found (too crooked, or shorter than calculated)
         if foundShapeId == nil or foundShapeId == 0 then
             failedAt = i
             break
         end
+        maxRadius = math.max(maxRadius, radius)
 
         --treeCoords = newTreeCoords
         x,y,z = newTreeCoords.x, newTreeCoords.y, newTreeCoords.z
@@ -292,7 +288,12 @@ function ShapeMeasurementHelper:calculatePartVolume(shapeId, treeCoords, unitVec
         previousCoords = { x = x, y = y, z = z }
     end
 
-    return totalVolume, failedAt, numberOfParts
+    -- Calculate the total Y and Z size
+    -- TODO: Retrieve actual Y/Z total dimensions. For now, use the radius, which is usually smaller than the bounding box, however
+    local sizeY = maxRadius * 2
+    local sizeZ = sizeY
+
+    return totalVolume, failedAt, numberOfParts, sizeY, sizeZ
 end
 
 function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
@@ -305,11 +306,11 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 
         if shapeId ~= nil then
 
-            -- Retrieve data on the whole piece of wood
-            --local _, _, _, numConvexes, numAttachments = getSplitShapeStats(shapeId)
-
             -- Retrieve the length above and below the cut ("above" and "below" from a tree perspective)
             local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
+
+            -- TODO: Don't display info for the bottom part if it's an actual tree rather than a piece of wood on the ground
+
             if self.debugShapeLength then
                 -- Note: Need to press F4 with developer mode active to be able to see these
                 local shapeCutLocalCoords = { worldToLocal(shapeId, treeCoords.x, treeCoords.y, treeCoords.z) }
@@ -320,41 +321,50 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
                 DebugUtil.drawDebugLine(treeCoords.x, treeCoords.y, treeCoords.z, shapeBottomWorldCoords[1], shapeBottomWorldCoords[2], shapeBottomWorldCoords[3], 0,0,1, 0.1, false)
             end
 
-            -- Calculate the volume for the pices
-            local volumeBelow, failedAtBelow, numPiecesBelow = self:calculatePartVolume(shapeId, treeCoords, unitVectors, lenBelow, -1)
-            local volumeAbove, failedAtAbove, numPiecesAbove = self:calculatePartVolume(shapeId, treeCoords, unitVectors, lenAbove, 1)
+            -- Calculate the volume for the pieces
+            local volumeBelow, failedAtBelow, numPiecesBelow, sizeYBelow, sizeZBelow = self:calculatePartData(shapeId, treeCoords, unitVectors, lenBelow, -1)
+            local volumeAbove, failedAtAbove, numPiecesAbove, sizeYAbove, sizeZAbove = self:calculatePartData(shapeId, treeCoords, unitVectors, lenAbove, 1)
+
+            -- Get the total volume calculated by the engine and adjust our own calculations to match that total sum
+            local targetVolume = getVolume(shapeId)
+            local volumeFactor = targetVolume / (volumeBelow + volumeAbove)
+            volumeBelow = volumeBelow * volumeFactor
+            volumeAbove = volumeAbove * volumeFactor
+
+            -- TODO: Find out if "above" is top, left or right from a player point of view
+
+            -- Store the volumes so the UI can read them
+            self.futureWoodPartData = {
+                bottomVolume = volumeBelow,
+                bottomLength = lenBelow,
+                bottomSizeY = sizeYBelow,
+                bottomSizeZ = sizeZBelow,
+                topVolume = volumeAbove,
+                topLength = lenAbove,
+                topSizeY = sizeYAbove,
+                topSizeZ = sizeZAbove,
+             }
 
             if self.debugVolumeCalculations then
                 local estimatedVolume = volumeBelow + volumeAbove
-                local engineVolume = getVolume(shapeId)
-                local volumeDeviation = (estimatedVolume / engineVolume - 1) * 100
-                
+
                 Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 1.0, treeCoords.z, ("Volume (below): %d l"):format(volumeBelow * 1000), getCorrectTextSize(0.02, 0))
                 Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.9, treeCoords.z, ("Volume (above): %d l"):format(volumeAbove * 1000), getCorrectTextSize(0.02, 0))
                 Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.8, treeCoords.z, ("Volume (total est'd): %d l"):format(estimatedVolume * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.7, treeCoords.z, ("Volume (engine): %d l"):format(engineVolume * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.6, treeCoords.z, ("Volume (deviation)): %.2f %%"):format(volumeDeviation), getCorrectTextSize(0.02, 0))
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.7, treeCoords.z, ("Volume (engine): %d l"):format(targetVolume * 1000), getCorrectTextSize(0.02, 0))
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.6, treeCoords.z, ("Bottom Y/Z: (%.3f, %.3f)"):format(sizeYBelow, sizeZBelow), getCorrectTextSize(0.02, 0))
+                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.5, treeCoords.z, ("Top Y/Z: (%.3f, %.3f)"):format(sizeYAbove, sizeZAbove), getCorrectTextSize(0.02, 0))
                 if failedAtBelow >= 0 then
-                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.5, treeCoords.z, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), getCorrectTextSize(0.02, 0))
+                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.4, treeCoords.z, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), getCorrectTextSize(0.02, 0))
                 end
                 if failedAtAbove >= 0 then
-                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.4, treeCoords.z, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), getCorrectTextSize(0.02, 0))
+                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.3, treeCoords.z, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), getCorrectTextSize(0.02, 0))
                 end
 
             end
         end
-    end
-
-    if not chainsaw.wasAlreadyCutting and chainsaw.isCutting then
-        -- The user has just started cutting
-        chainsaw.wasAlreadyCutting = true
-
-        local originalShape = chainsaw.curSplitShape
-        if originalShape ~= nil then
-        end
-
-    elseif chainsaw.wasAlreadyCutting and not chainsaw.isCutting then
-        -- The user has just stopped cutting
-        chainsaw.wasAlreadyCutting = false
+    else
+        -- Chainsaw is no longer aimed at a tree; reset calculations
+        self.futureWoodPartData = nil
     end
 end

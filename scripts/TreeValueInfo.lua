@@ -18,6 +18,24 @@ TreeValueInfo = {
 -- The bool arguments make it believe it's being created in a single player game - this info is not important for our use case
 TreeValueInfo.dummyWoodTrigger = WoodUnloadTrigger.new(true, true)
 
+-- Helper object for calculating advanced stuff
+local shapeMeasurementHelper = ShapeMeasurementHelper.new()
+
+-- Define a function which will estimate the value of a part of a tree based on precalculated values
+
+---Retrieves the partial value of a part of a tree, assuming it's delimbed
+---@param wholePieceData table @Contains the total volume, the type of tree and the number of convexes, Y size and Z size for the whole shape
+---@param partialPieceData table @Contains the volume, length, Y extent and Z extent of the partial piece
+---@return integer @The volume in liters
+---@return integer @The price per liter adjusted to the quality of the tree
+local function getPartialDelimbedValue(wholePieceData, partialPieceData)
+    local volumeProportion = partialPieceData.volume / wholePieceData.volume
+    local partialNumConvexes = math.floor(wholePieceData.numConvexes * volumeProportion + .5)
+
+    return TreeValueInfo.dummyWoodTrigger:calculateWoodBaseValueForData(
+        partialPieceData.volume, wholePieceData.treeType, partialPieceData.length, wholePieceData.sizeY, wholePieceData.sizeZ, partialNumConvexes, 0)
+end
+
 -- Define a method which will add more information to the info box for trees or wood. The last argument is defined by the method we are extending
 
 ---This function adds information about the value of trees
@@ -57,18 +75,52 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     if getIsSplitShapeSplit(treeOrPieceOfWood) and getRigidBodyType(treeOrPieceOfWood) == RigidBodyType.DYNAMIC then
         local pieceOfWood = treeOrPieceOfWood -- alias for readability
 
-        -- Calculate the best cut position: Each piece needs to be between 6 and 11 meters (value decreases when shorter or longer)
-        local sizeX, sizeY, sizeZ, _, _ = getSplitShapeStats(pieceOfWood)
-        local length = math.max(sizeX, sizeY, sizeZ)
-        -- Only recommend a cut if the piece of wood is longer than 12 meters (otherwise one piece would be below 6m, so worth less)
-        if length > 12 then
-            local recommendedMinimumCutLength = TreeValueInfo.PROFITABLE_LENGTH_MIN
-            local recommendedMaximumCutLength = math.min(TreeValueInfo.PROFITABLE_LENGTH_MAX, length - recommendedMinimumCutLength)
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CUT_RECOMMENDATION), ('%.1fm-%.1fm'):format(recommendedMinimumCutLength, recommendedMaximumCutLength))
+        -- Get the type of tree
+        local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
+
+        -- Estimate the value for the left and right pieces
+        if shapeMeasurementHelper.futureWoodPartData ~= nil then
+            -- Get data on the full shape
+            local _, sizeY, sizeZ, numConvexes, _ = getSplitShapeStats(treeOrPieceOfWood)
+            local wholePieceData = {
+                volume = getVolume(treeOrPieceOfWood),
+                treeType = splitType,
+                numConvexes = numConvexes,
+                sizeY = sizeY,
+                sizeZ = sizeZ
+            }
+            local partData = shapeMeasurementHelper.futureWoodPartData
+
+            -- Calculate the value of the bottom part
+            local bottomData = {
+                volume = partData.bottomVolume,
+                length = partData.bottomLength,
+                sizeY = partData.bottomSizeY,
+                sizeZ = partData.bottomSizeZ
+            }
+            local delimbedBottomVolume, bottomPricePerLiter = getPartialDelimbedValue(wholePieceData, bottomData)
+            local bottomPrice = delimbedBottomVolume * bottomPricePerLiter
+
+            -- Calculate the value of the top part
+            local topData = {
+                volume = partData.topVolume,
+                length = partData.topLength,
+                sizeY = partData.topSizeY,
+                sizeZ = partData.topSizeZ
+            }
+            local delimbedTopVolume, topPricePerLiter = getPartialDelimbedValue(wholePieceData, topData)
+            local topPrice = delimbedTopVolume * topPricePerLiter
+
+            -- Display the values
+            playerHudUpdater.objectBox:addLine("Estimated value after cut", ('%d %s| %d %s'):format(bottomPrice, currencySymbol, topPrice, currencySymbol))
+
+            -- Calculate the absolute value increase
+            local priceAfterCutting = bottomPrice + topPrice
+            local absoluteValueIncrease = priceAfterCutting - currentValue
+            playerHudUpdater.objectBox:addLine("Value increase when cutting", ('%d %s'):format(absoluteValueIncrease, currencySymbol))
         end
 
         -- Get the amount of wood chips this piece of wood would produce
-        local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
         local litersIfChipped = numberOfLiters * splitType.woodChipsPerLiter
         playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.LITERS_IF_CHIPPED), ('%d l'):format(litersIfChipped))
 
@@ -103,19 +155,8 @@ PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater
 
 
 
-local shapeMeasurementHelper = ShapeMeasurementHelper.new()
 local function inj_update(chainsaw, superFunc, deltaTime, allowInput)
     superFunc(chainsaw, deltaTime, allowInput)
     shapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 end
-local function inj_postLoad(chainsaw, superFunc, xmlFile)
-    superFunc(chainsaw, xmlFile)
-    shapeMeasurementHelper:afterChainsawPostLoad(chainsaw)
-end
-local function inj_delete(chainsaw, superFunc)
-    shapeMeasurementHelper:beforeChainsawDelete(chainsaw)
-    superFunc(chainsaw)
-end
 Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, inj_update)
-Chainsaw.postLoad = Utils.overwrittenFunction(Chainsaw.postLoad, inj_postLoad)
-Chainsaw.delete = Utils.overwrittenFunction(Chainsaw.delete, inj_delete)
