@@ -6,6 +6,10 @@ function ChainsawTest.new()
     self.woodProbeNode = createTransformGroup("treeValueInfo_woodProbeNode")
     self.debugNode = createTransformGroup("treeValueInfo_debugNode")
     link(getRootNode(), self.debugNode)
+
+
+    self.debugRadiusDetection = false
+    self.debugRadiusResults = true
     return self
 end
 
@@ -29,12 +33,12 @@ end
 
 ---Gets the radius of the tree at the given location
 ---@param shapeId any @The tree shape which was already found
----@param worldCoorpsNearShape table @World coordinates close to or within the tree
+---@param worldCoordsNearShape table @World coordinates close to or within the tree
 ---@param shapeUnitVectors table @Unit vectors for X/Y/Z dimensions, where the X vector points along the longest dimension of the tree
 ---@return any @The ID of the tree shape or nil if it wasn't found at the given location
 ---@return number @The radius at the given location
 ---@return table @The coordinates a the given location, centered on the tree shape in Y/Z direction
-function ChainsawTest:getRadiusAtLocation(shapeId, worldCoorpsNearShape, shapeUnitVectors)
+function ChainsawTest:getRadiusAtLocation(shapeId, worldCoordsNearShape, shapeUnitVectors)
 
     -- Define a reasonably large enough rectangle to find the tree
     -- We already found a tree at this point so we don't need an overly large radius
@@ -42,9 +46,29 @@ function ChainsawTest:getRadiusAtLocation(shapeId, worldCoorpsNearShape, shapeUn
     local halfRectangleSize = rectangleSize / 2.0
 
     -- Move the coordinates half a height in Y and Z direction so that the resulting rectangle will have the original y/z in its center
-    local x = worldCoorpsNearShape.x - shapeUnitVectors.yx*halfRectangleSize - shapeUnitVectors.zx*halfRectangleSize
-    local y = worldCoorpsNearShape.y - shapeUnitVectors.yy*halfRectangleSize - shapeUnitVectors.zy*halfRectangleSize
-    local z = worldCoorpsNearShape.z - shapeUnitVectors.yz*halfRectangleSize - shapeUnitVectors.zz*halfRectangleSize
+    local x = worldCoordsNearShape.x - shapeUnitVectors.yx*halfRectangleSize - shapeUnitVectors.zx*halfRectangleSize
+    local y = worldCoordsNearShape.y - shapeUnitVectors.yy*halfRectangleSize - shapeUnitVectors.zy*halfRectangleSize
+    local z = worldCoordsNearShape.z - shapeUnitVectors.yz*halfRectangleSize - shapeUnitVectors.zz*halfRectangleSize
+
+    if self.debugRadiusDetection then
+        DebugUtil.drawDebugAreaRectangle(
+            x,y,z,
+            x + shapeUnitVectors.yx*rectangleSize,
+            y + shapeUnitVectors.yy*rectangleSize,
+            z + shapeUnitVectors.yz*rectangleSize,
+            x + shapeUnitVectors.zx*rectangleSize,
+            y + shapeUnitVectors.zy*rectangleSize,
+            z + shapeUnitVectors.zz*rectangleSize,
+            false,
+            .7,0,.7
+        )
+        DebugUtil.drawDebugGizmoAtWorldPos(
+            x,y,z,
+            shapeUnitVectors.yx, shapeUnitVectors.yy, shapeUnitVectors.yz,
+            shapeUnitVectors.zx, shapeUnitVectors.zy, shapeUnitVectors.zz,
+            "search",
+            false)
+    end
 
     -- Find the split shape at the location we already found it at, but this time with a perpendicular cut
     local minY, maxY, minZ, maxZ = testSplitShape(
@@ -61,7 +85,25 @@ function ChainsawTest:getRadiusAtLocation(shapeId, worldCoorpsNearShape, shapeUn
     if minY ~= nil then
         local radius = ((maxY-minY)+(maxZ-minZ)) / 4.0 -- /2 for average diameter and another /2 to get the radius
 
-        return shapeId, radius, worldCoorpsNearShape
+        -- Move the corner of the search rectangle used above to the center of the found location. min/max Y/Z are relative to that location
+        local yCenter = (minY + maxY) / 2.0
+        local zCenter = (minZ + maxZ) / 2.0
+        local worldCoordsAtShape = {}
+        worldCoordsAtShape.x = x + yCenter * shapeUnitVectors.yx + zCenter * shapeUnitVectors.zx
+        worldCoordsAtShape.y = y + yCenter * shapeUnitVectors.yy + zCenter * shapeUnitVectors.zy
+        worldCoordsAtShape.z = z + yCenter * shapeUnitVectors.yz + zCenter * shapeUnitVectors.zz
+
+        if self.debugRadiusDetection then
+            DebugUtil.drawDebugGizmoAtWorldPos(
+                worldCoordsAtShape.x, worldCoordsAtShape.y, worldCoordsAtShape.z,
+                shapeUnitVectors.yx, shapeUnitVectors.yy, shapeUnitVectors.yz,
+                shapeUnitVectors.zx, shapeUnitVectors.zy, shapeUnitVectors.zz,
+                "match",
+                false)
+        end
+
+        -- Move the world coordinates by the specified Y and Z dimensions
+        return shapeId, radius, worldCoordsAtShape
     else
         return nil, 0, {}
     end
@@ -124,7 +166,7 @@ function ChainsawTest:getWoodShapeDimensionsAtFocusPoint(chainsaw)
             zz = zz
         }
 
-        shapeId, radius, treeCoords = self:getRadiusAtLocation(shapeId, treeCoords, treeUnitVectors)
+        shapeId, radius, _ = self:getRadiusAtLocation(shapeId, treeCoords, treeUnitVectors)
     end
 
     return shapeId, treeCoords, radius, treeUnitVectors
@@ -147,7 +189,7 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
             local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
 
             -- "Above" part: probe from the split point to the upper end
-            local stepWidth = .5
+            local stepWidth = .1
             lenAbove = lenAbove - 0.03 -- to avoid weird readings at the end
             local numberOfParts = math.ceil(lenAbove / stepWidth)
             local previousRadius = 0
@@ -170,12 +212,16 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
                 local z = treeCoords.z + unitVectors.xz * xOffset
 
                 -- Retrieve the radius
-                shapeId, radius, _ = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, unitVectors)
+                local newTreeCoords
+                shapeId, radius, newTreeCoords = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, unitVectors)
 
                 if shapeId == nil or shapeId == 0 then
                     failedAt = i
                     break
                 end
+
+                --treeCoords = newTreeCoords
+                x,y,z = newTreeCoords.x, newTreeCoords.y, newTreeCoords.z
 
                 -- starting from the second radius:
                 if i > 0 then
@@ -185,59 +231,60 @@ function ChainsawTest:afterChainsawUpdate(chainsaw)
                     -- approximate volume of a cone stump: average circle area * length. circle area = pi * r²
                     totalVolume = totalVolume + math.pi * averageRadius * averageRadius * pieceLength
 
-                    -- DEBUG
-                    DebugUtil.drawDebugAreaRectangle(
-                        x - unitVectors.yx * radius - unitVectors.zx * radius,
-                        y - unitVectors.yy * radius - unitVectors.zy * radius,
-                        z - unitVectors.yz * radius - unitVectors.zz * radius,
-                        x - unitVectors.yx * radius + unitVectors.zx * radius,
-                        y - unitVectors.yy * radius + unitVectors.zy * radius,
-                        z - unitVectors.yz * radius + unitVectors.zz * radius,
-                        x + unitVectors.yx * radius - unitVectors.zx * radius,
-                        y + unitVectors.yy * radius - unitVectors.zy * radius,
-                        z + unitVectors.yz * radius - unitVectors.zz * radius,
-                        false,
-                        1,0,0)
-                    DebugUtil.drawDebugLine(
-                        x - unitVectors.yx * radius - unitVectors.zx * radius,
-                        y - unitVectors.yy * radius - unitVectors.zy * radius,
-                        z - unitVectors.yz * radius - unitVectors.zz * radius,
-                        previousCoords.x - unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
-                        previousCoords.y - unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
-                        previousCoords.z - unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
-                        1,0,0,
-                        nil,
-                        false)
-                    DebugUtil.drawDebugLine(
-                        x - unitVectors.yx * radius + unitVectors.zx * radius,
-                        y - unitVectors.yy * radius + unitVectors.zy * radius,
-                        z - unitVectors.yz * radius + unitVectors.zz * radius,
-                        previousCoords.x - unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
-                        previousCoords.y - unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
-                        previousCoords.z - unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
-                        1,0,0,
-                        nil,
-                        false)
-                    DebugUtil.drawDebugLine(
-                        x + unitVectors.yx * radius - unitVectors.zx * radius,
-                        y + unitVectors.yy * radius - unitVectors.zy * radius,
-                        z + unitVectors.yz * radius - unitVectors.zz * radius,
-                        previousCoords.x + unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
-                        previousCoords.y + unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
-                        previousCoords.z + unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
-                        1,0,0,
-                        nil,
-                        false)
-                    DebugUtil.drawDebugLine(
-                        x + unitVectors.yx * radius + unitVectors.zx * radius,
-                        y + unitVectors.yy * radius + unitVectors.zy * radius,
-                        z + unitVectors.yz * radius + unitVectors.zz * radius,
-                        previousCoords.x + unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
-                        previousCoords.y + unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
-                        previousCoords.z + unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
-                        1,0,0,
-                        nil,
-                        false)
+                    if self.debugRadiusResults then
+                        DebugUtil.drawDebugAreaRectangle(
+                            x - unitVectors.yx * radius - unitVectors.zx * radius,
+                            y - unitVectors.yy * radius - unitVectors.zy * radius,
+                            z - unitVectors.yz * radius - unitVectors.zz * radius,
+                            x - unitVectors.yx * radius + unitVectors.zx * radius,
+                            y - unitVectors.yy * radius + unitVectors.zy * radius,
+                            z - unitVectors.yz * radius + unitVectors.zz * radius,
+                            x + unitVectors.yx * radius - unitVectors.zx * radius,
+                            y + unitVectors.yy * radius - unitVectors.zy * radius,
+                            z + unitVectors.yz * radius - unitVectors.zz * radius,
+                            false,
+                            1,0,0)
+                        DebugUtil.drawDebugLine(
+                            x - unitVectors.yx * radius - unitVectors.zx * radius,
+                            y - unitVectors.yy * radius - unitVectors.zy * radius,
+                            z - unitVectors.yz * radius - unitVectors.zz * radius,
+                            previousCoords.x - unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
+                            previousCoords.y - unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
+                            previousCoords.z - unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
+                            1,0,0,
+                            nil,
+                            false)
+                        DebugUtil.drawDebugLine(
+                            x - unitVectors.yx * radius + unitVectors.zx * radius,
+                            y - unitVectors.yy * radius + unitVectors.zy * radius,
+                            z - unitVectors.yz * radius + unitVectors.zz * radius,
+                            previousCoords.x - unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
+                            previousCoords.y - unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
+                            previousCoords.z - unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
+                            1,0,0,
+                            nil,
+                            false)
+                        DebugUtil.drawDebugLine(
+                            x + unitVectors.yx * radius - unitVectors.zx * radius,
+                            y + unitVectors.yy * radius - unitVectors.zy * radius,
+                            z + unitVectors.yz * radius - unitVectors.zz * radius,
+                            previousCoords.x + unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
+                            previousCoords.y + unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
+                            previousCoords.z + unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
+                            1,0,0,
+                            nil,
+                            false)
+                        DebugUtil.drawDebugLine(
+                            x + unitVectors.yx * radius + unitVectors.zx * radius,
+                            y + unitVectors.yy * radius + unitVectors.zy * radius,
+                            z + unitVectors.yz * radius + unitVectors.zz * radius,
+                            previousCoords.x + unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
+                            previousCoords.y + unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
+                            previousCoords.z + unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
+                            1,0,0,
+                            nil,
+                            false)
+                    end
 
                 -- else: just store the radius for the first piece
                 end
