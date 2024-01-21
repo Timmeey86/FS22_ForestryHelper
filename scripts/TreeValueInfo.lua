@@ -146,6 +146,7 @@ local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape)
 end
 Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, onChainsawUpdateRingSelector)
 
+local shapeMeasurementHelper = ShapeMeasurementHelper.new()
 ---Makes sure the info box is shown on the next frame while the chainsaw ring is visible
 ---@param chainsaw table @The chainsaw instance
 ---@param superFunc function @The base game function
@@ -169,5 +170,8 @@ local function onChainsawUpdate(chainsaw, superFunc, deltaTime, allowInput)
             -- else: the box will be displayed already; nothing to do
         end
     end
+
+    -- Debug shape calculations
+    shapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 end
 Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, onChainsawUpdate)

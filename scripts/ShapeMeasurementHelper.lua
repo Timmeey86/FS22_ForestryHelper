@@ -7,7 +7,7 @@ function ShapeMeasurementHelper.new()
     self.futureWoodPartData = nil
 
     self.debugRadiusDetection = false
-    self.debugRadiusResults = false
+    self.debugRadiusResults = true
     self.debugShapeLength = false
     self.debugVolumeCalculations = false
     return self
