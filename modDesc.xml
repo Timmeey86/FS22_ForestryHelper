@@ -63,6 +63,7 @@ Version 1.0.1.0:
 
     <extraSourceFiles>
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
+        <sourceFile filename="scripts/ShapeMeasurementHelper.lua" />
         <sourceFile filename="scripts/TreeValueInfo.lua" />
     </extraSourceFiles>
 

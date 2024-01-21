@@ -18,6 +18,14 @@
         "MathUtil",
         "Class",
         "Chainsaw",
-        "getVisibility"
+        "getVisibility",
+        "findSplitShape",
+        "localDirectionToWorld",
+        "localToWorld",
+        "DebugUtil",
+        "testSplitShape",
+        "getSplitShapePlaneExtents",
+        "worldToLocal",
+        "getCorrectTextSize"
     ]
 }
