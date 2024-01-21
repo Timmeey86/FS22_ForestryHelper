@@ -5,7 +5,7 @@ TreeValueInfo = {
     I18N_IDS = {
         VOLUME = 'tvi_volume',
         CURRENT_VALUE = 'tvi_current_value',
-        CUT_RECOMMENDATION = 'tvi_cut_recommendation',
+        TOTAL_QUALITY = 'tvi_total_quality',
         LITERS_IF_CHIPPED = 'tvi_liters_if_chipped',
         CURRENT_VALUE_IF_CHIPPED = 'tvi_current_value_if_chipped',
         POTENTIAL_VALUE_IF_CHIPPED = 'tvi_potential_value_if_chipped'
@@ -82,7 +82,7 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     end
 
     -- Display the total quality of the tree, which is proportional to the sell price
-    playerHudUpdater.objectBox:addLine("Total Quality (max 120%)", ('%d %%'):format(totalQuality * 100))
+    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.TOTAL_QUALITY), ('%d %%'):format(totalQuality * 100))
 
     -- Display the current value (if the tree/piece of wood was sold in its current shape)
     playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
