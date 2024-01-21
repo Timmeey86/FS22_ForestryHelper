@@ -140,11 +140,13 @@ function DebugDrawUtils.drawBoundingBox(firstPoint, secondPoint, unitVectors, fi
     DebugDrawUtils.drawLine(firstSquare.topRight, secondSquare.topRight, color)
 end
 
----Renders a text at the given location, using a fixed size
+---Renders a text at the given location
 ---@param location table @The location to render the text at
 ---@param text string @The text to display
----@optional yOffset number @An optional Y offset, useful for drawing various information at the same location, but on top of each other
-function DebugDrawUtils.renderText(location, text, yOffset)
+---@param yOffset any @An optional Y offset, useful for drawing various information at the same location, but on top of each other (optional)
+---@param textSizeFactor any @A factor to multiply the text size by (optional)
+function DebugDrawUtils.renderText(location, text, yOffset, textSizeFactor)
     local offset = yOffset or 0
-    Utils.renderTextAtWorldPosition(location.x, location.y + offset, location.z, text, getCorrectTextSize(0.02, 0))
+    local textSizeScale = 0.02 * (textSizeFactor or 1.0)
+    Utils.renderTextAtWorldPosition(location.x, location.y + offset, location.z, text, getCorrectTextSize(textSizeScale, 0))
 end

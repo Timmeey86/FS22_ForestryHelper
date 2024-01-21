@@ -21,8 +21,8 @@ local TreeValueInfo_mt = Class(TreeValueInfo)
 function TreeValueInfo.new()
     local self = setmetatable({}, TreeValueInfo_mt)
 
-    self.debugValueDetails = false
-    self.debugShapeDetails = false
+    self.debugValueDetails = true
+    self.debugShapeDetails = true
     self.currentShape = nil
     return self
 end

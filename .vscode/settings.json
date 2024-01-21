@@ -26,6 +26,7 @@
         "testSplitShape",
         "getSplitShapePlaneExtents",
         "worldToLocal",
-        "getCorrectTextSize"
+        "getCorrectTextSize",
+        "ShapeMeasurementHelper"
     ]
 }

@@ -10,7 +10,9 @@ function ShapeMeasurementHelper.new()
     self.debugRadiusResults = false
     self.debugShapeLength = false
     self.debugVolumeCalculations = false
-    self.debugConvexity = true
+    self.debugConvexityAngles = false
+    self.debugConvexityLines = false
+    self.debugConvexityAboveThreshold = true
     return self
 end
 
@@ -153,14 +155,16 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
     if shapeId == nil then
         return 0, 0, 0, 0, 0
     end
-    local stepWidth = .5 * directionFactor
+    local stepWidth = .25 * directionFactor
     -- Reduce the maximum length to avoid detection issues towards the end
     local adjustedLength = length - 0.03
     local numberOfParts = math.abs(math.ceil(adjustedLength / stepWidth))
-    local previousRadius = 0
     local totalVolume = 0
     local failedAt = -1
     local previousCoords = {}
+    local previousRadius = 0
+    local previousAngle = nil
+    local previousNormalizedDirection = nil
     local maxRadius = 0
     for i = 0,numberOfParts do -- intentionally not numberOfParts-1 because 5 parts have 6 "borders"
         local xOffset = i * stepWidth
@@ -190,6 +194,8 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
         coords.x, coords.y, coords.z = newTreeCoords.x, newTreeCoords.y, newTreeCoords.z
 
         -- starting from the second radius:
+        local angle = 0
+        local normalizedDirection
         if i > 0 then
             -- calculate the volume to the previous radius
             local averageRadius = (previousRadius + radius) / 2.0
@@ -208,17 +214,78 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
                     color =  { 0,0,1 }
                 end
                 DebugDrawUtils.drawBoundingBox(coords, previousCoords, unitVectors, radius * 2, previousRadius * 2, color)
-            elseif self.debugConvexity then
-                -- Rendering both at the same time would clutter the screen too much. Besides, it's similar information
-                DebugDrawUtils.drawLine(coords, previousCoords, { 1, 0, .7 }, .05)
             end
 
-        -- else: just store the radius for the first piece
+            -- Get a vector between the previous and the new coordinates. Invert for backwards direction
+            local newDirectionVector = {
+                x = (coords.x - previousCoords.x) * directionFactor,
+                y = (coords.y - previousCoords.y) * directionFactor,
+                z = (coords.z - previousCoords.z) * directionFactor
+            }
+            -- Normalize it to a vector of length = 1
+            normalizedDirection = {}
+            normalizedDirection.x, normalizedDirection.y, normalizedDirection.z = MathUtil.vector3Normalize(newDirectionVector.x, newDirectionVector.y, newDirectionVector.z)
+
+            -- Retrieve the angle between the tree's X axis and the vector to the coordinate
+            local cosTreeAngle = MathUtil.dotProduct(unitVectors.xx, unitVectors.xy, unitVectors.xz, normalizedDirection.x, normalizedDirection.y, normalizedDirection.z)
+            if self.debugConvexityAngles then
+                DebugDrawUtils.renderText(coords, ('cos: %.5f'):format(cosTreeAngle), 0.4, .5)
+            end
+
+            -- Convert to a regular angle in degrees
+            if cosTreeAngle ~= cosTreeAngle then cosTreeAngle = 0 end -- fix NaN values
+            angle = math.acos(cosTreeAngle) * 180 / math.pi
+            if self.debugConvexityAngles then
+                DebugDrawUtils.renderText(coords, ('acos: %.3f'):format(angle), 0.2, .5)
+            end
+
+            -- Retrieve the difference in angle compared to the previous piece, starting from the third coordinate
+            if angle ~= angle then angle = 0 end -- fix NaN values
+            local angleDifference = (angle - previousAngle)
+            if i == 1 then angleDifference = 0 end
+
+            local angleThreshold = 1.5
+            if self.debugConvexityAngles or (self.debugConvexityAboveThreshold and angleDifference > angleThreshold) then
+                DebugDrawUtils.renderText(coords, ('diff: %.3f'):format(angleDifference), 0.1, .5)
+            end
+            if self.debugConvexityLines or (self.debugConvexityAboveThreshold and angleDifference > angleThreshold) then
+                local directionVectorLength = 2
+                local directionalCoordsFwd = {
+                    x = coords.x + normalizedDirection.x * directionVectorLength,
+                    y = coords.y + normalizedDirection.y * directionVectorLength,
+                    z = coords.z + normalizedDirection.z * directionVectorLength
+                }
+                local directionalCoordsRev = {
+                    x = coords.x - normalizedDirection.x * directionVectorLength,
+                    y = coords.y - normalizedDirection.y * directionVectorLength,
+                    z = coords.z - normalizedDirection.z * directionVectorLength
+                }
+                DebugDrawUtils.drawLine(directionalCoordsRev, directionalCoordsFwd, {1,0,0})
+                if previousNormalizedDirection ~= nil then
+                    local previousDirectionalCoordsFwd = {
+                        x = coords.x + previousNormalizedDirection.x * directionVectorLength,
+                        y = coords.y + previousNormalizedDirection.y * directionVectorLength,
+                        z = coords.z + previousNormalizedDirection.z * directionVectorLength
+                    }
+                    local previousDirectionalCoordsRev = {
+                        x = coords.x - previousNormalizedDirection.x * directionVectorLength,
+                        y = coords.y - previousNormalizedDirection.y * directionVectorLength,
+                        z = coords.z - previousNormalizedDirection.z * directionVectorLength
+                    }
+                    DebugDrawUtils.drawLine(previousDirectionalCoordsFwd, previousDirectionalCoordsRev, {0,0,1})
+                end
+                DebugDrawUtils.drawLine(previousCoords, coords, {0.7,0.7,0})
+            end
+
+
+        -- else: just store the data for the first piece as a base for comparison
         end
 
-        -- store the radius for the next calculation
+        -- store data for the next calculation
         previousRadius = radius
         previousCoords = coords
+        previousAngle = angle
+        previousNormalizedDirection = normalizedDirection
     end
 
     -- Calculate the total Y and Z size
