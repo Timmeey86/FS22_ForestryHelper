@@ -12,8 +12,8 @@
 
 - The volume of the tree or piece of wood in liters
 - The current value, which is the amount of money you would get if you sold the tree in its current form
-- A recommendation for a cut if splitting the piece of wood would result in more total money
-- The amount of liters you would get when processing the tree with a wood chipper
+- The total quality of the tree or piece of wood as calculated by the game, where 120% is the maximum
+- The amount of liters you would get when processing the tree piece of wood with a wood chipper
 - The amount of money you would get if you sold the wood chips right now
 - An estimation of money you would get if you sold the wood chips at best price (sometimes you can get more than that, due to randonmness)
 
@@ -32,16 +32,19 @@ Version 1.0.2.0:
 Version 1.0.1.0:
 - Added wood chip info
 ]]></en>
-        <de><![CDATA[Diese Mod berechnet den aktuellen Preis für einen Baum oder ein Stück Holz und zeigt diese Informationen an.
+        <de><![CDATA[Diese Mod berechnet den aktuellen Preis für einen Baum oder ein Stück Holz und zeigt diese Informationen an:
 
-Der "Aktuelle Wert" ist der Preis, den man bekommen würde, wenn man den Baum oder das Stück Holz in seiner aktuellen Form verkauft.
+- Das Volumen des Baums oder Holzstücks in Liter
+- Der aktuelle Wert, den man bekommen würde, wenn man den oder das Holzstück in seiner aktuellen Form verkaufen würde
+- Die Gesamtquality des Baums oder Holzstücks, so wie sie vom Spiel berechnet wird, wobei 120% das Maximum ist
+- Die Anzahl an Litern, die man bekommen würde, wenn man das Holzstück mit einem Häcksler verarbeiten würde
+- Die Menge an Geld, die man bekommen würde, wenn man die Hackschnitzel sofort verkaufen würde
+- Eine Abschätzung über den Preis, den man erzielen würde, wenn man die Hackschnitzel zum Bestpreis verkauft (manchmal bekommt man noch mehr, aufgrund von zufälligen Abweichungen)
 
 Beachtet, dass der Wert von Holz von diesen drei Faktoren abhängt (Standardverhalten von FS22):
 - Die Form (Am wertvollsten, wenn gerade)
 - Die Anzahl an Zweigen, die noch vorhanden sind (Am wertvollsten, wenn vollständig entastet)
 - Die Länge (Am wertvollsten zwischen 6m und 11m)
-
-Die Mod gibt daher Vorschläge für den besten Schnitt, wenn anwendbar.
 
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
 
