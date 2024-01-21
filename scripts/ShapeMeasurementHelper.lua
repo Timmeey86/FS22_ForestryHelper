@@ -7,7 +7,7 @@ function ShapeMeasurementHelper.new()
     self.futureWoodPartData = nil
 
     self.debugRadiusDetection = false
-    self.debugRadiusResults = true
+    self.debugRadiusResults = false
     self.debugShapeLength = false
     self.debugVolumeCalculations = false
     return self
@@ -28,15 +28,15 @@ function ShapeMeasurementHelper:getWoodShapeDimensionsAtFocusPoint(chainsaw)
     local x,y,z, nx,ny,nz, yx,yy,yz = chainsaw:getCutShapeInformation()
 
     -- Find the wood shape at the given coordinates
-    local largeEnoughRectangleSize = 2.0
-    local shapeId, _, _, _, _ = findSplitShape(x,y,z, nx,ny,nz, yx,yy,yz, largeEnoughRectangleSize, largeEnoughRectangleSize)
+    local largeEnoughSquareSize = 2.0
+    local shapeId, _, _, _, _ = findSplitShape(x,y,z, nx,ny,nz, yx,yy,yz, largeEnoughSquareSize, largeEnoughSquareSize)
 
     local treeCoords, radius, treeUnitVectors
     if shapeId ~= nil and shapeId ~= 0 then
 
         -- Get the radius of the wood shape at the same position, but while ignoring the chainsaw cutting angle
         -- instead, simulate a perfect perpendicular cut to get the actual radius of the tree
-        -- in order to properly find the shape again, we need to define a rectangle around the whole shape.
+        -- in order to properly find the shape again, we need to define a square around the whole shape.
 
         -- Retrieve unit vectors for the local tree coordinate system, but rotate it so that the tree's Y becomes the lookup X axis,
         -- otherwise `testSplitShape` will fail to find anything later on.
@@ -83,33 +83,17 @@ end
 ---@return number @The maximum Z coordinate of the shape at that location, in world coordinates
 function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShape, shapeUnitVectors)
 
-    -- Define a reasonably large enough rectangle to find the tree
-    local rectangleSize = 2.0
-    local halfRectangleSize = rectangleSize / 2.0
+    -- Define a reasonably large enough square to find the tree
+    local squareSize = 2.0
+    local halfSquareSize = squareSize / 2.0
 
-    -- Move the coordinates half a height in Y and Z direction so that the resulting rectangle will have the original y/z in its center
-    local x = worldCoordsNearShape.x - shapeUnitVectors.yx*halfRectangleSize - shapeUnitVectors.zx*halfRectangleSize
-    local y = worldCoordsNearShape.y - shapeUnitVectors.yy*halfRectangleSize - shapeUnitVectors.zy*halfRectangleSize
-    local z = worldCoordsNearShape.z - shapeUnitVectors.yz*halfRectangleSize - shapeUnitVectors.zz*halfRectangleSize
+    -- Move the coordinates half a height in Y and Z direction so that the resulting square will have the original y/z in its center
+    local x = worldCoordsNearShape.x - shapeUnitVectors.yx*halfSquareSize - shapeUnitVectors.zx*halfSquareSize
+    local y = worldCoordsNearShape.y - shapeUnitVectors.yy*halfSquareSize - shapeUnitVectors.zy*halfSquareSize
+    local z = worldCoordsNearShape.z - shapeUnitVectors.yz*halfSquareSize - shapeUnitVectors.zz*halfSquareSize
 
     if self.debugRadiusDetection then
-        DebugUtil.drawDebugAreaRectangle(
-            x,y,z,
-            x + shapeUnitVectors.yx*rectangleSize,
-            y + shapeUnitVectors.yy*rectangleSize,
-            z + shapeUnitVectors.yz*rectangleSize,
-            x + shapeUnitVectors.zx*rectangleSize,
-            y + shapeUnitVectors.zy*rectangleSize,
-            z + shapeUnitVectors.zz*rectangleSize,
-            false,
-            .7,0,.7
-        )
-        DebugUtil.drawDebugGizmoAtWorldPos(
-            x,y,z,
-            shapeUnitVectors.yx, shapeUnitVectors.yy, shapeUnitVectors.yz,
-            shapeUnitVectors.zx, shapeUnitVectors.zy, shapeUnitVectors.zz,
-            "search",
-            false)
+        DebugDrawUtils.drawShapeSearchSquare( { x=x, y=y, z=z }, shapeUnitVectors, squareSize, {0.7, 0, 1})
     end
 
     -- Find the split shape at the location we already found it at, but this time with a perpendicular cut
@@ -122,12 +106,12 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
         shapeUnitVectors.yx,
         shapeUnitVectors.yy,
         shapeUnitVectors.yz,
-        rectangleSize,
-        rectangleSize)
+        squareSize,
+        squareSize)
     if minY ~= nil then
         local radius = ((maxY-minY)+(maxZ-minZ)) / 4.0 -- /2 for average diameter and another /2 to get the radius
 
-        -- Move the corner of the search rectangle used above to the center of the found location. min/max Y/Z are relative to that location
+        -- Move the corner of the search square used above to the center of the found location. min/max Y/Z are relative to that location
         local yCenter = (minY + maxY) / 2.0
         local zCenter = (minZ + maxZ) / 2.0
         local worldCoordsAtShape = {}
@@ -136,12 +120,7 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
         worldCoordsAtShape.z = z + yCenter * shapeUnitVectors.yz + zCenter * shapeUnitVectors.zz
 
         if self.debugRadiusDetection then
-            DebugUtil.drawDebugGizmoAtWorldPos(
-                worldCoordsAtShape.x, worldCoordsAtShape.y, worldCoordsAtShape.z,
-                shapeUnitVectors.yx, shapeUnitVectors.yy, shapeUnitVectors.yz,
-                shapeUnitVectors.zx, shapeUnitVectors.zy, shapeUnitVectors.zz,
-                "match",
-                false)
+            DebugDrawUtils.drawDebugGizmo(worldCoordsAtShape, shapeUnitVectors, "match")
         end
 
         -- Calculate the minimum and maximum world Y and Z coordinates for further processing
@@ -227,62 +206,12 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
                 else
                     color =  { 0,0,1 }
                 end
-                DebugUtil.drawDebugAreaRectangle(
-                    x - unitVectors.yx * radius - unitVectors.zx * radius,
-                    y - unitVectors.yy * radius - unitVectors.zy * radius,
-                    z - unitVectors.yz * radius - unitVectors.zz * radius,
-                    x - unitVectors.yx * radius + unitVectors.zx * radius,
-                    y - unitVectors.yy * radius + unitVectors.zy * radius,
-                    z - unitVectors.yz * radius + unitVectors.zz * radius,
-                    x + unitVectors.yx * radius - unitVectors.zx * radius,
-                    y + unitVectors.yy * radius - unitVectors.zy * radius,
-                    z + unitVectors.yz * radius - unitVectors.zz * radius,
-                    false,
-                    color[1], color[2], color[3])
-                DebugUtil.drawDebugLine(
-                    x - unitVectors.yx * radius - unitVectors.zx * radius,
-                    y - unitVectors.yy * radius - unitVectors.zy * radius,
-                    z - unitVectors.yz * radius - unitVectors.zz * radius,
-                    previousCoords.x - unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
-                    previousCoords.y - unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
-                    previousCoords.z - unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
-                    color[1], color[2], color[3],
-                    nil,
-                    false)
-                DebugUtil.drawDebugLine(
-                    x - unitVectors.yx * radius + unitVectors.zx * radius,
-                    y - unitVectors.yy * radius + unitVectors.zy * radius,
-                    z - unitVectors.yz * radius + unitVectors.zz * radius,
-                    previousCoords.x - unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
-                    previousCoords.y - unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
-                    previousCoords.z - unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
-                    color[1], color[2], color[3],
-                    nil,
-                    false)
-                DebugUtil.drawDebugLine(
-                    x + unitVectors.yx * radius - unitVectors.zx * radius,
-                    y + unitVectors.yy * radius - unitVectors.zy * radius,
-                    z + unitVectors.yz * radius - unitVectors.zz * radius,
-                    previousCoords.x + unitVectors.yx * previousRadius - unitVectors.zx * previousRadius,
-                    previousCoords.y + unitVectors.yy * previousRadius - unitVectors.zy * previousRadius,
-                    previousCoords.z + unitVectors.yz * previousRadius - unitVectors.zz * previousRadius,
-                    color[1], color[2], color[3],
-                    nil,
-                    false)
-                DebugUtil.drawDebugLine(
-                    x + unitVectors.yx * radius + unitVectors.zx * radius,
-                    y + unitVectors.yy * radius + unitVectors.zy * radius,
-                    z + unitVectors.yz * radius + unitVectors.zz * radius,
-                    previousCoords.x + unitVectors.yx * previousRadius + unitVectors.zx * previousRadius,
-                    previousCoords.y + unitVectors.yy * previousRadius + unitVectors.zy * previousRadius,
-                    previousCoords.z + unitVectors.yz * previousRadius + unitVectors.zz * previousRadius,
-                    color[1], color[2], color[3],
-                    nil,
-                    false)
+                DebugDrawUtils.drawBoundingBox({ x=x, y=y, z=z }, previousCoords, unitVectors, radius * 2, previousRadius * 2, color)
             end
 
         -- else: just store the radius for the first piece
         end
+
         -- store the radius for the next calculation
         previousRadius = radius
         previousCoords = { x = x, y = y, z = z }
@@ -314,11 +243,13 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
             if self.debugShapeLength then
                 -- Note: Need to press F4 with developer mode active to be able to see these
                 local shapeCutLocalCoords = { worldToLocal(shapeId, treeCoords.x, treeCoords.y, treeCoords.z) }
-                local shapeTopWorldCoords = { localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] + lenAbove, shapeCutLocalCoords[3]) }
-                local shapeBottomWorldCoords = { localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] - lenBelow, shapeCutLocalCoords[3]) }
+                local shapeTopWorldCoords = {}
+                local shapeBottomWorldCoords = {}
+                shapeTopWorldCoords.x, shapeTopWorldCoords.y, shapeTopWorldCoords.z = localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] + lenAbove, shapeCutLocalCoords[3])
+                shapeBottomWorldCoords.x, shapeBottomWorldCoords.y, shapeBottomWorldCoords.z = localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] - lenBelow, shapeCutLocalCoords[3])
 
-                DebugUtil.drawDebugLine(treeCoords.x, treeCoords.y, treeCoords.z, shapeTopWorldCoords[1], shapeTopWorldCoords[2], shapeTopWorldCoords[3], 1,0,0, 0.1, false)
-                DebugUtil.drawDebugLine(treeCoords.x, treeCoords.y, treeCoords.z, shapeBottomWorldCoords[1], shapeBottomWorldCoords[2], shapeBottomWorldCoords[3], 0,0,1, 0.1, false)
+                DebugDrawUtils.drawLine(treeCoords, shapeTopWorldCoords, {1,0,0}, 0.1)
+                DebugDrawUtils.drawLine(treeCoords, shapeBottomWorldCoords, {1,0,0}, 0.1)
             end
 
             -- Calculate the volume for the pieces
@@ -348,22 +279,22 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
             if self.debugVolumeCalculations then
                 local estimatedVolume = volumeBelow + volumeAbove
 
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 1.0, treeCoords.z, ("Volume (below): %d l"):format(volumeBelow * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.9, treeCoords.z, ("Volume (above): %d l"):format(volumeAbove * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.8, treeCoords.z, ("Volume (total est'd): %d l"):format(estimatedVolume * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.7, treeCoords.z, ("Volume (engine): %d l"):format(targetVolume * 1000), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.6, treeCoords.z, ("Length (below): %.2f m"):format(lenBelow), getCorrectTextSize(0.02, 0))
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.5, treeCoords.z, ("Length (above): %.2f m"):format(lenAbove), getCorrectTextSize(0.02, 0))
+                DebugDrawUtils.renderText(treeCoords, ("Volume (below): %d l"):format(volumeBelow * 1000), 1.0)
+                DebugDrawUtils.renderText(treeCoords, ("Volume (above): %d l"):format(volumeAbove * 1000), .9)
+                DebugDrawUtils.renderText(treeCoords, ("Volume (total est'd): %d l"):format(estimatedVolume * 1000), .8)
+                DebugDrawUtils.renderText(treeCoords, ("Volume (engine): %d l"):format(targetVolume * 1000), .7)
+                DebugDrawUtils.renderText(treeCoords, ("Length (below): %.2f m"):format(lenBelow), .6)
+                DebugDrawUtils.renderText(treeCoords, ("Length (above): %.2f m"):format(lenAbove), .5)
 
                 local _, _, _, numConvexes, _ = getSplitShapeStats(shapeId)
 
-                Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.4, treeCoords.z, ("numConvexes: %d"):format(numConvexes), getCorrectTextSize(0.02, 0))              
+                DebugDrawUtils.renderText(treeCoords, ("numConvexes: %d"):format(numConvexes), .4)
 
                 if failedAtBelow >= 0 then
-                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.2, treeCoords.z, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), getCorrectTextSize(0.02, 0))
+                    DebugDrawUtils.renderText(treeCoords, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), .3)
                 end
                 if failedAtAbove >= 0 then
-                    Utils.renderTextAtWorldPosition(treeCoords.x, treeCoords.y + 0.1, treeCoords.z, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), getCorrectTextSize(0.02, 0))
+                    DebugDrawUtils.renderText(treeCoords, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), .2)
                 end
 
             end
