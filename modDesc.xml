@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.1.1</version>
+    <version>1.0.2.0</version>
     <title>
         <en>Tree Value Info</en>
         <de>Baumpreis Info</de>
@@ -25,6 +25,10 @@ Note that the value of a piece of wood depends on these three factors (default b
 It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
 
 Changelog:
+Version 1.0.2.0:
+- Info Box is now displayed whenever the ring around a piece of wood is visible (caused by an equipped chainsaw)
+- Removed cut length recommendation (too inaccurate) and added quality
+
 Version 1.0.1.0:
 - Added wood chip info
 ]]></en>
@@ -42,6 +46,9 @@ Die Mod gibt daher Vorschläge für den besten Schnitt, wenn anwendbar.
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
 
 Changelog:
+Version 1.0.2.0:
+- Info Box wird nun immer angezeigt, solange ein Ring um ein Stück Holz sichtbar ist (wenn man eine Kettensäge benutzt)
+- Vorschlag zur optimalen Schnittlänge entfernt (zu ungenau) und Qualitäts-Wert hinzugefügt
 Version 1.0.1.0:
 - Informationen für Hackschnitzel hinzugefügt
 ]]></de>

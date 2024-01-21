@@ -21,8 +21,8 @@ local TreeValueInfo_mt = Class(TreeValueInfo)
 function TreeValueInfo.new()
     local self = setmetatable({}, TreeValueInfo_mt)
 
-    self.debugValueDetails = true
-    self.debugShapeDetails = true
+    self.debugValueDetails = false
+    self.debugShapeDetails = false
     self.currentShape = nil
     return self
 end
@@ -82,7 +82,7 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     end
 
     -- Display the total quality of the tree, which is proportional to the sell price
-    playerHudUpdater.objectBox:addLine("Total Quality", ('%.3f'):format(totalQuality))
+    playerHudUpdater.objectBox:addLine("Total Quality (max 120%)", ('%d %%'):format(totalQuality * 100))
 
     -- Display the current value (if the tree/piece of wood was sold in its current shape)
     playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
