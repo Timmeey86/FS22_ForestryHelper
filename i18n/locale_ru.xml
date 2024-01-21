@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<l10n>
+    <translationContributors>Gonimy_Vetrom</translationContributors>
+    <texts>
+        <text name="tvi_volume" text="Объём" />
+        <text name="tvi_current_value" text="Текущая стоимость" />
+        <text name="tvi_cut_recommendation" text="Рекомендуется резать на" />
+        <text name="tvi_liters_if_chipped" text="Объём если на щепу" />
+        <text name="tvi_current_value_if_chipped" text="Стоимость щепы (сейчас)" />
+        <text name="tvi_potential_value_if_chipped" text="Стоимость щепы (максимум)" />
+    </texts>
+</l10n>
