@@ -10,6 +10,7 @@ function ShapeMeasurementHelper.new()
     self.debugRadiusResults = false
     self.debugShapeLength = false
     self.debugVolumeCalculations = false
+    self.debugConvexity = true
     return self
 end
 
@@ -152,7 +153,7 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
     if shapeId == nil then
         return 0, 0, 0, 0, 0
     end
-    local stepWidth = .1 * directionFactor
+    local stepWidth = .5 * directionFactor
     -- Reduce the maximum length to avoid detection issues towards the end
     local adjustedLength = length - 0.03
     local numberOfParts = math.abs(math.ceil(adjustedLength / stepWidth))
@@ -185,8 +186,8 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
         end
         maxRadius = math.max(maxRadius, radius)
 
-        --treeCoords = newTreeCoords
-        x,y,z = newTreeCoords.x, newTreeCoords.y, newTreeCoords.z
+        local coords = {}
+        coords.x, coords.y, coords.z = newTreeCoords.x, newTreeCoords.y, newTreeCoords.z
 
         -- starting from the second radius:
         if i > 0 then
@@ -206,7 +207,10 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
                 else
                     color =  { 0,0,1 }
                 end
-                DebugDrawUtils.drawBoundingBox({ x=x, y=y, z=z }, previousCoords, unitVectors, radius * 2, previousRadius * 2, color)
+                DebugDrawUtils.drawBoundingBox(coords, previousCoords, unitVectors, radius * 2, previousRadius * 2, color)
+            elseif self.debugConvexity then
+                -- Rendering both at the same time would clutter the screen too much. Besides, it's similar information
+                DebugDrawUtils.drawLine(coords, previousCoords, { 1, 0, .7 }, .05)
             end
 
         -- else: just store the radius for the first piece
@@ -214,7 +218,7 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
 
         -- store the radius for the next calculation
         previousRadius = radius
-        previousCoords = { x = x, y = y, z = z }
+        previousCoords = coords
     end
 
     -- Calculate the total Y and Z size
