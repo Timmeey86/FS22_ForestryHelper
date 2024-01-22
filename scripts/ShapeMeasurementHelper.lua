@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 ShapeMeasurementHelper = {}
 local ShapeMeasurementHelper_mt = Class(ShapeMeasurementHelper)
 
@@ -139,6 +140,78 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
     end
 end
 
+-- Half of this is probably already in the engine or in MathUtil or something, but it's tough to discover
+
+function ShapeMeasurementHelper.getAngleDifference(oldDim1, oldDim2, newDim1, newDim2)
+    local newAngle = math.atan2(newDim2, newDim1)
+    local oldAngle = math.atan2(oldDim2, oldDim1)
+    return newAngle - oldAngle
+end
+
+function ShapeMeasurementHelper.getEulerAngleDifference(oldX, oldY, oldZ, newX, newY, newZ)
+    -- beta: angle between the Z axes
+    -- alpha: angle between oldX and
+end
+
+function ShapeMeasurementHelper.eulerRotateVector(x, y, z, rotX, rotY, rotZ)
+    local qx2, qy2, qz2, qw2 = mathEulerToQuaternion(rotX, rotY, rotZ)
+    return mathQuaternionRotateVector(qx2, qy2, qz2, qw2, x, y, z)
+end
+
+function ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectors, rotX, rotY, rotZ)
+    local newUnitVectors = {}
+    newUnitVectors.xx, newUnitVectors.xy, newUnitVectors.xz = ShapeMeasurementHelper.eulerRotateVector(unitVectors.xx, unitVectors.xy, unitVectors.xz, rotX, rotY, rotZ)
+    newUnitVectors.yx, newUnitVectors.yy, newUnitVectors.yz = ShapeMeasurementHelper.eulerRotateVector(unitVectors.yx, unitVectors.yy, unitVectors.yz, rotX, rotY, rotZ)
+    newUnitVectors.zx, newUnitVectors.zy, newUnitVectors.zz = ShapeMeasurementHelper.eulerRotateVector(unitVectors.zx, unitVectors.zy, unitVectors.zz, rotX, rotY, rotZ)
+    return newUnitVectors
+end
+
+function ShapeMeasurementHelper.rotateUnitVectors(unitVectors, newXUnitVector)
+    -- Calculate the angles between the old X vector and the new one for all three planes using good ol' pythagoras
+    local xyAngle = ShapeMeasurementHelper.getAngleDifference(unitVectors.xx, unitVectors.xy, newXUnitVector.x, newXUnitVector.y)
+    local yzAngle = ShapeMeasurementHelper.getAngleDifference(unitVectors.xy, unitVectors.xz, newXUnitVector.y, newXUnitVector.z)
+    local xzAngle = ShapeMeasurementHelper.getAngleDifference(unitVectors.xx, unitVectors.xz, newXUnitVector.x, newXUnitVector.z)
+
+    -- Assumption: the parameters rotX, rotY, rotZ mean: Counter-clockwise rotation of the YZ plane around the X axis, ZX plane around Y, XY plane around Z
+    print("--------------------------------------")
+    local testVector = { x = 1, y = 0, z = 0 }
+    local ninetyDegInRad = 90 * math.pi / 180
+    local qx, qy, qz, qw = mathEulerToQuaternion(0, 0, 0)
+    local x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
+    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
+    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 0, 0)
+    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
+    local qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
+    local x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
+    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
+    qx, qy, qz, qw = mathEulerToQuaternion(ninetyDegInRad, 0, 0)
+    x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
+    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
+    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 0, 0)
+    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
+    qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
+    x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
+    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
+    qx, qy, qz, qw = mathEulerToQuaternion(0, ninetyDegInRad, 0)
+    x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
+    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, 0)
+    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 0, -1)
+    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, -1)
+    qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
+    x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
+    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
+    qx, qy, qz, qw = mathEulerToQuaternion(0, 0, ninetyDegInRad)
+    x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
+    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, 1)
+    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 1, 0)
+    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, 0)
+    qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
+    x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
+    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
+
+
+end
+
 ---Calculates the volume of a part of the tree
 ---@param shapeId any @The ID of the tree shape
 ---@param treeCoords table @The x/y/z coordinates of the planned cutting position
@@ -166,6 +239,18 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
     local previousAngle = nil
     local previousNormalizedDirection = nil
     local maxRadius = 0
+
+    local adjustedUnitVectors = {
+        xx = unitVectors.xx,
+        xy = unitVectors.xy,
+        xz = unitVectors.xz,
+        yx = unitVectors.yx,
+        yy = unitVectors.yy,
+        yz = unitVectors.yz,
+        zx = unitVectors.zx,
+        zy = unitVectors.zy,
+        zz = unitVectors.zz
+    }
     for i = 0,numberOfParts do -- intentionally not numberOfParts-1 because 5 parts have 6 "borders"
         local xOffset = i * stepWidth
         local pieceLength = stepWidth
@@ -176,12 +261,12 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
         end
 
         -- Get a point along the X axis from the tree, based on where the chainsaw is aiming
-        local x = treeCoords.x + unitVectors.xx * xOffset
-        local y = treeCoords.y + unitVectors.xy * xOffset
-        local z = treeCoords.z + unitVectors.xz * xOffset
+        local x = treeCoords.x + adjustedUnitVectors.xx * xOffset
+        local y = treeCoords.y + adjustedUnitVectors.xy * xOffset
+        local z = treeCoords.z + adjustedUnitVectors.xz * xOffset
 
         -- Retrieve the radius
-        local foundShapeId, radius, newTreeCoords, yMinWorld, yMaxWorld, zMinWorld, zMaxWorld = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, unitVectors)
+        local foundShapeId, radius, newTreeCoords, yMinWorld, yMaxWorld, zMinWorld, zMaxWorld = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, adjustedUnitVectors)
 
         -- Stop processing if the shape was no longer found (too crooked, or shorter than calculated)
         if foundShapeId == nil or foundShapeId == 0 then
@@ -213,7 +298,7 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
                 else
                     color =  { 0,0,1 }
                 end
-                DebugDrawUtils.drawBoundingBox(coords, previousCoords, unitVectors, radius * 2, previousRadius * 2, color)
+                DebugDrawUtils.drawBoundingBox(coords, previousCoords, adjustedUnitVectors, radius * 2, previousRadius * 2, color)
             end
 
             -- Get a vector between the previous and the new coordinates. Invert for backwards direction
@@ -227,7 +312,7 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
             normalizedDirection.x, normalizedDirection.y, normalizedDirection.z = MathUtil.vector3Normalize(newDirectionVector.x, newDirectionVector.y, newDirectionVector.z)
 
             -- Retrieve the angle between the tree's X axis and the vector to the coordinate
-            local cosTreeAngle = MathUtil.dotProduct(unitVectors.xx, unitVectors.xy, unitVectors.xz, normalizedDirection.x, normalizedDirection.y, normalizedDirection.z)
+            local cosTreeAngle = MathUtil.dotProduct(adjustedUnitVectors.xx, adjustedUnitVectors.xy, adjustedUnitVectors.xz, normalizedDirection.x, normalizedDirection.y, normalizedDirection.z)
             if self.debugConvexityAngles then
                 DebugDrawUtils.renderText(coords, ('cos: %.5f'):format(cosTreeAngle), 0.4, .5)
             end
@@ -277,6 +362,9 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
                 DebugDrawUtils.drawLine(previousCoords, coords, {0.7,0.7,0})
             end
 
+            -- Adjust the unit vectors to the new direction
+
+
 
         -- else: just store the data for the first piece as a base for comparison
         end
@@ -301,8 +389,47 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
     -- If the ring around the tree is currently visible with an equipped chain saw
     if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
 
+
+
+
         -- Find the wood shape we're looking at
         local shapeId, treeCoords, _, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)
+
+        
+        -- Get the wolrd position of the ring selector (or a bit above, for better visibility)
+        local xCenter, yCenter, zCenter = localToWorld(chainsaw.ringSelector, 0, -.5, 0)
+        -- Define world coordinate unit vectors
+        local unitVectorsWorld = { xx = 1, xy = 0, xz = 0, yx = 0, yy = 1, yz = 0, zx = 0, zy = 0, zz = 1 }
+
+
+        -- TEMP Draw several debug gizmos above the ring selector, based on the tree's coordinate system and rotated
+        local currentTime = g_currentMission.environment.dayTime
+        local angleMultiplier = (currentTime % 4000) / 4000
+        local x1,y1,z1 = localToWorld(chainsaw.ringSelector, 0, -.4, 0)
+        local x2,y2,z2 = localToWorld(chainsaw.ringSelector, -.6, -.8, 0)
+        local x3,y3,z3 = localToWorld(chainsaw.ringSelector, 0, -.8, 0)
+        local x4,y4,z4 = localToWorld(chainsaw.ringSelector, .6, -.8, 0)
+
+        -- Draw the unmodified tree coordinate system
+        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsWorld, "Unmodified")
+
+        local currentAngle = angleMultiplier*2*math.pi
+        -- Set rotX to 45°
+        local unitVectors1 = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, currentAngle, 0, 0)
+        DebugDrawUtils.drawDebugGizmo( {x=x2, y=y2, z=z2}, unitVectorsWorld, "")
+        DebugDrawUtils.drawDebugGizmo( {x=x2, y=y2, z=z2}, unitVectors1, "rotX = 45°")
+
+        -- Set rotY to 45°
+        local unitVectors2 = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 0, currentAngle, 0)
+        DebugDrawUtils.drawDebugGizmo( {x=x3, y=y3, z=z3}, unitVectorsWorld, "")
+        DebugDrawUtils.drawDebugGizmo( {x=x3, y=y3, z=z3}, unitVectors2, "rotY = 45°")
+
+        -- Set rotZ to 45°
+        local unitVectors3 = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 0, 0, currentAngle)
+        DebugDrawUtils.drawDebugGizmo( {x=x4, y=y4, z=z4}, unitVectorsWorld, "")
+        DebugDrawUtils.drawDebugGizmo( {x=x4, y=y4, z=z4}, unitVectors3, "rotZ = 45°")
+
+
 
         if shapeId ~= nil then
 
