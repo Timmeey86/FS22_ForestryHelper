@@ -386,16 +386,6 @@ end
 
 function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 
-    -- If the ring around the tree is currently visible with an equipped chain saw
-    if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
-
-
-
-
-        -- Find the wood shape we're looking at
-        local shapeId, treeCoords, _, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)
-
-        
         -- Get the wolrd position of the ring selector (or a bit above, for better visibility)
         local xCenter, yCenter, zCenter = localToWorld(chainsaw.ringSelector, 0, -.5, 0)
         -- Define world coordinate unit vectors
@@ -405,29 +395,74 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
         -- TEMP Draw several debug gizmos above the ring selector, based on the tree's coordinate system and rotated
         local currentTime = g_currentMission.environment.dayTime
         local angleMultiplier = (currentTime % 4000) / 4000
-        local x1,y1,z1 = localToWorld(chainsaw.ringSelector, 0, -.4, 0)
-        local x2,y2,z2 = localToWorld(chainsaw.ringSelector, -.6, -.8, 0)
-        local x3,y3,z3 = localToWorld(chainsaw.ringSelector, 0, -.8, 0)
-        local x4,y4,z4 = localToWorld(chainsaw.ringSelector, .6, -.8, 0)
+
+        local x1,y1,z1 = 666, 66, 413
+        local x2,y2,z2 = x1 - 2, y1, z1
+        --local x1,y1,z1 = localToWorld(chainsaw.ringSelector, 0, -.4, 0)
+        --local x2,y2,z2 = localToWorld(chainsaw.ringSelector, 0, -.8, 0)
+        --local x3,y3,z3 = localToWorld(chainsaw.ringSelector, 0, -1, 0)
+        --local x4,y4,z4 = localToWorld(chainsaw.ringSelector, .6, -.8, 0)
 
         -- Draw the unmodified tree coordinate system
-        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsWorld, "Unmodified")
-
-        local currentAngle = angleMultiplier*2*math.pi
-        -- Set rotX to 45°
-        local unitVectors1 = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, currentAngle, 0, 0)
+        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsWorld, "")
         DebugDrawUtils.drawDebugGizmo( {x=x2, y=y2, z=z2}, unitVectorsWorld, "")
-        DebugDrawUtils.drawDebugGizmo( {x=x2, y=y2, z=z2}, unitVectors1, "rotX = 45°")
 
-        -- Set rotY to 45°
-        local unitVectors2 = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 0, currentAngle, 0)
-        DebugDrawUtils.drawDebugGizmo( {x=x3, y=y3, z=z3}, unitVectorsWorld, "")
-        DebugDrawUtils.drawDebugGizmo( {x=x3, y=y3, z=z3}, unitVectors2, "rotY = 45°")
+        -- Get an arbitrarily rotated vector
+        local testAngle = 45 * math.pi / 180
+        local unitVectorsArbitrary = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 0, 0, testAngle)
+        local qx1, qy1, qz1, qw1 = mathEulerToQuaternion(0, 0, testAngle)
+        -- Draw the target coordinate system in the same spot
+        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsArbitrary, "")
 
-        -- Set rotZ to 45°
-        local unitVectors3 = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 0, 0, currentAngle)
-        DebugDrawUtils.drawDebugGizmo( {x=x4, y=y4, z=z4}, unitVectorsWorld, "")
-        DebugDrawUtils.drawDebugGizmo( {x=x4, y=y4, z=z4}, unitVectors3, "rotZ = 45°")
+        -- Get a rotation axis which is rectangular on the old and new x axis
+        local rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.crossProduct( unitVectorsWorld.xx, unitVectorsWorld.xy, unitVectorsWorld.xz, unitVectorsArbitrary.xx, unitVectorsArbitrary.xy, unitVectorsArbitrary.xz )
+        -- Calculate the angle between the two x axes by making use of general properties of cross products
+        local crossProductMagnitude = math.sqrt(rotationAxisX * rotationAxisX + rotationAxisY * rotationAxisY + rotationAxisZ * rotationAxisZ)
+        local rotationAngle = math.asin(crossProductMagnitude)
+        -- Normalize the rotation axis
+        rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.vector3Normalize(rotationAxisX, rotationAxisY, rotationAxisZ)
+
+        
+
+        -- Define a quaternion which rotates anything around the rotation Axis by the rotation angle
+        -- Such a quaternion can be defined by using the cosinus of half of the rotation angle for the "w" part, and the rotation axis for the x,y,z part
+        -- according to https://www.johndcook.com/blog/2021/06/16/faster-quaternion-rotations/
+        local currentAngle = rotationAngle * angleMultiplier
+        local sinMultiplier = math.sin(currentAngle / 2)
+        local cosMultiplier = math.cos(currentAngle / 2)
+
+        local qw, qx, qy, qz = cosMultiplier, rotationAxisX * sinMultiplier, rotationAxisY * sinMultiplier, rotationAxisZ * sinMultiplier
+
+        DebugDrawUtils.renderText( {x=x1, y=y1 + 0.2, z = z1}, ("%.3f, %.3f, %.3f, %.3f / %.3f, %.3f, %.3f, %.3f"):format(qw1,qx1,qy1,qz1,qw,qx,qy,qz))
+
+        local unitVectorsNew = {}
+        unitVectorsNew.xx, unitVectorsNew.xy, unitVectorsNew.xz = mathQuaternionRotateVector(qx, qy, qz, qw, unitVectorsWorld.xx, unitVectorsWorld.xy, unitVectorsWorld.xz)
+        unitVectorsNew.yx, unitVectorsNew.yy, unitVectorsNew.yz = mathQuaternionRotateVector(qx, qy, qz, qw, unitVectorsWorld.yx, unitVectorsWorld.yy, unitVectorsWorld.yz)
+        unitVectorsNew.zx, unitVectorsNew.zy, unitVectorsNew.zz = mathQuaternionRotateVector(qx, qy, qz, qw, unitVectorsWorld.zx, unitVectorsWorld.zy, unitVectorsWorld.zz)
+        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsNew, ("%d °"):format(currentAngle * 180 / math.pi))
+
+
+        DebugDrawUtils.renderText({ x=x2, y=y2, z=z2 }, ("rotationAngle: %.3f"):format(rotationAngle * 180 / math.pi))
+        --DebugDrawUtils.renderText({ x=x3, y=y3, z=z3 }, ("cross product magnitude: %.3f"):format(crossProductMagnitude))
+        --DebugDrawUtils.renderText({ x=x4, y=y4, z=z4 }, ("%.3f, %.3f, %.3f"):format(x1, y1, z1))
+
+        DebugDrawUtils.drawLine( {
+            x = x1 - rotationAxisX, y = y1 - rotationAxisY, z = z1 - rotationAxisZ
+        },
+        {
+            x = x1 + rotationAxisX, y = y1 + rotationAxisY, z = z1 + rotationAxisZ
+        },
+        { .7, .7, .1 })
+        
+
+    -- If the ring around the tree is currently visible with an equipped chain saw
+    if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
+
+
+
+
+        -- Find the wood shape we're looking at
+        local shapeId, treeCoords, _, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)
 
 
 
