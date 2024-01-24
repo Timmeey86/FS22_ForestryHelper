@@ -140,19 +140,6 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
     end
 end
 
--- Half of this is probably already in the engine or in MathUtil or something, but it's tough to discover
-
-function ShapeMeasurementHelper.getAngleDifference(oldDim1, oldDim2, newDim1, newDim2)
-    local newAngle = math.atan2(newDim2, newDim1)
-    local oldAngle = math.atan2(oldDim2, oldDim1)
-    return newAngle - oldAngle
-end
-
-function ShapeMeasurementHelper.getEulerAngleDifference(oldX, oldY, oldZ, newX, newY, newZ)
-    -- beta: angle between the Z axes
-    -- alpha: angle between oldX and
-end
-
 function ShapeMeasurementHelper.eulerRotateVector(x, y, z, rotX, rotY, rotZ)
     local qx2, qy2, qz2, qw2 = mathEulerToQuaternion(rotX, rotY, rotZ)
     return mathQuaternionRotateVector(qx2, qy2, qz2, qw2, x, y, z)
@@ -166,50 +153,59 @@ function ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectors, rotX, rotY, 
     return newUnitVectors
 end
 
-function ShapeMeasurementHelper.rotateUnitVectors(unitVectors, newXUnitVector)
-    -- Calculate the angles between the old X vector and the new one for all three planes using good ol' pythagoras
-    local xyAngle = ShapeMeasurementHelper.getAngleDifference(unitVectors.xx, unitVectors.xy, newXUnitVector.x, newXUnitVector.y)
-    local yzAngle = ShapeMeasurementHelper.getAngleDifference(unitVectors.xy, unitVectors.xz, newXUnitVector.y, newXUnitVector.z)
-    local xzAngle = ShapeMeasurementHelper.getAngleDifference(unitVectors.xx, unitVectors.xz, newXUnitVector.x, newXUnitVector.z)
+---Simple conversion function to convert a three component vector into an table
+---@param x number @The X component
+---@param y number @The Y component
+---@param z number @The Z component
+---@return table @The vector as a table with properties x, y and z
+function ShapeMeasurementHelper.joinVector(x, y, z)
+    return { x = x, y = y, z = z }
+end
 
-    -- Assumption: the parameters rotX, rotY, rotZ mean: Counter-clockwise rotation of the YZ plane around the X axis, ZX plane around Y, XY plane around Z
-    print("--------------------------------------")
-    local testVector = { x = 1, y = 0, z = 0 }
-    local ninetyDegInRad = 90 * math.pi / 180
-    local qx, qy, qz, qw = mathEulerToQuaternion(0, 0, 0)
-    local x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
-    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
-    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 0, 0)
-    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
-    local qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
-    local x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
-    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
-    qx, qy, qz, qw = mathEulerToQuaternion(ninetyDegInRad, 0, 0)
-    x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
-    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
-    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 0, 0)
-    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 1, 0)
-    qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
-    x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
-    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
-    qx, qy, qz, qw = mathEulerToQuaternion(0, ninetyDegInRad, 0)
-    x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
-    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, 0)
-    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 0, -1)
-    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, -1)
-    qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
-    x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
-    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
-    qx, qy, qz, qw = mathEulerToQuaternion(0, 0, ninetyDegInRad)
-    x, y, z = mathQuaternionRotateVector(qx, qy, qz, qw, testVector.x, testVector.y, testVector.z)
-    xyAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, 1)
-    yzAngle = ShapeMeasurementHelper.getAngleDifference(0, 0, 1, 0)
-    xzAngle = ShapeMeasurementHelper.getAngleDifference(1, 0, 0, 0)
-    qx2, qy2, qz2, qw2 = mathEulerToQuaternion(yzAngle, xzAngle, xyAngle)
-    x2, y2, z2 = mathQuaternionRotateVector(qx2, qy2, qz2, qw2, testVector.x, testVector.y, testVector.z)
-    print( ('%.3f, %.3f, %.3f // %.3f, %.3f, %.3f // %.3f, %.3f, %.3f'):format(x, y, z, x2, y2, z2, yzAngle, xzAngle, xyAngle) )
+---Retrieves a quaternion which rotates a vector 
+---@param oldUnitVector table @The X/Y/Z coordinates of the old (source) vector (with a length of 1)
+---@param newUnitVector table @The X/Y/Z coordintaes of the new (target) vector (with a length of 1)
+---@param angleMultiplier any @Optional parameter used for animation. Usually between 0 and 1
+---@return table @The W/X/Y/Z components of the quaternion. Note that some engine functions expect quaternions to be supplied in XYZW order.
+function ShapeMeasurementHelper.getRotationQuaternion(oldUnitVector, newUnitVector, angleMultiplier)
+    -- Get a rotation axis which is rectangular on the old and new x axis
+    local rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.crossProduct(oldUnitVector.x, oldUnitVector.y, oldUnitVector.z, newUnitVector.x, newUnitVector.y, newUnitVector.z )
+    -- Calculate the angle between the two x axes by making use of general properties of cross products
+    local crossProductMagnitude = MathUtil.vector3Length(rotationAxisX, rotationAxisY, rotationAxisZ)
+    local rotationAngle = math.asin(crossProductMagnitude)
+    -- Normalize the rotation axis since the quaternion processing functions expect unit vectors
+    rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.vector3Normalize(rotationAxisX, rotationAxisY, rotationAxisZ)
 
+    -- Define a quaternion which rotates anything around the rotation Axis by the rotation angle
+    -- A quaternion which rotates an object around a unit vector (x,y,z) by an angle a is defined as q = (cos(a/2), x*sin(a/2), y*sin(a/2), z*sin(a/2))
+    -- https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
+    local halfAngle = rotationAngle * (angleMultiplier or 1) / 2
+    local sinMultiplier = math.sin(halfAngle)
+    local cosMultiplier = math.cos(halfAngle)
 
+    return {
+        w = cosMultiplier,
+        x = rotationAxisX * sinMultiplier,
+        y = rotationAxisY * sinMultiplier,
+        z = rotationAxisZ * sinMultiplier
+    }
+end
+
+function ShapeMeasurementHelper.rotateUnitVectors(oldUnitVectors, rotationQuaternion)
+    local newUnitVectors = {}
+    newUnitVectors.xx, newUnitVectors.xy, newUnitVectors.xz = mathQuaternionRotateVector(
+        rotationQuaternion.x, rotationQuaternion.y, rotationQuaternion.z, rotationQuaternion.w,
+        oldUnitVectors.xx, oldUnitVectors.xy, oldUnitVectors.xz
+    )
+    newUnitVectors.yx, newUnitVectors.yy, newUnitVectors.yz = mathQuaternionRotateVector(
+        rotationQuaternion.x, rotationQuaternion.y, rotationQuaternion.z, rotationQuaternion.w,
+        oldUnitVectors.yx, oldUnitVectors.yy, oldUnitVectors.yz
+    )
+    newUnitVectors.zx, newUnitVectors.zy, newUnitVectors.zz = mathQuaternionRotateVector(
+        rotationQuaternion.x, rotationQuaternion.y, rotationQuaternion.z, rotationQuaternion.w,
+        oldUnitVectors.zx, oldUnitVectors.zy, oldUnitVectors.zz
+    )
+    return newUnitVectors
 end
 
 ---Calculates the volume of a part of the tree
@@ -394,7 +390,7 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 
         -- TEMP Draw several debug gizmos above the ring selector, based on the tree's coordinate system and rotated
         local currentTime = g_currentMission.environment.dayTime
-        local angleMultiplier = (currentTime % 4000) / 4000
+        local angleMultiplier = math.min(currentTime % 5000, 4000) / 4000
 
         local x1,y1,z1 = 666, 66, 413
         local x2,y2,z2 = x1 - 2, y1, z1
@@ -408,52 +404,21 @@ function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
         DebugDrawUtils.drawDebugGizmo( {x=x2, y=y2, z=z2}, unitVectorsWorld, "")
 
         -- Get an arbitrarily rotated vector
-        local testAngle = 45 * math.pi / 180
-        local unitVectorsArbitrary = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 0, 0, testAngle)
-        local qx1, qy1, qz1, qw1 = mathEulerToQuaternion(0, 0, testAngle)
-        -- Draw the target coordinate system in the same spot
-        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsArbitrary, "")
+        local unitVectorsArbitrary = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 20 * math.pi / 180, -30 * math.pi / 180, -44 * math.pi / 180)
+        -- Draw just the X axis
+        DebugDrawUtils.drawLine( 
+            { x = x1 - 5 * unitVectorsArbitrary.xx, y = y1 - 5 * unitVectorsArbitrary.xy, z = z1 - 5 * unitVectorsArbitrary.xz },
+            { x = x1 + 5 * unitVectorsArbitrary.xx, y = y1 + 5 * unitVectorsArbitrary.xy, z = z1 + 5 * unitVectorsArbitrary.xz },
+            { .8,0,.8 })
 
-        -- Get a rotation axis which is rectangular on the old and new x axis
-        local rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.crossProduct( unitVectorsWorld.xx, unitVectorsWorld.xy, unitVectorsWorld.xz, unitVectorsArbitrary.xx, unitVectorsArbitrary.xy, unitVectorsArbitrary.xz )
-        -- Calculate the angle between the two x axes by making use of general properties of cross products
-        local crossProductMagnitude = math.sqrt(rotationAxisX * rotationAxisX + rotationAxisY * rotationAxisY + rotationAxisZ * rotationAxisZ)
-        local rotationAngle = math.asin(crossProductMagnitude)
-        -- Normalize the rotation axis
-        rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.vector3Normalize(rotationAxisX, rotationAxisY, rotationAxisZ)
+        local rotationQuaternion = ShapeMeasurementHelper.getRotationQuaternion(
+            { x = unitVectorsWorld.xx, y = unitVectorsWorld.xy, z = unitVectorsWorld.xz },
+            { x = unitVectorsArbitrary.xx, y = unitVectorsArbitrary.xy, z = unitVectorsArbitrary.xz },
+            angleMultiplier
+        )
+        local unitVectorsNew = ShapeMeasurementHelper.rotateUnitVectors(unitVectorsWorld, rotationQuaternion)
+        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsNew, "")
 
-        
-
-        -- Define a quaternion which rotates anything around the rotation Axis by the rotation angle
-        -- Such a quaternion can be defined by using the cosinus of half of the rotation angle for the "w" part, and the rotation axis for the x,y,z part
-        -- according to https://www.johndcook.com/blog/2021/06/16/faster-quaternion-rotations/
-        local currentAngle = rotationAngle * angleMultiplier
-        local sinMultiplier = math.sin(currentAngle / 2)
-        local cosMultiplier = math.cos(currentAngle / 2)
-
-        local qw, qx, qy, qz = cosMultiplier, rotationAxisX * sinMultiplier, rotationAxisY * sinMultiplier, rotationAxisZ * sinMultiplier
-
-        DebugDrawUtils.renderText( {x=x1, y=y1 + 0.2, z = z1}, ("%.3f, %.3f, %.3f, %.3f / %.3f, %.3f, %.3f, %.3f"):format(qw1,qx1,qy1,qz1,qw,qx,qy,qz))
-
-        local unitVectorsNew = {}
-        unitVectorsNew.xx, unitVectorsNew.xy, unitVectorsNew.xz = mathQuaternionRotateVector(qx, qy, qz, qw, unitVectorsWorld.xx, unitVectorsWorld.xy, unitVectorsWorld.xz)
-        unitVectorsNew.yx, unitVectorsNew.yy, unitVectorsNew.yz = mathQuaternionRotateVector(qx, qy, qz, qw, unitVectorsWorld.yx, unitVectorsWorld.yy, unitVectorsWorld.yz)
-        unitVectorsNew.zx, unitVectorsNew.zy, unitVectorsNew.zz = mathQuaternionRotateVector(qx, qy, qz, qw, unitVectorsWorld.zx, unitVectorsWorld.zy, unitVectorsWorld.zz)
-        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsNew, ("%d °"):format(currentAngle * 180 / math.pi))
-
-
-        DebugDrawUtils.renderText({ x=x2, y=y2, z=z2 }, ("rotationAngle: %.3f"):format(rotationAngle * 180 / math.pi))
-        --DebugDrawUtils.renderText({ x=x3, y=y3, z=z3 }, ("cross product magnitude: %.3f"):format(crossProductMagnitude))
-        --DebugDrawUtils.renderText({ x=x4, y=y4, z=z4 }, ("%.3f, %.3f, %.3f"):format(x1, y1, z1))
-
-        DebugDrawUtils.drawLine( {
-            x = x1 - rotationAxisX, y = y1 - rotationAxisY, z = z1 - rotationAxisZ
-        },
-        {
-            x = x1 + rotationAxisX, y = y1 + rotationAxisY, z = z1 + rotationAxisZ
-        },
-        { .7, .7, .1 })
-        
 
     -- If the ring around the tree is currently visible with an equipped chain saw
     if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
