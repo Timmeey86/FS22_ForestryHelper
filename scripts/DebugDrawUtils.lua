@@ -31,12 +31,12 @@ function DebugDrawUtils.drawShapeSearchSquare(searchCorner, unitVectors, searchS
         color[1], color[2], color[3]
     )
     -- Draw the X/Y/Z axes which helps with verifying that the proper unit vectors were supplied
-    DebugUtil.drawDebugGizmoAtWorldPos(
+    --[[DebugUtil.drawDebugGizmoAtWorldPos(
         searchCorner.x, searchCorner.y, searchCorner.z,
         unitVectors.yx, unitVectors.yy, unitVectors.yz,
         unitVectors.zx, unitVectors.zy, unitVectors.zz,
-        "search",
-        false)
+        "",
+        false)]]
 end
 
 ---Draws the X/Y/Z directions at the given location

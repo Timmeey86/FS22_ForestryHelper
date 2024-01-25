@@ -7,13 +7,15 @@ function ShapeMeasurementHelper.new()
 
     self.futureWoodPartData = nil
 
-    self.debugRadiusDetection = false
-    self.debugRadiusResults = false
+    self.debugRadiusDetection = true
+    self.debugRadiusResults = true
     self.debugShapeLength = false
     self.debugVolumeCalculations = false
     self.debugConvexityAngles = false
     self.debugConvexityLines = false
-    self.debugConvexityAboveThreshold = true
+    self.debugConvexityAboveThreshold = false
+
+    self.previousCalculationPos = { x = 0, y = 0, z = 0 }
     return self
 end
 
@@ -68,36 +70,34 @@ function ShapeMeasurementHelper:getWoodShapeDimensionsAtFocusPoint(chainsaw)
         treeCoords = {}
         treeCoords.x, treeCoords.y, treeCoords.z = localToWorld(chainsaw.ringSelector, 0,0,0)
 
-        shapeId, radius, _, _, _, _, _ = self:getRadiusAtLocation(shapeId, treeCoords, treeUnitVectors)
+        local coordinates = {}
+        coordinates, radius = self:findPointInMiddleOfShape(shapeId, treeCoords, treeUnitVectors)
+        if coordinates == nil then
+            shapeId = nil
+        end
     end
 
     return shapeId, treeCoords, radius, treeUnitVectors
 end
 
----Gets the radius of the tree at the given location
----@param shapeId any @The tree shape which was already found
----@param worldCoordsNearShape table @World coordinates close to or within the tree
----@param shapeUnitVectors table @Unit vectors for X/Y/Z dimensions, where the X vector points along the longest dimension of the tree
----@return any @The ID of the tree shape or nil if it wasn't found at the given location
----@return number @The radius at the given location
----@return table @The coordinates a the given location, centered on the tree shape in Y/Z direction
----@return number @The minimum Y coordinate of the shape at that location, in world coordinates
----@return number @The maximum Y coordinate of the shape at that location, in world coordinates
----@return number @The minimum Z coordinate of the shape at that location, in world coordinates
----@return number @The maximum Z coordinate of the shape at that location, in world coordinates
-function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShape, shapeUnitVectors)
+---comment
+---@param shapeId any
+---@param worldCoordsNearShape any
+---@param shapeUnitVectors any
+---@param searchRadius any
+---@return any
+---@return number
+function ShapeMeasurementHelper:findPointInMiddleOfShape(shapeId, worldCoordsNearShape, shapeUnitVectors, searchRadius)
+    -- Define a search square centered around the world coordinates
+    local halfSearchBoxSize = searchRadius or 0.7
+    local searchBoxSize = halfSearchBoxSize * 2
 
-    -- Define a reasonably large enough square to find the tree
-    local squareSize = 2.0
-    local halfSquareSize = squareSize / 2.0
-
-    -- Move the coordinates half a height in Y and Z direction so that the resulting square will have the original y/z in its center
-    local x = worldCoordsNearShape.x - shapeUnitVectors.yx*halfSquareSize - shapeUnitVectors.zx*halfSquareSize
-    local y = worldCoordsNearShape.y - shapeUnitVectors.yy*halfSquareSize - shapeUnitVectors.zy*halfSquareSize
-    local z = worldCoordsNearShape.z - shapeUnitVectors.yz*halfSquareSize - shapeUnitVectors.zz*halfSquareSize
+    local x = worldCoordsNearShape.x - shapeUnitVectors.yx*halfSearchBoxSize - shapeUnitVectors.zx*halfSearchBoxSize
+    local y = worldCoordsNearShape.y - shapeUnitVectors.yy*halfSearchBoxSize - shapeUnitVectors.zy*halfSearchBoxSize
+    local z = worldCoordsNearShape.z - shapeUnitVectors.yz*halfSearchBoxSize - shapeUnitVectors.zz*halfSearchBoxSize
 
     if self.debugRadiusDetection then
-        DebugDrawUtils.drawShapeSearchSquare( { x=x, y=y, z=z }, shapeUnitVectors, squareSize, {0.7, 0, 1})
+        DebugDrawUtils.drawShapeSearchSquare( { x=x, y=y, z=z }, shapeUnitVectors, searchBoxSize, {0.7, 0, 1})
     end
 
     -- Find the split shape at the location we already found it at, but this time with a perpendicular cut
@@ -110,11 +110,9 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
         shapeUnitVectors.yx,
         shapeUnitVectors.yy,
         shapeUnitVectors.yz,
-        squareSize,
-        squareSize)
+        searchBoxSize,
+        searchBoxSize)
     if minY ~= nil then
-        local radius = ((maxY-minY)+(maxZ-minZ)) / 4.0 -- /2 for average diameter and another /2 to get the radius
-
         -- Move the corner of the search square used above to the center of the found location. min/max Y/Z are relative to that location
         local yCenter = (minY + maxY) / 2.0
         local zCenter = (minZ + maxZ) / 2.0
@@ -123,21 +121,16 @@ function ShapeMeasurementHelper:getRadiusAtLocation(shapeId, worldCoordsNearShap
         worldCoordsAtShape.y = y + yCenter * shapeUnitVectors.yy + zCenter * shapeUnitVectors.zy
         worldCoordsAtShape.z = z + yCenter * shapeUnitVectors.yz + zCenter * shapeUnitVectors.zz
 
-        if self.debugRadiusDetection then
-            DebugDrawUtils.drawDebugGizmo(worldCoordsAtShape, shapeUnitVectors, "match")
-        end
+        --[[if self.debugRadiusResults then
+            DebugDrawUtils.drawDebugGizmo(worldCoordsAtShape, shapeUnitVectors, "")
+        end]]
 
-        -- Calculate the minimum and maximum world Y and Z coordinates for further processing
-        local minYWorld = y
-        local maxYWorld = y + math.abs(maxY - minY)
-        local minZWorld = z
-        local maxZWorld = z + math.abs(maxZ - minZ)
-
-        -- Move the world coordinates by the specified Y and Z dimensions
-        return shapeId, radius, worldCoordsAtShape, minYWorld, maxYWorld, minZWorld, maxZWorld
+        local radius = math.max((maxY-minY)/2, (maxZ-minZ)/2)
+        return worldCoordsAtShape, radius
     else
-        return nil, 0, {}, 0, 0, 0, 0
+        return nil, 0
     end
+
 end
 
 function ShapeMeasurementHelper.eulerRotateVector(x, y, z, rotX, rotY, rotZ)
@@ -158,7 +151,7 @@ end
 ---@param y number @The Y component
 ---@param z number @The Z component
 ---@return table @The vector as a table with properties x, y and z
-function ShapeMeasurementHelper.joinVector(x, y, z)
+function ShapeMeasurementHelper:joinVector(x, y, z)
     return { x = x, y = y, z = z }
 end
 
@@ -167,7 +160,7 @@ end
 ---@param newUnitVector table @The X/Y/Z coordintaes of the new (target) vector (with a length of 1)
 ---@param angleMultiplier any @Optional parameter used for animation. Usually between 0 and 1
 ---@return table @The W/X/Y/Z components of the quaternion. Note that some engine functions expect quaternions to be supplied in XYZW order.
-function ShapeMeasurementHelper.getRotationQuaternion(oldUnitVector, newUnitVector, angleMultiplier)
+function ShapeMeasurementHelper:getRotationQuaternion(oldUnitVector, newUnitVector, angleMultiplier)
     -- Get a rotation axis which is rectangular on the old and new x axis
     local rotationAxisX, rotationAxisY, rotationAxisZ = MathUtil.crossProduct(oldUnitVector.x, oldUnitVector.y, oldUnitVector.z, newUnitVector.x, newUnitVector.y, newUnitVector.z )
     -- Calculate the angle between the two x axes by making use of general properties of cross products
@@ -191,7 +184,11 @@ function ShapeMeasurementHelper.getRotationQuaternion(oldUnitVector, newUnitVect
     }
 end
 
-function ShapeMeasurementHelper.rotateUnitVectors(oldUnitVectors, rotationQuaternion)
+---Rotates the X/Y/Z unit vectors as configured in the rotation quaternion.
+---@param oldUnitVectors table @A nested table of unit vectors in X/Y/Z direction
+---@param rotationQuaternion table @A quaternion which describes a rotation in 3D space
+---@return table @A nested table with the rotated unit vectors pointing in the new X/Y/Z directions
+function ShapeMeasurementHelper:rotateUnitVectors(oldUnitVectors, rotationQuaternion)
     local newUnitVectors = {}
     newUnitVectors.xx, newUnitVectors.xy, newUnitVectors.xz = mathQuaternionRotateVector(
         rotationQuaternion.x, rotationQuaternion.y, rotationQuaternion.z, rotationQuaternion.w,
@@ -208,297 +205,197 @@ function ShapeMeasurementHelper.rotateUnitVectors(oldUnitVectors, rotationQuater
     return newUnitVectors
 end
 
+function ShapeMeasurementHelper:copyUnitVectors(unitVectors)
+    return {
+        xx = unitVectors.xx, xy = unitVectors.xy, xz = unitVectors.xz,
+        yx = unitVectors.yx, yy = unitVectors.yy, yz = unitVectors.yz,
+        zx = unitVectors.zx, zy = unitVectors.zy, zz = unitVectors.zz,
+    }
+end
+
 ---Calculates the volume of a part of the tree
 ---@param shapeId any @The ID of the tree shape
 ---@param treeCoords table @The x/y/z coordinates of the planned cutting position
 ---@param unitVectors table @Unit vectors along the x/y/z axes of the tree, where x goes along the tree
+---@param initialRadius number @The radius at the split point
 ---@param length integer @The distance between the end of the tree and the cutting position
 ---@param directionFactor integer @+1 if going from the cut position towards the (former) top of the tree or -1 to go below
----@return integer @The volume of the part (in milliliters, just like getVolume())
----@return integer @If >= 0, the part at which processing could no longer find the tree
----@return integer @The number of parts which were analyzed
----@return integer @The total Y size of the part bounding box
----@return integer @The total Z size of the part bounding box
-function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVectors, length, directionFactor)
+function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVectors, initialRadius, length, directionFactor)
+    local coordinateList, radiusList, unitVectorList, angleList = self:retrieveShapeData(shapeId, treeCoords, unitVectors, initialRadius, length, directionFactor)
 
-    if shapeId == nil then
-        return 0, 0, 0, 0, 0
-    end
-    local stepWidth = .25 * directionFactor
-    -- Reduce the maximum length to avoid detection issues towards the end
-    local adjustedLength = length - 0.03
-    local numberOfParts = math.abs(math.ceil(adjustedLength / stepWidth))
-    local totalVolume = 0
-    local failedAt = -1
-    local previousCoords = {}
-    local previousRadius = 0
-    local previousAngle = nil
-    local previousNormalizedDirection = nil
-    local maxRadius = 0
-
-    local adjustedUnitVectors = {
-        xx = unitVectors.xx,
-        xy = unitVectors.xy,
-        xz = unitVectors.xz,
-        yx = unitVectors.yx,
-        yy = unitVectors.yy,
-        yz = unitVectors.yz,
-        zx = unitVectors.zx,
-        zy = unitVectors.zy,
-        zz = unitVectors.zz
-    }
-    for i = 0,numberOfParts do -- intentionally not numberOfParts-1 because 5 parts have 6 "borders"
-        local xOffset = i * stepWidth
-        local pieceLength = stepWidth
-        if i == numberOfParts then
-            -- Last part: make sure it does not exceed the tree dimensions
-            pieceLength = adjustedLength - (i-1) * stepWidth * directionFactor
-            xOffset = xOffset - stepWidth + directionFactor * pieceLength
+    -- Find the "dents" in the tree and split at those locations
+    local shapeParts = {}
+    local currentStart = nil
+    for i = 1, #coordinateList do
+        if currentStart == nil then
+            currentStart = { coordinateList[i] }
         end
+
+        local currentAngle = angleList[i] * 180 / math.pi
+        if currentAngle > 1 then
+            DebugDrawUtils.renderText(coordinateList[i], ('%.1f°'):format(currentAngle))
+        end
+    end
+end
+
+---comment
+---@param shapeId any
+---@param treeCoords any
+---@param unitVectors any
+---@param length any
+---@param directionFactor any
+---@return table|any
+---@return table|any
+---@return table|any
+---@return table|any
+function ShapeMeasurementHelper:retrieveShapeData(shapeId, treeCoords, unitVectors, initialRadius, length, directionFactor)
+    if shapeId == nil then
+        return nil, nil, nil, nil
+    end
+
+    local maxLength = length
+    local coordinateList = { treeCoords }
+    local radiusList = { initialRadius }
+    local unitVectorList = { self:copyUnitVectors(unitVectors) }
+    local angleList = { 0 }
+    local currentLength = 0
+    local currentCoordinates = { x = treeCoords.x, y = treeCoords.y, z = treeCoords.z }
+    local currentUnitVectors = self:copyUnitVectors(unitVectors)
+    local currentRadius = initialRadius * 2 or .5
+
+    -- Repeat until the end of the shape was exceeded
+    while currentLength <= maxLength do
+        local currentOffset = .1
 
         -- Get a point along the X axis from the tree, based on where the chainsaw is aiming
-        local x = treeCoords.x + adjustedUnitVectors.xx * xOffset
-        local y = treeCoords.y + adjustedUnitVectors.xy * xOffset
-        local z = treeCoords.z + adjustedUnitVectors.xz * xOffset
+        local x = currentCoordinates.x + currentUnitVectors.xx * currentOffset * directionFactor
+        local y = currentCoordinates.y + currentUnitVectors.xy * currentOffset * directionFactor
+        local z = currentCoordinates.z + currentUnitVectors.xz * currentOffset * directionFactor
 
-        -- Retrieve the radius
-        local foundShapeId, radius, newTreeCoords, yMinWorld, yMaxWorld, zMinWorld, zMaxWorld = self:getRadiusAtLocation(shapeId, { x = x, y = y, z = z }, adjustedUnitVectors)
+        -- Test if the shape can still be detected at this location. Use a search radius which is 30% larger than the previous match
+        local pointInMiddleOfShape = {}
+        pointInMiddleOfShape, currentRadius = self:findPointInMiddleOfShape(shapeId, { x=x, y=y, z=z }, currentUnitVectors, currentRadius * 1.3)
 
-        -- Stop processing if the shape was no longer found (too crooked, or shorter than calculated)
-        if foundShapeId == nil or foundShapeId == 0 then
-            failedAt = i
+        if pointInMiddleOfShape ~= nil then
+            -- A new point was found. Remember its location and other properties
+            currentCoordinates.x = pointInMiddleOfShape.x
+            currentCoordinates.y = pointInMiddleOfShape.y
+            currentCoordinates.z = pointInMiddleOfShape.z
+            table.insert(coordinateList, pointInMiddleOfShape)
+            table.insert(radiusList, currentRadius)
+            table.insert(unitVectorList, self:copyUnitVectors(currentUnitVectors))
+        else
+            -- Nothing was found => looks like the end of the tree was reached
             break
         end
-        maxRadius = math.max(maxRadius, radius)
 
-        local coords = {}
-        coords.x, coords.y, coords.z = newTreeCoords.x, newTreeCoords.y, newTreeCoords.z
+        currentLength = currentLength + currentOffset
 
-        -- starting from the second radius:
-        local angle = 0
-        local normalizedDirection
-        if i > 0 then
-            -- calculate the volume to the previous radius
-            local averageRadius = (previousRadius + radius) / 2.0
+        local numberOfCoordinates = #coordinateList
+        if numberOfCoordinates > 2 then
+            -- Rotate the unit vectors so the X axis follows the direction between the two most recent coordinates
+            local newDirection = {
+                x = coordinateList[numberOfCoordinates].x - coordinateList[numberOfCoordinates - 1].x,
+                y = coordinateList[numberOfCoordinates].y - coordinateList[numberOfCoordinates - 1].y,
+                z = coordinateList[numberOfCoordinates].z - coordinateList[numberOfCoordinates - 1].z
+            }
+            newDirection.x, newDirection.y, newDirection.z = MathUtil.vector3Normalize(
+                newDirection.x * directionFactor,
+                newDirection.y * directionFactor,
+                newDirection.z * directionFactor)
+            local currentXUnitVector = { x = currentUnitVectors.xx, y = currentUnitVectors.xy, z = currentUnitVectors.xz }
+            local rotationQuaternion = self:getRotationQuaternion(currentXUnitVector, newDirection)
+            currentUnitVectors = self:rotateUnitVectors(currentUnitVectors, rotationQuaternion)
 
-            -- Calculate the distance between the two 
-            local calculatedLength = MathUtil.vector3Length(x - previousCoords.x, y - previousCoords.y, z - previousCoords.z)
+            -- Remember the rotation angle for further processing. Since the w part of a quaternion is cos(theta/2), theta can be calculated as 2*acos(w)
+            local rotationAngle = math.acos(rotationQuaternion.w) * 2
 
-            -- approximate volume of a cone stump: average circle area * length. circle area = pi * r²
-            totalVolume = totalVolume + math.pi * averageRadius * averageRadius * calculatedLength
+            if numberOfCoordinates == 3 then
+                -- This is the first coordinate which adjusted the unit vector. Ignore its angle since the basis is the tree trunk orientation rather than the cut position's one
+                table.insert(angleList, 0)
+            else
+                table.insert(angleList, rotationAngle)
+            end
+
+            if numberOfCoordinates > 3 and rotationAngle > 0.17 then -- around 10°
+                -- This only happens near the end of the tree, especially if it was cut diagonally
+                table.remove(coordinateList, #coordinateList)
+                table.remove(radiusList, #radiusList)
+                table.remove(unitVectorList, #unitVectorList)
+                break
+            end
 
             if self.debugRadiusResults then
-                local color
-                if directionFactor > 0 then
-                    color =  { 1,0,0 }
-                else
-                    color =  { 0,0,1 }
-                end
-                DebugDrawUtils.drawBoundingBox(coords, previousCoords, adjustedUnitVectors, radius * 2, previousRadius * 2, color)
+                DebugDrawUtils.drawDebugGizmo(coordinateList[numberOfCoordinates], currentUnitVectors, "")
+                DebugDrawUtils.drawLine(
+                    coordinateList[numberOfCoordinates],
+                    coordinateList[numberOfCoordinates - 1],
+                    {.8, 0, .8})
             end
-
-            -- Get a vector between the previous and the new coordinates. Invert for backwards direction
-            local newDirectionVector = {
-                x = (coords.x - previousCoords.x) * directionFactor,
-                y = (coords.y - previousCoords.y) * directionFactor,
-                z = (coords.z - previousCoords.z) * directionFactor
-            }
-            -- Normalize it to a vector of length = 1
-            normalizedDirection = {}
-            normalizedDirection.x, normalizedDirection.y, normalizedDirection.z = MathUtil.vector3Normalize(newDirectionVector.x, newDirectionVector.y, newDirectionVector.z)
-
-            -- Retrieve the angle between the tree's X axis and the vector to the coordinate
-            local cosTreeAngle = MathUtil.dotProduct(adjustedUnitVectors.xx, adjustedUnitVectors.xy, adjustedUnitVectors.xz, normalizedDirection.x, normalizedDirection.y, normalizedDirection.z)
-            if self.debugConvexityAngles then
-                DebugDrawUtils.renderText(coords, ('cos: %.5f'):format(cosTreeAngle), 0.4, .5)
-            end
-
-            -- Convert to a regular angle in degrees
-            if cosTreeAngle ~= cosTreeAngle then cosTreeAngle = 0 end -- fix NaN values
-            angle = math.acos(cosTreeAngle) * 180 / math.pi
-            if self.debugConvexityAngles then
-                DebugDrawUtils.renderText(coords, ('acos: %.3f'):format(angle), 0.2, .5)
-            end
-
-            -- Retrieve the difference in angle compared to the previous piece, starting from the third coordinate
-            if angle ~= angle then angle = 0 end -- fix NaN values
-            local angleDifference = (angle - previousAngle)
-            if i == 1 then angleDifference = 0 end
-
-            local angleThreshold = 1.5
-            if self.debugConvexityAngles or (self.debugConvexityAboveThreshold and angleDifference > angleThreshold) then
-                DebugDrawUtils.renderText(coords, ('diff: %.3f'):format(angleDifference), 0.1, .5)
-            end
-            if self.debugConvexityLines or (self.debugConvexityAboveThreshold and angleDifference > angleThreshold) then
-                local directionVectorLength = 2
-                local directionalCoordsFwd = {
-                    x = coords.x + normalizedDirection.x * directionVectorLength,
-                    y = coords.y + normalizedDirection.y * directionVectorLength,
-                    z = coords.z + normalizedDirection.z * directionVectorLength
-                }
-                local directionalCoordsRev = {
-                    x = coords.x - normalizedDirection.x * directionVectorLength,
-                    y = coords.y - normalizedDirection.y * directionVectorLength,
-                    z = coords.z - normalizedDirection.z * directionVectorLength
-                }
-                DebugDrawUtils.drawLine(directionalCoordsRev, directionalCoordsFwd, {1,0,0})
-                if previousNormalizedDirection ~= nil then
-                    local previousDirectionalCoordsFwd = {
-                        x = coords.x + previousNormalizedDirection.x * directionVectorLength,
-                        y = coords.y + previousNormalizedDirection.y * directionVectorLength,
-                        z = coords.z + previousNormalizedDirection.z * directionVectorLength
-                    }
-                    local previousDirectionalCoordsRev = {
-                        x = coords.x - previousNormalizedDirection.x * directionVectorLength,
-                        y = coords.y - previousNormalizedDirection.y * directionVectorLength,
-                        z = coords.z - previousNormalizedDirection.z * directionVectorLength
-                    }
-                    DebugDrawUtils.drawLine(previousDirectionalCoordsFwd, previousDirectionalCoordsRev, {0,0,1})
-                end
-                DebugDrawUtils.drawLine(previousCoords, coords, {0.7,0.7,0})
-            end
-
-            -- Adjust the unit vectors to the new direction
-
-
-
-        -- else: just store the data for the first piece as a base for comparison
+        else
+            table.insert(angleList, 0)
         end
 
-        -- store data for the next calculation
-        previousRadius = radius
-        previousCoords = coords
-        previousAngle = angle
-        previousNormalizedDirection = normalizedDirection
+        if currentRadius < 0.01 then
+            -- Too small, trying to detect further will produce coordinates which jump around too much
+            break
+        end
     end
+    return coordinateList, radiusList, unitVectorList, angleList
 
-    -- Calculate the total Y and Z size
-    -- TODO: Retrieve actual Y/Z total dimensions. For now, use the radius, which is usually smaller than the bounding box, however
-    local sizeY = maxRadius * 2
-    local sizeZ = sizeY
+end
 
-    return totalVolume, failedAt, numberOfParts, sizeY, sizeZ
+---Retrieves the distance between two points in 3D space
+---@param vector1 table @The X/Y/Z coordinates of the first vector
+---@param vector2 table @The X/Y/Z coordinates of the second vector
+---@return number @The distance between the two points the vectors are pointing to
+function ShapeMeasurementHelper:getDistance(vector1, vector2)
+    local dX = vector1.x - vector2.x
+    local dY = vector1.y - vector2.y
+    local dZ = vector1.z - vector2.z
+    return math.sqrt(dX * dX + dY * dY + dZ * dZ)
 end
 
 function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 
-        -- Get the wolrd position of the ring selector (or a bit above, for better visibility)
-        local xCenter, yCenter, zCenter = localToWorld(chainsaw.ringSelector, 0, -.5, 0)
-        -- Define world coordinate unit vectors
-        local unitVectorsWorld = { xx = 1, xy = 0, xz = 0, yx = 0, yy = 1, yz = 0, zx = 0, zy = 0, zz = 1 }
-
-
-        -- TEMP Draw several debug gizmos above the ring selector, based on the tree's coordinate system and rotated
-        local currentTime = g_currentMission.environment.dayTime
-        local angleMultiplier = math.min(currentTime % 5000, 4000) / 4000
-
-        local x1,y1,z1 = 666, 66, 413
-        local x2,y2,z2 = x1 - 2, y1, z1
-        --local x1,y1,z1 = localToWorld(chainsaw.ringSelector, 0, -.4, 0)
-        --local x2,y2,z2 = localToWorld(chainsaw.ringSelector, 0, -.8, 0)
-        --local x3,y3,z3 = localToWorld(chainsaw.ringSelector, 0, -1, 0)
-        --local x4,y4,z4 = localToWorld(chainsaw.ringSelector, .6, -.8, 0)
-
-        -- Draw the unmodified tree coordinate system
-        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsWorld, "")
-        DebugDrawUtils.drawDebugGizmo( {x=x2, y=y2, z=z2}, unitVectorsWorld, "")
-
-        -- Get an arbitrarily rotated vector
-        local unitVectorsArbitrary = ShapeMeasurementHelper.eulerRotateUnitVectors(unitVectorsWorld, 20 * math.pi / 180, -30 * math.pi / 180, -44 * math.pi / 180)
-        -- Draw just the X axis
-        DebugDrawUtils.drawLine( 
-            { x = x1 - 5 * unitVectorsArbitrary.xx, y = y1 - 5 * unitVectorsArbitrary.xy, z = z1 - 5 * unitVectorsArbitrary.xz },
-            { x = x1 + 5 * unitVectorsArbitrary.xx, y = y1 + 5 * unitVectorsArbitrary.xy, z = z1 + 5 * unitVectorsArbitrary.xz },
-            { .8,0,.8 })
-
-        local rotationQuaternion = ShapeMeasurementHelper.getRotationQuaternion(
-            { x = unitVectorsWorld.xx, y = unitVectorsWorld.xy, z = unitVectorsWorld.xz },
-            { x = unitVectorsArbitrary.xx, y = unitVectorsArbitrary.xy, z = unitVectorsArbitrary.xz },
-            angleMultiplier
-        )
-        local unitVectorsNew = ShapeMeasurementHelper.rotateUnitVectors(unitVectorsWorld, rotationQuaternion)
-        DebugDrawUtils.drawDebugGizmo( {x=x1, y=y1, z=z1}, unitVectorsNew, "")
-
-
     -- If the ring around the tree is currently visible with an equipped chain saw
     if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
 
+        local currentRingSelectorPos = {}
+        currentRingSelectorPos.x, currentRingSelectorPos.y, currentRingSelectorPos.z = localToWorld(chainsaw.ringSelector, 0,0,0)
+        local distanceMoved = self:getDistance(currentRingSelectorPos, self.previousCalculationPos)
+        self.previousCalculationPos = currentRingSelectorPos
 
+        if distanceMoved > 0.05 or self.debugRadiusResults then -- 5 cm
+            -- Find the wood shape we're looking at
+            local shapeId, treeCoords, radius, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)
 
+            if shapeId ~= nil then
 
-        -- Find the wood shape we're looking at
-        local shapeId, treeCoords, _, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)
+                -- Retrieve the length above and below the cut ("above" and "below" from a tree perspective)
+                local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
 
+                -- TODO: Don't display info for the bottom part if it's an actual tree rather than a piece of wood on the ground
 
+                if self.debugShapeLength then
+                    -- Note: Need to press F4 with developer mode active to be able to see these
+                    local shapeCutLocalCoords = { worldToLocal(shapeId, treeCoords.x, treeCoords.y, treeCoords.z) }
+                    local shapeTopWorldCoords = {}
+                    local shapeBottomWorldCoords = {}
+                    shapeTopWorldCoords.x, shapeTopWorldCoords.y, shapeTopWorldCoords.z = localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] + lenAbove, shapeCutLocalCoords[3])
+                    shapeBottomWorldCoords.x, shapeBottomWorldCoords.y, shapeBottomWorldCoords.z = localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] - lenBelow, shapeCutLocalCoords[3])
 
-        if shapeId ~= nil then
-
-            -- Retrieve the length above and below the cut ("above" and "below" from a tree perspective)
-            local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
-
-            -- TODO: Don't display info for the bottom part if it's an actual tree rather than a piece of wood on the ground
-
-            if self.debugShapeLength then
-                -- Note: Need to press F4 with developer mode active to be able to see these
-                local shapeCutLocalCoords = { worldToLocal(shapeId, treeCoords.x, treeCoords.y, treeCoords.z) }
-                local shapeTopWorldCoords = {}
-                local shapeBottomWorldCoords = {}
-                shapeTopWorldCoords.x, shapeTopWorldCoords.y, shapeTopWorldCoords.z = localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] + lenAbove, shapeCutLocalCoords[3])
-                shapeBottomWorldCoords.x, shapeBottomWorldCoords.y, shapeBottomWorldCoords.z = localToWorld(shapeId, shapeCutLocalCoords[1], shapeCutLocalCoords[2] - lenBelow, shapeCutLocalCoords[3])
-
-                DebugDrawUtils.drawLine(treeCoords, shapeTopWorldCoords, {1,0,0}, 0.1)
-                DebugDrawUtils.drawLine(treeCoords, shapeBottomWorldCoords, {1,0,0}, 0.1)
-            end
-
-            -- Calculate the volume for the pieces
-            local volumeBelow, failedAtBelow, numPiecesBelow, sizeYBelow, sizeZBelow = self:calculatePartData(shapeId, treeCoords, unitVectors, lenBelow, -1)
-            local volumeAbove, failedAtAbove, numPiecesAbove, sizeYAbove, sizeZAbove = self:calculatePartData(shapeId, treeCoords, unitVectors, lenAbove, 1)
-
-            -- Get the total volume calculated by the engine and adjust our own calculations to match that total sum
-            local targetVolume = getVolume(shapeId)
-            local volumeFactor = targetVolume / (volumeBelow + volumeAbove)
-            volumeBelow = volumeBelow * volumeFactor
-            volumeAbove = volumeAbove * volumeFactor
-
-            -- TODO: Find out if "above" is top, left or right from a player point of view
-
-            -- Store the volumes so the UI can read them
-            self.futureWoodPartData = {
-                bottomVolume = volumeBelow,
-                bottomLength = lenBelow,
-                bottomSizeY = sizeYBelow,
-                bottomSizeZ = sizeZBelow,
-                topVolume = volumeAbove,
-                topLength = lenAbove,
-                topSizeY = sizeYAbove,
-                topSizeZ = sizeZAbove,
-             }
-
-            if self.debugVolumeCalculations then
-                local estimatedVolume = volumeBelow + volumeAbove
-
-                DebugDrawUtils.renderText(treeCoords, ("Volume (below): %d l"):format(volumeBelow * 1000), 1.0)
-                DebugDrawUtils.renderText(treeCoords, ("Volume (above): %d l"):format(volumeAbove * 1000), .9)
-                DebugDrawUtils.renderText(treeCoords, ("Volume (total est'd): %d l"):format(estimatedVolume * 1000), .8)
-                DebugDrawUtils.renderText(treeCoords, ("Volume (engine): %d l"):format(targetVolume * 1000), .7)
-                DebugDrawUtils.renderText(treeCoords, ("Length (below): %.2f m"):format(lenBelow), .6)
-                DebugDrawUtils.renderText(treeCoords, ("Length (above): %.2f m"):format(lenAbove), .5)
-
-                local _, _, _, numConvexes, _ = getSplitShapeStats(shapeId)
-
-                DebugDrawUtils.renderText(treeCoords, ("numConvexes: %d"):format(numConvexes), .4)
-
-                if failedAtBelow >= 0 then
-                    DebugDrawUtils.renderText(treeCoords, ("Bottom calculation aborted at %d/%d"):format(failedAtBelow, numPiecesBelow), .3)
-                end
-                if failedAtAbove >= 0 then
-                    DebugDrawUtils.renderText(treeCoords, ("Top calculation aborted at %d/%d"):format(failedAtAbove, numPiecesAbove), .2)
+                    DebugDrawUtils.drawLine(treeCoords, shapeTopWorldCoords, {1,0,0}, 0.1)
+                    DebugDrawUtils.drawLine(treeCoords, shapeBottomWorldCoords, {1,0,0}, 0.1)
                 end
 
+                self:calculatePartData(shapeId, treeCoords, unitVectors, radius, lenBelow, -1)
+                self:calculatePartData(shapeId, treeCoords, unitVectors, radius, lenAbove, 1)
             end
         end
     else
         -- Chainsaw is no longer aimed at a tree; reset calculations
         self.futureWoodPartData = nil
+        self.previousCalculationPos = { x = 0, y = 0, z = 0 }
     end
 end
