@@ -30,6 +30,7 @@
         "ShapeMeasurementHelper",
         "mathEulerRotateVector",
         "mathEulerToQuaternion",
-        "mathQuaternionRotateVector"
+        "mathQuaternionRotateVector",
+        "printError"
     ]
 }
