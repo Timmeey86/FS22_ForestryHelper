@@ -15,8 +15,10 @@ function ShapeMeasurementHelper.new()
     self.debugShapeLength = false
     self.debugVolumeCalculations = false
     self.debugConvexityLines = true
+    self.shapeAnalysisStepWidth = .1 -- 10cm
 
     self.previousCalculationPos = { x = 0, y = 0, z = 0 }
+
     return self
 end
 
@@ -241,16 +243,15 @@ function ShapeMeasurementHelper:retrieveShapeData(shapeId, treeCoords, unitVecto
 
     -- Repeat until the end of the shape was exceeded
     while currentLength <= maxLength do
-        local currentOffset = .2
 
         -- Get a point along the X axis from the tree, based on where the chainsaw is aiming
-        local x = currentCoordinates.x + currentUnitVectors.xx * currentOffset * directionFactor
-        local y = currentCoordinates.y + currentUnitVectors.xy * currentOffset * directionFactor
-        local z = currentCoordinates.z + currentUnitVectors.xz * currentOffset * directionFactor
+        local x = currentCoordinates.x + currentUnitVectors.xx * self.shapeAnalysisStepWidth * directionFactor
+        local y = currentCoordinates.y + currentUnitVectors.xy * self.shapeAnalysisStepWidth * directionFactor
+        local z = currentCoordinates.z + currentUnitVectors.xz * self.shapeAnalysisStepWidth * directionFactor
 
-        -- Test if the shape can still be detected at this location. Use a search radius which is 30% larger than the previous match
+        -- Test if the shape can still be detected at this location. Use a search radius which is 40% larger than the previous match
         local pointInMiddleOfShape = {}
-        pointInMiddleOfShape, currentRadius = self:findPointInMiddleOfShape(shapeId, { x=x, y=y, z=z }, currentUnitVectors, currentRadius * 1.3)
+        pointInMiddleOfShape, currentRadius = self:findPointInMiddleOfShape(shapeId, { x=x, y=y, z=z }, currentUnitVectors, currentRadius * 1.4)
 
         if pointInMiddleOfShape ~= nil then
             -- A new point was found. Remember its location and other properties
@@ -265,7 +266,7 @@ function ShapeMeasurementHelper:retrieveShapeData(shapeId, treeCoords, unitVecto
             break
         end
 
-        currentLength = currentLength + currentOffset
+        currentLength = currentLength + self.shapeAnalysisStepWidth
 
         local numberOfCoordinates = #coordinateList
         if numberOfCoordinates > 2 then
@@ -330,36 +331,35 @@ end
 ---@return number @The position of the dent
 function ShapeMeasurementHelper:getNextDent(coordinateList, angleList, listLength, currentIndex)
 
-    local relevantAngleThreshold = 0.014 -- roughly 0.8°
+    local relevantAngleThreshold = 0.017 -- roughly 1°
 
     for i = currentIndex, listLength do
         -- Check if the current position has an angle deviation from the previous point larger than the threshold
         local currentAngleRad = angleList[i]
         if currentAngleRad > relevantAngleThreshold then
-            local angleSum = currentAngleRad
-            if i > 1 then
-                angleSum = angleSum + angleList[i - 1]
-            end
-            if i < listLength then
-                angleSum = angleSum + angleList[i + 1]
-            end
-            -- If the sum of angles of the node and the one before and behind it is below 2°, ignore it
-            if angleSum > 0.034 then
-                local startIndex = i
-                local endIndex = i
-                local j = i + 1
-                while j < listLength do
-                    -- Skip any other nodes which have an angle above the threshold until there is a node which is below
-                    local nextAngleRad = angleList[j]
-                    if nextAngleRad > relevantAngleThreshold then
-                        endIndex = j
-                    else
-                        break
-                    end
-                    j = j + 1
+            local startIndex = i
+            local endIndex = i
+            local j = i + 1
+            local totalAngleSum = currentAngleRad
+            while j < listLength do
+                -- Skip any other nodes which have an angle above the threshold until there is a node which is below
+                local nextAngleRad = angleList[j]
+                if nextAngleRad > relevantAngleThreshold then
+                    totalAngleSum = totalAngleSum + nextAngleRad
+                    endIndex = j
+                else
+                    break
                 end
-                return coordinateList[startIndex], endIndex
+                j = j + 1
             end
+            if self.debugConvexityLines then
+                DebugDrawUtils.renderText(coordinateList[startIndex], ('%.1f°'):format(totalAngleSum * 180 / math.pi), .3)
+            end
+            -- ignore the next meter
+            local indicesToBeSkipped = math.floor(1 / self.shapeAnalysisStepWidth)
+            endIndex = math.min(endIndex + indicesToBeSkipped, listLength)
+
+            return coordinateList[startIndex], endIndex
         end
         i = i + 1
     end
@@ -402,18 +402,14 @@ function ShapeMeasurementHelper:calculatePartData(shapeId, treeCoords, unitVecto
         end
     end
 
-    -- Render angles if desired
-    if self.debugConvexityLines then
-        for j = 1,#coordinateList do
-            DebugDrawUtils.renderText(coordinateList[j], ('%.1f°'):format(angleList[j] * 180 / math.pi), -.2)
-        end
-    end
-
     -- Render the shape parts if desired
     if self.debugConvexityLines then
         for _, shapePart in pairs(shapeParts) do
             DebugDrawUtils.drawLine(shapePart.first, shapePart.second, {.8,0,.8}, .1)
         end
+        --for j = 1, listLength do
+        --    DebugDrawUtils.renderText(coordinateList[j], ('%.1f'):format(angleList[j] * 180 / math.pi))
+        --end
     end
 
     return #shapeParts - 1
@@ -432,18 +428,63 @@ end
 
 function ShapeMeasurementHelper:afterChainsawUpdate(chainsaw)
 
+    local referenceDents = {
+        { x = 630.460, y = 65.252, z = 411.577 },
+        { x = 628.751, y = 65.081, z = 414.799 },
+        { x = 626,056, y = 65.144, z = 420.669 },
+        { x = 624.330, y = 65.182, z = 424.471 },
+        { x = 622.461, y = 65.221, z = 428.589 },
+        { x = 621.017, y = 65.235, z = 431.472 },
+        { x = 619.821, y = 65.269, z = 434.029 },
+        { x = 618.752, y = 65.278, z = 436.319 }
+    }
+    for _, referenceDent in pairs(referenceDents) do
+        DebugDrawUtils.renderText(referenceDent, "X")
+    end
+
     -- If the ring around the tree is currently visible with an equipped chain saw
-    if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
+    --[[if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) then
 
         local currentRingSelectorPos = {}
         currentRingSelectorPos.x, currentRingSelectorPos.y, currentRingSelectorPos.z = localToWorld(chainsaw.ringSelector, 0,0,0)
         local distanceMoved = self:getDistance(currentRingSelectorPos, self.previousCalculationPos)
         self.previousCalculationPos = currentRingSelectorPos
-        if distanceMoved > 0.05 or self.debugConvexityLines then -- 5 cm
+        --if distanceMoved > 0.05 then -- 5 cm
+        if true then
             -- Find the wood shape we're looking at
-            local shapeId, treeCoords, radius, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)
+            local shapeId, treeCoords, radius, unitVectors = self:getWoodShapeDimensionsAtFocusPoint(chainsaw)]]
+    if true then
+        if true then
+
+            local shapeId = 78686
+            local nx,ny,nz = localDirectionToWorld(shapeId, 0,1,0) -- unit vector along the local X axis of the shape, but in world coordinates
+            local yx,yy,yz = localDirectionToWorld(shapeId, 1,0,0) -- unit vector along the local Y axis of the shape, but in world coordinates
+            local zx,zy,zz = localDirectionToWorld(shapeId, 0,0,-1) -- unit vector along the local Y axis of the shape, but in world coordinates
+
+            -- Put unit vectors in a table so other functions can use it afterwards
+            local unitVectors = {
+                xx = nx,
+                xy = ny,
+                xz = nz,
+                yx = yx,
+                yy = yy,
+                yz = yz,
+                zx = zx,
+                zy = zy,
+                zz = zz
+            }
+            local treeCoords = { x = 618.914, y = 65.303, z = 436.591 }
+
+            local radius
+            treeCoords, radius = self:findPointInMiddleOfShape(shapeId, treeCoords, unitVectors)
+            if treeCoords == nil then
+                shapeId = nil
+            end
 
             if shapeId ~= nil and shapeId ~= 0 then
+                DebugDrawUtils.renderText(treeCoords, ('%d'):format(shapeId))
+
+                DebugDrawUtils.renderText(treeCoords, ('%.3f %.3f %.3f'):format(treeCoords.x, treeCoords.y, treeCoords.z), .2)
 
                 -- Retrieve the length above and below the cut ("above" and "below" from a tree perspective)
                 local lenBelow, lenAbove = getSplitShapePlaneExtents(shapeId, treeCoords.x, treeCoords.y, treeCoords.z, unitVectors.xx, unitVectors.xy, unitVectors.xz)
