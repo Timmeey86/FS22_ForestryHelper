@@ -4,15 +4,15 @@
 
 This mod calculates the current value of a tree or a piece of wood and displays that information while looking at the tree or piece of wood.
 
-Before cutting:
+Detailed info on quality, value and wood chip potential. Visible with or without chainsaw:
 ![](screenshots/screen1.png)
-After cutting:
+Feedback on factors which reduce the sell price:
 ![](screenshots/screen2.png)
-After delimbing
+Compatibility with [Info Display Extension](https://github.com/Achimobil/FS22_InfoDisplayExtension):
 ![](screenshots/screen3.png)
-Value increase through splitting:
+Info displayed in wood harvesters as well:
 ![](screenshots/screen4.png)
-Information for wood chipping:
+Information about the piece of wood in the harvester's head (no quality info since that will change when cutting anyway).
 ![](screenshots/screen5.png)
 
 ## How to install
