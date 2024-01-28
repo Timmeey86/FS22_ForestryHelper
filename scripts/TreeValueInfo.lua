@@ -94,44 +94,53 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
 
     -- Display the number of liters
     local currencySymbol = g_i18n:getCurrencySymbol(true)
-    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.VOLUME), ('%d l'):format(shapeData.volume))
+    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.VOLUME), g_i18n:formatFluid(shapeData.volume))
 
     -- If the player is looking at a piece of wood on the ground
     if getIsSplitShapeSplit(treeOrPieceOfWood) and getRigidBodyType(treeOrPieceOfWood) == RigidBodyType.DYNAMIC then
         local pieceOfWood = treeOrPieceOfWood -- alias for readability
 
-        -- Display the current value (if the tree/piece of wood was sold in its current shape)
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
+        -- Check if the player is sitting in a wood harvester
+        local isInWoodHarvester = g_currentMission.currentWoodHarvesterSpec ~= nil
 
-        -- Display hints about different aspects which influence the total quality
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.SHAPE), TreeValueInfo.getQualityText(valueData.qualityScale, 1.0, 0.7, 0.5)) -- min 0.05
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.LENGTH), TreeValueInfo.getQualityText(valueData.lengthScale, 1.2, 1.0, 0.8)) -- min 0.6
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.ATTACHMENTS), ('%d'):format(shapeData.numAttachments))
+        -- Skip quality info while in a wood harvester - The player would only get this info for the remaining tree rather than the piece they are about to cut
+        if not isInWoodHarvester then
 
-        -- Display the total quality of the tree, which is proportional to the sell price
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.TOTAL_QUALITY), ('%d %%'):format(totalQuality * 100))
+            -- Display the current value (if the tree/piece of wood was sold in its current shape)
+            playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
 
-        -- Display detailed info if enabled
-        if treeValueInfo.debugShapeDetails then
-            playerHudUpdater.objectBox:addLine("Size X", ('%.3f'):format(shapeData.sizeX))
-            playerHudUpdater.objectBox:addLine("Size Y", ('%.3f'):format(shapeData.sizeY))
-            playerHudUpdater.objectBox:addLine("Size Z", ('%.3f'):format(shapeData.sizeZ))
-            playerHudUpdater.objectBox:addLine("# Convexes", ('%d'):format(shapeData.numConvexes))
-            playerHudUpdater.objectBox:addLine("# Attachments", ('%d'):format(shapeData.numAttachments))
+            -- Display hints about different aspects which influence the total quality
+            playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.SHAPE), TreeValueInfo.getQualityText(valueData.qualityScale, 1.0, 0.7, 0.5)) -- min 0.05
+            playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.LENGTH), TreeValueInfo.getQualityText(valueData.lengthScale, 1.2, 1.0, 0.8)) -- min 0.6
+            playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.ATTACHMENTS), ('%d'):format(shapeData.numAttachments))
+
+            -- Display the total quality of the tree, which is proportional to the sell price
+            playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.TOTAL_QUALITY), ('%d %%'):format(totalQuality * 100))
+
+            -- Display detailed info if enabled
+            if treeValueInfo.debugShapeDetails then
+                playerHudUpdater.objectBox:addLine("Size X", ('%.3f'):format(shapeData.sizeX))
+                playerHudUpdater.objectBox:addLine("Size Y", ('%.3f'):format(shapeData.sizeY))
+                playerHudUpdater.objectBox:addLine("Size Z", ('%.3f'):format(shapeData.sizeZ))
+                playerHudUpdater.objectBox:addLine("# Convexes", ('%d'):format(shapeData.numConvexes))
+                playerHudUpdater.objectBox:addLine("# Attachments", ('%d'):format(shapeData.numAttachments))
+            end
+            if treeValueInfo.debugValueDetails then
+                playerHudUpdater.objectBox:addLine("Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
+                playerHudUpdater.objectBox:addLine("Volume Quality", ('%.3f'):format(valueData.volumeQuality))
+                playerHudUpdater.objectBox:addLine("Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
+                playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
+                playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
+                playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
+            end
         end
-        if treeValueInfo.debugValueDetails then
-            playerHudUpdater.objectBox:addLine("Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
-            playerHudUpdater.objectBox:addLine("Volume Quality", ('%.3f'):format(valueData.volumeQuality))
-            playerHudUpdater.objectBox:addLine("Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
-            playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
-            playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
-            playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
-        end
+
+        -- Information about wood chips might help the player decide whether or not to chip the top part of the tree
 
         -- Get the amount of wood chips this piece of wood would produce
         local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
         local litersIfChipped = shapeData.volume * splitType.woodChipsPerLiter
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.LITERS_IF_CHIPPED), ('%d l'):format(litersIfChipped))
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.LITERS_IF_CHIPPED), g_i18n:formatFluid(litersIfChipped))
 
         -- Calculate the price for the wood chips if sold right away
         local currentWoodChipValue = g_currentMission.economyManager:getPricePerLiter(FillType.WOODCHIPS) * litersIfChipped

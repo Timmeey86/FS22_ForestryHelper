@@ -21,9 +21,17 @@
 Note that in order to get the maximum quality possible, a piece of wood needs to be a near perfect frustum of a cone, between 6-11m in length (about 20-36 feet) and may not have any branches still attached.
 A perfect shape is not possible for every piece of wood.
 
+The info box will also be displayed whenever a chainsaw is equipped and the ring around the tree to be cut is possible.
+While sitting in a wood harvester, you will see basic information about the tree, but no quality details, since those can only be calculated for the full tree, not for the next piece to be cut unfortunately.
+
 It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
 
 Changelog:
+Version 1.0.3.0
+- Added more detailed quality information
+- Added russian translation (provided by Gonimy-Vetrom)
+- Info box is now displayed while sitting in a wood harvester
+
 Version 1.0.2.0:
 - Info Box is now displayed whenever the ring around a piece of wood is visible (caused by an equipped chainsaw)
 - Removed cut length recommendation (too inaccurate) and added quality
@@ -47,9 +55,15 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
 
 Changelog:
+Version 1.0.3.0
+- Mehr Detailinformationen über die Qualität hinzugefügt
+- Russische Übersetzung hinzugefügt (bereitgestellt von Gonimy-Vetrom)
+- Die Info Box wird nun auch angezeigt, während man in einem Hollzvollernter (Harvester) sitzt
+
 Version 1.0.2.0:
 - Info Box wird nun immer angezeigt, solange ein Ring um ein Stück Holz sichtbar ist (wenn man eine Kettensäge benutzt)
 - Vorschlag zur optimalen Schnittlänge entfernt (zu ungenau) und Qualitäts-Wert hinzugefügt
+
 Version 1.0.1.0:
 - Informationen für Hackschnitzel hinzugefügt
 ]]></de>
@@ -61,6 +75,7 @@ Version 1.0.1.0:
 
     <extraSourceFiles>
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
+        <sourceFile filename="scripts/WoodHarvesterInjection.lua" />
         <sourceFile filename="scripts/TreeValueInfo.lua" />
     </extraSourceFiles>
 

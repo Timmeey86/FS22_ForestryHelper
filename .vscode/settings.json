@@ -18,6 +18,7 @@
         "MathUtil",
         "Class",
         "Chainsaw",
-        "getVisibility"
+        "getVisibility",
+        "WoodHarvester"
     ]
 }
