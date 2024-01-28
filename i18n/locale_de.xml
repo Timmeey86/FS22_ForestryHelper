@@ -8,5 +8,12 @@
         <text name="tvi_liters_if_chipped" text="Liter an Hackschnitzeln" />
         <text name="tvi_current_value_if_chipped" text="Hackschnitzel-Wert (Jetzt)" />
         <text name="tvi_potential_value_if_chipped" text="Hackschnitzel-Wert (Max.)" />
+        <text name="tvi_shape" text="Form" />
+        <text name="tvi_length" text="Länge" />
+        <text name="tvi_attachments" text="Anzahl Äste" />
+        <text name="tvi_perfect" text="Perfekt" />
+        <text name="tvi_good" text="Gut" />
+        <text name="tvi_acceptable" text="Akzeptabel" />
+        <text name="tvi_bad" text="Schlecht" />
     </texts>
 </l10n>

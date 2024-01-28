@@ -8,7 +8,14 @@ TreeValueInfo = {
         TOTAL_QUALITY = 'tvi_total_quality',
         LITERS_IF_CHIPPED = 'tvi_liters_if_chipped',
         CURRENT_VALUE_IF_CHIPPED = 'tvi_current_value_if_chipped',
-        POTENTIAL_VALUE_IF_CHIPPED = 'tvi_potential_value_if_chipped'
+        POTENTIAL_VALUE_IF_CHIPPED = 'tvi_potential_value_if_chipped',
+        SHAPE = 'tvi_shape',
+        LENGTH = 'tvi_length',
+        ATTACHMENTS = 'tvi_attachments',
+        PERFECT = 'tvi_perfect',
+        GOOD = 'tvi_good',
+        ACCEPTABLE = 'tvi_acceptable',
+        BAD = 'tvi_bad'
     },
     -- Define constants for what the base game considers best value
     PROFITABLE_LENGTH_MIN = 6,
@@ -28,6 +35,31 @@ function TreeValueInfo.new()
 end
 
 local treeValueInfo = TreeValueInfo.new()
+
+
+-- Define a function which returns the appropriate quality text based on defined thresholds
+
+---Retrieves a translated "perfect", "good", "acceptable", or "bad" text based on the current quality and the provided thresholds.
+---@param quality number @The quality factor as calculated by the wood sell trigger.
+---@param perfectThreshold number @The maximum possible quality.
+---@param goodThreshold number @The minimum quality to still consider it "good".
+---@param acceptableThreshold number @The minimum quality to still consider it "acceptable"
+---@return string @A translated rating of the quality
+function TreeValueInfo.getQualityText(quality, perfectThreshold, goodThreshold, acceptableThreshold)
+    -- Since quality ratings are floating point values, consider a small imprecision (often called "epsilon")
+    local floatingPointImprecision = .0001
+    local translationKey
+    if quality >= (perfectThreshold - floatingPointImprecision) then
+        translationKey = TreeValueInfo.I18N_IDS.PERFECT
+    elseif quality >= (goodThreshold - floatingPointImprecision) then
+        translationKey = TreeValueInfo.I18N_IDS.GOOD
+    elseif quality >= (acceptableThreshold - floatingPointImprecision) then
+        translationKey = TreeValueInfo.I18N_IDS.ACCEPTABLE
+    else
+        translationKey = TreeValueInfo.I18N_IDS.BAD
+    end
+    return g_i18n:getText(translationKey)
+end
 
 -- Define a method which will add more information to the info box for trees or wood. The last argument is defined by the method we are extending
 
@@ -64,32 +96,37 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     local currencySymbol = g_i18n:getCurrencySymbol(true)
     playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.VOLUME), ('%d l'):format(shapeData.volume))
 
-    -- Display detailed info if enabled
-    if treeValueInfo.debugShapeDetails then
-        playerHudUpdater.objectBox:addLine("Size X", ('%.3f'):format(shapeData.sizeX))
-        playerHudUpdater.objectBox:addLine("Size Y", ('%.3f'):format(shapeData.sizeY))
-        playerHudUpdater.objectBox:addLine("Size Z", ('%.3f'):format(shapeData.sizeZ))
-        playerHudUpdater.objectBox:addLine("# Convexes", ('%d'):format(shapeData.numConvexes))
-        playerHudUpdater.objectBox:addLine("# Attachments", ('%d'):format(shapeData.numAttachments))
-    end
-    if treeValueInfo.debugValueDetails then
-        playerHudUpdater.objectBox:addLine("Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
-        playerHudUpdater.objectBox:addLine("Volume Quality", ('%.3f'):format(valueData.volumeQuality))
-        playerHudUpdater.objectBox:addLine("Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
-        playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
-        playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
-        playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
-    end
-
-    -- Display the total quality of the tree, which is proportional to the sell price
-    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.TOTAL_QUALITY), ('%d %%'):format(totalQuality * 100))
-
-    -- Display the current value (if the tree/piece of wood was sold in its current shape)
-    playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
-
     -- If the player is looking at a piece of wood on the ground
     if getIsSplitShapeSplit(treeOrPieceOfWood) and getRigidBodyType(treeOrPieceOfWood) == RigidBodyType.DYNAMIC then
         local pieceOfWood = treeOrPieceOfWood -- alias for readability
+
+        -- Display the current value (if the tree/piece of wood was sold in its current shape)
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
+
+        -- Display hints about different aspects which influence the total quality
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.SHAPE), TreeValueInfo.getQualityText(valueData.qualityScale, 1.0, 0.7, 0.5)) -- min 0.05
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.LENGTH), TreeValueInfo.getQualityText(valueData.lengthScale, 1.2, 1.0, 0.8)) -- min 0.6
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(treeValueInfo.I18N_IDS.ATTACHMENTS), ('%d'):format(shapeData.numAttachments))
+
+        -- Display the total quality of the tree, which is proportional to the sell price
+        playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.TOTAL_QUALITY), ('%d %%'):format(totalQuality * 100))
+
+        -- Display detailed info if enabled
+        if treeValueInfo.debugShapeDetails then
+            playerHudUpdater.objectBox:addLine("Size X", ('%.3f'):format(shapeData.sizeX))
+            playerHudUpdater.objectBox:addLine("Size Y", ('%.3f'):format(shapeData.sizeY))
+            playerHudUpdater.objectBox:addLine("Size Z", ('%.3f'):format(shapeData.sizeZ))
+            playerHudUpdater.objectBox:addLine("# Convexes", ('%d'):format(shapeData.numConvexes))
+            playerHudUpdater.objectBox:addLine("# Attachments", ('%d'):format(shapeData.numAttachments))
+        end
+        if treeValueInfo.debugValueDetails then
+            playerHudUpdater.objectBox:addLine("Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
+            playerHudUpdater.objectBox:addLine("Volume Quality", ('%.3f'):format(valueData.volumeQuality))
+            playerHudUpdater.objectBox:addLine("Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
+            playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
+            playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
+            playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
+        end
 
         -- Get the amount of wood chips this piece of wood would produce
         local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))

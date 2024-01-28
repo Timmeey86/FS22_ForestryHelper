@@ -8,5 +8,12 @@
         <text name="tvi_liters_if_chipped" text="Volume if chipped" />
         <text name="tvi_current_value_if_chipped" text="Wood chip value (now)" />
         <text name="tvi_potential_value_if_chipped" text="Wood chip value (max.)" />
+        <text name="tvi_shape" text="Shape" />
+        <text name="tvi_length" text="Length" />
+        <text name="tvi_attachments" text="Number of branches" />
+        <text name="tvi_perfect" text="perfect" />
+        <text name="tvi_good" text="good" />
+        <text name="tvi_acceptable" text="acceptable" />
+        <text name="tvi_bad" text="bad" />
     </texts>
 </l10n>

@@ -8,5 +8,12 @@
         <text name="tvi_liters_if_chipped" text="Объём если на щепу" />
         <text name="tvi_current_value_if_chipped" text="Стоимость щепы (сейчас)" />
         <text name="tvi_potential_value_if_chipped" text="Стоимость щепы (максимум)" />
+        <text name="tvi_shape" text="TODO" />
+        <text name="tvi_length" text="TODO" />
+        <text name="tvi_attachments" text="TODO" />
+        <text name="tvi_perfect" text="TODO" />
+        <text name="tvi_good" text="TODO" />
+        <text name="tvi_acceptable" text="TODO" />
+        <text name="tvi_bad" text="TODO" />
     </texts>
 </l10n>
