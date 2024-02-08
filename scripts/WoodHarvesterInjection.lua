@@ -49,9 +49,6 @@ function WoodHarvesterInjection.onWoodHarvesterUpdate(currentVehicle, superFunc,
     end
 end
 
--- Call our function on each update tick of the harvester
-WoodHarvester.onUpdate = Utils.overwrittenFunction(WoodHarvester.onUpdate, WoodHarvesterInjection.onWoodHarvesterUpdate)
-
 -- At this point, the info box is prepared to draw information while the wood harvester has a tree in its harvester head
 -- However, nobody would call the draw implementation, since we're using Player:hudUpdater, but that class won't render anything when we're in a vehicle
 -- Therefore, we need to override the draw function of the wood harvester and draw the player HUD info box ourselves
@@ -83,5 +80,12 @@ function WoodHarvesterInjection.onWoodHarvesterDraw(woodHarvester, superFunc, is
     end
 end
 
--- Register our draw override so it gets called when necessary
-WoodHarvester.onDraw = Utils.overwrittenFunction(WoodHarvester.onDraw, WoodHarvesterInjection.onWoodHarvesterDraw)
+
+-- Mods like Wood Harvester Controls overwrite onUpdate without calling the superFunc. We therefore delay the registration of the override as late as possible
+-- in order to decrease the chance for a mod conflict
+Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
+    -- Call our function on each update tick of the harvester
+    WoodHarvester.onUpdate = Utils.overwrittenFunction(WoodHarvester.onUpdate, WoodHarvesterInjection.onWoodHarvesterUpdate)
+    -- Register our draw override so it gets called when necessary
+    WoodHarvester.onDraw = Utils.overwrittenFunction(WoodHarvester.onDraw, WoodHarvesterInjection.onWoodHarvesterDraw)
+end)

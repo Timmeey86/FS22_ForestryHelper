@@ -166,8 +166,6 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     end
 end
 
--- Inject our own method into the existing PlayerHUDUpdater method of the base game
-PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, TreeValueInfo.addTreeValueInfo)
 
 -- If the game would normally call the showSplitShapeInfo method, it will now call our method instead (which calls the original function first, and then adds stuff)
 
@@ -190,7 +188,6 @@ local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape)
         treeValueInfo.currentShape = nil
     end
 end
-Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, onChainsawUpdateRingSelector)
 
 ---Makes sure the info box is shown on the next frame while the chainsaw ring is visible
 ---@param chainsaw table @The chainsaw instance
@@ -216,4 +213,10 @@ local function onChainsawUpdate(chainsaw, superFunc, deltaTime, allowInput)
         end
     end
 end
-Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, onChainsawUpdate)
+
+-- Register our overrides as late as possible in order to not be affected by mods which override the same methods, but don't call superFunc
+Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
+    PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, TreeValueInfo.addTreeValueInfo)
+    Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, onChainsawUpdateRingSelector)
+    Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, onChainsawUpdate)
+end)

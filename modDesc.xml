@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.3.0</version>
+    <version>1.0.3.1</version>
     <title>
         <en>Tree Value Info</en>
         <de>Baumpreis Info</de>
@@ -28,6 +28,10 @@ While sitting in a wood harvester, you will see basic information about the tree
 It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
 
 Changelog:
+Version 1.0.3.1
+- Resolved a mod conflict with Wood Harvester Controls and decreased likelyhood of similar conflicts with other mods
+- More Russian translations (provided by vitalii2011)
+
 Version 1.0.3.0
 - Added more detailed quality information
 - Added russian translation (provided by Gonimy-Vetrom)
@@ -56,6 +60,10 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
 
 Changelog:
+Version 1.0.3.1
+- Konflikts mit Holzvollernter-Steuerungen gelöst und Chance reduziert, dass vergleichbare Konflikte auftreten
+- Russische Übersetzung überarbeitet (bereitgestellt von vitalii2011)
+
 Version 1.0.3.0
 - Mehr Detailinformationen über die Qualität hinzugefügt
 - Russische Übersetzung hinzugefügt (bereitgestellt von Gonimy-Vetrom)
