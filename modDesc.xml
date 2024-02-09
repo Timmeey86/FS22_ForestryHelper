@@ -83,6 +83,7 @@ Version 1.0.1.0:
     <iconFilename>icon_TreeValueInfo.dds</iconFilename>
 
     <extraSourceFiles>
+        <sourceFile filename="scripts/CutPositionIndicator.lua" />
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
         <sourceFile filename="scripts/WoodHarvesterInjection.lua" />
         <sourceFile filename="scripts/TreeValueInfo.lua" />

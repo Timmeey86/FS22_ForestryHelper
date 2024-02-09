@@ -20,6 +20,22 @@
         "Chainsaw",
         "getVisibility",
         "WoodHarvester",
-        "Mission00"
+        "Mission00",
+        "g_i3DManager",
+        "delete",
+        "setVisibility",
+        "getChildAt",
+        "setShaderParameter",
+        "getTranslation",
+        "setTranslation",
+        "setScale",
+        "link",
+        "getRootNode",
+        "localToWorld",
+        "localDirectionToWorld",
+        "DebugUtil",
+        "getSplitShapePlaneExtents",
+        "testSplitShape",
+        "setRotation"
     ]
 }
