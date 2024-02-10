@@ -20,6 +20,9 @@ function CutPositionIndicator.new()
     self.chainsawIsDeleted = false
     self.cycleActionEventId = nil
     self.cutIndicationWidth = 1
+    self.chainsawIsSnapped = false
+
+
     self.debugPositionDetection = false
     self.debugIndicator = false
     return self
@@ -78,6 +81,7 @@ function CutPositionIndicator:onOwnRingLoaded(node, failedReason, args)
 
         -- Allow cut indication width cycling
         g_inputBinding:setActionEventActive(self.cycleActionEventId, true)
+        self:updateHelpMenuText()
     end
 end
 
@@ -95,9 +99,27 @@ function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
         self.loadRequestId = g_i3DManager:loadSharedI3DFileAsync(filename, false, false, self.onOwnRingLoaded, self, chainsaw.player)
     end
     self.chainsawIsDeleted = false
+    self.chainsawIsSnapped = false
 
     -- TEMP
     chainsaw.defaultCutDuration = 1
+end
+
+---Rotates an object so its own X axis points along the given unit vector
+---@param object number @The ID of the object to rotate
+---@param xx number @The X dimension of the new direction vector. The vector must have a length of 1
+---@param xy number @The y dimension of the new direction vector.
+---@param xz number @The z dimension of the new direction vector.
+function CutPositionIndicator.rotateObjectAroundYAxis(object, xx,xy,xz)
+    -- Rotate the ring around its own Y axis to match the tree direction
+    setRotation(object, 0,0,0)
+    local xxInd,xyInd,xzInd = localDirectionToWorld(object, 1,0,0)
+    local yRotation = MathUtil.getVectorAngleDifference(xxInd,xyInd,xzInd, xx,xy,xz)
+    -- The rotation seems to be an absolute value, so we need to invert it in some cases
+    if xz > 0 then
+        yRotation = yRotation * -1
+    end
+    setRotation(object, 0, yRotation, 0)
 end
 
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
@@ -167,15 +189,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
                 local diameter = math.max((maxY - minY), (maxZ - minZ)) * 1.4
                 setScale(self.ring, 1, diameter, diameter)
 
-                -- Rotate the ring around its own Y axis to match the tree direction
-                setRotation(self.ring, 0,0,0)
-                local xxInd,xyInd,xzInd = localDirectionToWorld(self.ring, 1,0,0)
-                local yRotation = MathUtil.getVectorAngleDifference(xxInd,xyInd,xzInd, xx,xy,xz)
-                -- The rotation seems to be an absolute value, so we need to invert it in some cases
-                if xz > 0 then
-                    yRotation = yRotation * -1
-                end
-                setRotation(self.ring, 0, yRotation, 0)
+                CutPositionIndicator.rotateObjectAroundYAxis(self.ring, xx,xy,xz)
 
                 if self.debugIndicator then
                     local yx1,yy1,yz1 = localDirectionToWorld(self.ring, 0,1,0)
@@ -187,6 +201,27 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
                 -- Failed finding the shape at that location. It is probably too short
                 setVisibility(self.ring, false)
                 setRotation(self.ring, 0,0,0)
+            end
+        end
+
+        -- Snap the base game ring selector to our indicator if the player is close
+        if getVisibility(self.ring) then
+            -- Calculate the distance between the centers of the two rings
+            local xInd,yInd,zInd = localToWorld(self.ring, 0,0,0)
+            local xCut,yCut,zCut = localToWorld(chainsaw.ringSelector, 0,0,0)
+            local xDiff,yDiff,zDiff = xInd-xCut, yInd-yCut, zInd-zCut
+            local distance = math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff)
+
+            if distance < 0.2 then -- +/- 20cm
+                -- Figure out the position of our own ring in the local coordinate system of the chainsaw's ring selector
+                -- The chainsaw's ring selector's translation is relative to some other object, so we use the coordinate system of that object instead
+                -- Not sure why that's the right thing, but Chainsaw:updateRingSelector does it, too, and it won't work without the getParent call
+                local xCutLocal, yCutLocal, zCutLocal = worldToLocal(getParent(chainsaw.ringSelector), xInd, yInd, zInd)
+                -- Translate the chainsaw's ring selector onto those coordinates
+                setTranslation(chainsaw.ringSelector, xCutLocal, yCutLocal, zCutLocal)
+                self.chainsawIsSnapped = true
+            else
+                self.chainsawIsSnapped = false
             end
         end
     end
@@ -202,16 +237,29 @@ function CutPositionIndicator:registerActionEvents()
     g_inputBinding:setActionEventText(actionEventId, "")
 end
 
----Updates the help menu when applicable
----@param chainsaw table @The chainsaw
-function CutPositionIndicator:after_chainsawUpdate(chainsaw, dt, allowInput)
-    if chainsaw.isClient then
-        g_inputBinding:setActionEventText(self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, "m"))
-    end
-end
-
+---Cycles the desired cut length
 function CutPositionIndicator:cycleCutIndicator()
     self.cutIndicationWidth = 1 + self.cutIndicationWidth % 12 -- from 1 to 12
+    self:updateHelpMenuText()
+end
+
+---Updates the text of "desired length" option in the help menu so it reflects the current cut indication width
+function CutPositionIndicator:updateHelpMenuText()
+    g_inputBinding:setActionEventText(self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, "m"))
+end
+
+function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    if self.chainsawIsSnapped then
+        x,y,z = getWorldTranslation(self.ring)
+        local halfCutSizeY = cutSizeY / 2.0
+        local halfCutSizeZ = cutSizeZ / 2.0
+        local zx,zy,zz = MathUtil.crossProduct(xx,xy,xz, yx,yy,yz)
+        x = x - yx * halfCutSizeY - zx * halfCutSizeZ
+        y = y - yy * halfCutSizeY - zy * halfCutSizeZ
+        z = z - yz * halfCutSizeY - zz * halfCutSizeZ
+    end
+
+    superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
 end
 
 -- Register all our functions as late as possible just in case other mods which are further behind in the alphabet replace methods 
@@ -222,7 +270,11 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
     Chainsaw.onDeactivate = Utils.prependedFunction(Chainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
     Chainsaw.postLoad = Utils.appendedFunction(Chainsaw.postLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
     Chainsaw.updateRingSelector = Utils.appendedFunction(Chainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
-    Chainsaw.update = Utils.appendedFunction(Chainsaw.update, function(chainsaw, dt, allowInput) cutPositionIndicator:after_chainsawUpdate(chainsaw, dt, allowInput) end)
+
+    -- Note: When overriding non-member functions, superFunc will still be the second argument, even though the first argument isn't "self"
+    ChainsawUtil.cutSplitShape = Utils.overwrittenFunction(ChainsawUtil.cutSplitShape, function(shapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+        cutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    end)
 
     Player.registerActionEvents = Utils.appendedFunction(Player.registerActionEvents, function(player) cutPositionIndicator:registerActionEvents() end)
 end)

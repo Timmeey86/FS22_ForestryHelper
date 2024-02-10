@@ -39,6 +39,10 @@
         "setRotation",
         "Player",
         "g_inputBinding",
-        "GS_PRIO_LOW"
+        "GS_PRIO_LOW",
+        "worldToLocal",
+        "getParent",
+        "getWorldTranslation",
+        "ChainsawUtil"
     ]
 }
