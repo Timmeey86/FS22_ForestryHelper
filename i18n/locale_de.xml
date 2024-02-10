@@ -16,6 +16,6 @@
         <text name="tvi_acceptable" text="Akzeptabel" />
         <text name="tvi_bad" text="Schlecht" />
         <text name="tvi_change_length" text="Wunschlänge" />
-        <text name="CYCLE_CUT_INDICATOR" text="Wunschlänge ändern" />
+        <text name="input_CYCLE_CUT_INDICATOR" text="Wunschlänge ändern" />
     </texts>
 </l10n>

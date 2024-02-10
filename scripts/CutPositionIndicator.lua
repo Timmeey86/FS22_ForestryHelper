@@ -194,7 +194,8 @@ end
 
 ---Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
 function CutPositionIndicator:registerActionEvents()
-    local _, actionEventId = g_inputBinding:registerActionEvent('CYCLE_CUT_INDICATOR', self, CutPositionIndicator.cycleCutIndicator, true, false, false, true)
+    -- Register the action. Bool variables: Trigger on key release, trigger on key press, trigger always, unknown
+    local _, actionEventId = g_inputBinding:registerActionEvent('CYCLE_CUT_INDICATOR', self, CutPositionIndicator.cycleCutIndicator, false, true, false, true)
     self.cycleActionEventId = actionEventId
     g_inputBinding:setActionEventTextPriority(actionEventId, GS_PRIO_LOW)
     g_inputBinding:setActionEventActive(actionEventId, false)
@@ -211,7 +212,6 @@ end
 
 function CutPositionIndicator:cycleCutIndicator()
     self.cutIndicationWidth = 1 + self.cutIndicationWidth % 12 -- from 1 to 12
-    g_inputBinding:setActionEventText(self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, "m"))
 end
 
 -- Register all our functions as late as possible just in case other mods which are further behind in the alphabet replace methods 

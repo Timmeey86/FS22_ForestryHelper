@@ -16,6 +16,6 @@
         <text name="tvi_acceptable" text="приемлемо" />
         <text name="tvi_bad" text="плохо" />
         <text name="tvi_change_length" text="Desired length" />
-        <text name="CYCLE_CUT_INDICATOR" text="Change desired length" />
+        <text name="input_CYCLE_CUT_INDICATOR" text="Change desired length" />
     </texts>
 </l10n>
