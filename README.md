@@ -1,8 +1,8 @@
-# FS22_TreeValueInfo
+# FS22 Forestry Helper (formerly "Tree Value Info")
 
 ## Mod description
 
-This mod calculates the current value of a tree or a piece of wood and displays that information while looking at the tree or piece of wood.
+This mod provides helpful information on trees and logs and helps in making cuts at precise length intervals.
 
 Detailed info on quality, value and wood chip potential. Visible with or without chainsaw:
 ![](screenshots/screen1.png)
@@ -10,9 +10,9 @@ Feedback on factors which reduce the sell price:
 ![](screenshots/screen2.png)
 Compatibility with [Info Display Extension](https://github.com/Achimobil/FS22_InfoDisplayExtension):
 ![](screenshots/screen3.png)
-Info displayed in wood harvesters as well:
+Indicator which helps cutting at desired lengths (it also snaps the chainsaw to it when close):
 ![](screenshots/screen4.png)
-Information about the piece of wood in the harvester's head (no quality info since that will change when cutting anyway).
+Info displayed in wood harvesters: (no quality info since that will change when cutting anyway).
 ![](screenshots/screen5.png)
 
 ## How to install
