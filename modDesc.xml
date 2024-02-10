@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.3.1</version>
+    <version>1.0.4.0</version>
     <title>
         <en>Tree Value Info</en>
         <de>Baumpreis Info</de>
@@ -28,6 +28,10 @@ While sitting in a wood harvester, you will see basic information about the tree
 It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
 
 Changelog:
+Version 1.0.4.0
+- Added a feature which indicates the desired cut location and snaps the chainsaw to it when the chainsaw is within 20cm of that location
+- Added a keybind for this new feature (default: Z on English keyboards)
+
 Version 1.0.3.1
 - Resolved a mod conflict with Wood Harvester Controls and decreased likelyhood of similar conflicts with other mods
 - More Russian translations (provided by vitalii2011)
@@ -60,6 +64,10 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
 
 Changelog:
+Version 1.0.4.0
+- Funktion hinzugefügt, mit der man die gewünschte Position des nächsten Schnitts anzeigen kann. Die Kettensäge rastet an dieser Position ein, wenn sie max. 20cm entfernt ist.
+- Konfigurierbares Tastenkürzel für diese Funktion hinzugefügt (Standardmäßig Y auf einer deutschen Tastatur)
+
 Version 1.0.3.1
 - Konflikts mit Holzvollernter-Steuerungen gelöst und Chance reduziert, dass vergleichbare Konflikte auftreten
 - Russische Übersetzung überarbeitet (bereitgestellt von vitalii2011)
