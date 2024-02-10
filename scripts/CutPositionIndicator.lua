@@ -100,9 +100,6 @@ function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
     end
     self.chainsawIsDeleted = false
     self.chainsawIsSnapped = false
-
-    -- TEMP
-    chainsaw.defaultCutDuration = 1
 end
 
 ---Rotates an object so its own X axis points along the given unit vector
@@ -126,10 +123,15 @@ end
 ---@param chainsaw table @The chain saw
 function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
     if self.ring ~= nil then
-        -- Just tie the visibility of our ring to the one of the chainsaw's ring selector
-        setVisibility(self.ring, getVisibility(chainsaw.ringSelector))
 
-        if shape ~= nil and shape ~= 0 and getVisibility(self.ring) then
+        -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
+        local cutIndicatorShallBeVisible = false
+        if getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) == RigidBodyType.DYNAMIC then
+            cutIndicatorShallBeVisible = true
+        end
+        setVisibility(self.ring, cutIndicatorShallBeVisible)
+
+        if cutIndicatorShallBeVisible then
             -- Find the center of the cut location in world coordinates
             local chainsawX, chainsawY, chainsawZ = localToWorld(chainsaw.ringSelector, 0,0,0)
             -- Unit vectors along the local X axis of the log, same for Y and Z below
