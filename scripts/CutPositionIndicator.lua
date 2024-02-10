@@ -247,9 +247,25 @@ end
 
 ---Updates the text of "desired length" option in the help menu so it reflects the current cut indication width
 function CutPositionIndicator:updateHelpMenuText()
-    g_inputBinding:setActionEventText(self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, "m"))
+    g_inputBinding:setActionEventText(
+        self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, g_i18n:getText("unit_mShort")))
 end
 
+---Overrides the cut location in case the chainsaw is currently snapped to the cut indicator. Without this, the cut would be in the wrong location
+---@param superFunc function @The base game function which splits the log in two.
+---@param shapeId number @The ID of the tree shape to be split
+---@param x number @The X coordinate.
+---@param y number @The Y coordinate.
+---@param z number @The Z coordinate.
+---@param xx number @The X part of the unit vector in X direction.
+---@param xy number @The Y part of the unit vector in X direction.
+---@param xz number @The Y part of the unit vector in X direction.
+---@param yx number @The X part of the unit vector in Y direction.
+---@param yy number @The Y part of the unit vector in Y direction.
+---@param yz number @The Y part of the unit vector in Y direction.
+---@param cutSizeY number @The size of the search rectangle in Y dimension
+---@param cutSizeZ number @The size of the search rectangle in Z dimension
+---@param farmId number @The ID of the farm (not sure why this is needed, maybe for statistics)
 function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
     if self.chainsawIsSnapped then
         x,y,z = getWorldTranslation(self.ring)

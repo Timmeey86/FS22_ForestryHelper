@@ -3,13 +3,13 @@
     <author>Farmsim Tim (timmeey86)</author>
     <version>1.0.4.0</version>
     <title>
-        <en>Tree Value Info</en>
-        <de>Baumpreis Info</de>
-        <ru>Информация О Дереве</ru>
+        <en>Forestry Helper</en>
+        <de>Forstwirtschaftshelfer</de>
+        <ru>Помощь лесному хозяйству</ru>
     </title>
     
     <description>
-        <en><![CDATA[This mod provides more detailed information for pieces of wood and displays them in the info box:
+        <en><![CDATA[This mod (formerly known as "Tree Value Info") provides more detailed information for pieces of wood and displays them in the info box:
 
 - The volume of the piece of wood in liters. This is also being displayed before felling.
 - The current value, which is the amount of money you would get if you sold the piece of wood in its current form.
@@ -18,6 +18,8 @@
 - The amount of liters you would get when processing the piece of wood with a wood chipper.
 - The amount of money you would get if you sold the wood chips right now.
 - An estimation of money you would get if you sold the wood chips at best price (sometimes you can get more than that, due to randonmness).
+
+Additionally, the mod helps with making equal length cuts by displaying an indicator where to cut and snapping the chainsaw when it is within 20cm (about 8 inches) of the indicator.
 
 Note that in order to get the maximum quality possible, a piece of wood needs to be a near perfect frustum of a cone, between 6-11m in length (about 20-36 feet) and may not have any branches still attached.
 A perfect shape is not possible for every piece of wood.
@@ -31,6 +33,7 @@ Changelog:
 Version 1.0.4.0
 - Added a feature which indicates the desired cut location and snaps the chainsaw to it when the chainsaw is within 20cm of that location
 - Added a keybind for this new feature (default: Z on English keyboards)
+- Renamed mod from "Tree Value Info" to "Forestry Helper" since it is no longer a mere display
 
 Version 1.0.3.1
 - Resolved a mod conflict with Wood Harvester Controls and decreased likelyhood of similar conflicts with other mods
@@ -48,7 +51,7 @@ Version 1.0.2.0:
 Version 1.0.1.0:
 - Added wood chip info
 ]]></en>
-        <de><![CDATA[Diese Mod stellt detaillierte Informationen über ein Holzstück zur Verfügung und zeigt diese Informationen an:
+        <de><![CDATA[Diese Mod (früher "Holzpreis Info" genannt) stellt detaillierte Informationen über ein Holzstück zur Verfügung und zeigt diese Informationen an:
 
 - Das Volumen des Holzstücks in Litern. Dies wird auch dann angezeigt, wenn der Baum noch nicht gefällt wurde.
 - Der aktuelle Wert, den man bekommen würde, wenn man das Holzstück in seiner aktuellen Form verkaufen würde.
@@ -57,6 +60,8 @@ Version 1.0.1.0:
 - Die Anzahl an Litern, die man bekommen würde, wenn man das Holzstück mit einem Häcksler verarbeiten würde.
 - Die Menge an Geld, die man bekommen würde, wenn man die Hackschnitzel sofort verkaufen würde.
 - Eine Abschätzung über den Preis, den man erzielen würde, wenn man die Hackschnitzel zum Bestpreis verkauft (manchmal bekommt man noch mehr, aufgrund von zufälligen Abweichungen).
+
+Zusätzlich hilft die Mod dabei, Baumstämme in gleich große Stücke zu schneiden, indem eine Markierung für den nächsten Schnitt angezeigt wird, und die Kettensäge an dieser Markierung einrastet, wenn sie weniger als 20cm davon entfernt ist.
 
 Beachtet, dass man die maximale Qualität nur dann erreicht, wenn das Holzstück nahezu einem perfekten Kegelstumpf gleicht, 6-11m lang ist und keine Äste mehr vorhanden sind.
 Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
@@ -67,6 +72,7 @@ Changelog:
 Version 1.0.4.0
 - Funktion hinzugefügt, mit der man die gewünschte Position des nächsten Schnitts anzeigen kann. Die Kettensäge rastet an dieser Position ein, wenn sie max. 20cm entfernt ist.
 - Konfigurierbares Tastenkürzel für diese Funktion hinzugefügt (Standardmäßig Y auf einer deutschen Tastatur)
+- Mod von "Holzpreis Info" in "Forstwirtschaftshelfer" umbenannt, da sie keine reine Anzeige mehr ist
 
 Version 1.0.3.1
 - Konflikts mit Holzvollernter-Steuerungen gelöst und Chance reduziert, dass vergleichbare Konflikte auftreten
