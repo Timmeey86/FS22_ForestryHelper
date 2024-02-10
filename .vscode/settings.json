@@ -36,6 +36,9 @@
         "DebugUtil",
         "getSplitShapePlaneExtents",
         "testSplitShape",
-        "setRotation"
+        "setRotation",
+        "Player",
+        "g_inputBinding",
+        "GS_PRIO_LOW"
     ]
 }

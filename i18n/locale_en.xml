@@ -15,5 +15,7 @@
         <text name="tvi_good" text="good" />
         <text name="tvi_acceptable" text="acceptable" />
         <text name="tvi_bad" text="bad" />
+        <text name="tvi_change_length" text="Desired length" />
+        <text name="CYCLE_CUT_INDICATOR" text="Change desired length" />
     </texts>
 </l10n>

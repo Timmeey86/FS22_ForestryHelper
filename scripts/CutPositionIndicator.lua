@@ -1,7 +1,12 @@
 ---@class CutPositionIndicator
 ---This class is responsible for displaying an indicator for the desired cut position
 ---Most of this code was created by taking a look at the LUADOC for the chainsaw class and see where it uses the ringSelector
-CutPositionIndicator = {}
+CutPositionIndicator = {
+    -- Constants for translations
+    I18N_IDS = {
+        CHANGE_LENGTH = 'tvi_change_length'
+    }
+}
 
 local CutPositionIndicator_mt = Class(CutPositionIndicator)
 
@@ -13,6 +18,8 @@ function CutPositionIndicator.new()
     self.ring = nil
     self.loadRequestId = nil
     self.chainsawIsDeleted = false
+    self.cycleActionEventId = nil
+    self.cutIndicationWidth = 1
     self.debugPositionDetection = false
     self.debugIndicator = false
     return self
@@ -46,6 +53,9 @@ function CutPositionIndicator:before_chainsawDeactivate(chainsaw)
             setVisibility(self.ring, false)
         end
     end
+
+    -- Allow cut indication width cycling
+    g_inputBinding:setActionEventActive(self.cycleActionEventId, false)
 end
 
 ---This gets called by the game engine once the I3D for the ring selector has finished loading. Note that this is not an override of a chainsaw function
@@ -65,6 +75,9 @@ function CutPositionIndicator:onOwnRingLoaded(node, failedReason, args)
             setShaderParameter(self.ring, "colorScale", 0.7, .0, 0.7, 1, false)
         end
         delete(node)
+
+        -- Allow cut indication width cycling
+        g_inputBinding:setActionEventActive(self.cycleActionEventId, true)
     end
 end
 
@@ -82,6 +95,9 @@ function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
         self.loadRequestId = g_i3DManager:loadSharedI3DFileAsync(filename, false, false, self.onOwnRingLoaded, self, chainsaw.player)
     end
     self.chainsawIsDeleted = false
+
+    -- TEMP
+    chainsaw.defaultCutDuration = 1
 end
 
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
@@ -105,8 +121,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             local lenBelow = getSplitShapePlaneExtents(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz)
 
             -- Determine how far the projected cut location must be from the chainsaw focus location
-            local TEMP_desiredLength = 6
-            local xDiff = TEMP_desiredLength - lenBelow
+            local xDiff = self.cutIndicationWidth - lenBelow
 
             -- Shift the chainsaw location by the required X distance, along the local X axis of the tree
             local desiredLocation = {}
@@ -140,13 +155,17 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             -- Search in a square starting in the search square corner. We supply X and Y unit vectors, but the function will actually search in the Y/Z plane
             local minY, maxY, minZ, maxZ = testSplitShape(shape, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
             if minY ~= nil then
-                -- Move the corner of the search square used above to the center of the found location. min/max Y/Z are relative to that location
+                -- Move the corner of the search square used above to the center of the found location. min/max Y/Z are relative to the search square corner
                 local yCenter = (minY + maxY) / 2.0
                 local zCenter = (minZ + maxZ) / 2.0
                 local indicatorX = searchSquareCorner.x + yCenter * yx + zCenter * zx
                 local indicatorY = searchSquareCorner.y + yCenter * yy + zCenter * zy
                 local indicatorZ = searchSquareCorner.z + yCenter * yz + zCenter * zz
                 setTranslation(self.ring, indicatorX, indicatorY, indicatorZ)
+
+                -- Adjust the radius
+                local diameter = math.max((maxY - minY), (maxZ - minZ)) * 1.4
+                setScale(self.ring, 1, diameter, diameter)
 
                 -- Rotate the ring around its own Y axis to match the tree direction
                 setRotation(self.ring, 0,0,0)
@@ -161,7 +180,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
                 if self.debugIndicator then
                     local yx1,yy1,yz1 = localDirectionToWorld(self.ring, 0,1,0)
                     local zx1,zy1,zz1 = localDirectionToWorld(self.ring, 0,0,1)
-                    DebugUtil.drawDebugGizmoAtWorldPos(indicatorX, indicatorY, indicatorZ, yx1,yy1,yz1, zx1,zy1,zz1, "Indicator", false)
+                    DebugUtil.drawDebugGizmoAtWorldPos(indicatorX, indicatorY, indicatorZ, yx1,yy1,yz1, zx1,zy1,zz1, ('%.3f'):format(diameter), false)
                     DebugUtil.drawDebugGizmoAtWorldPos(indicatorX, indicatorY, indicatorZ, yx,yy,yz, zx,zy,zz, "", false)
                 end
             else
@@ -169,18 +188,41 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
                 setVisibility(self.ring, false)
                 setRotation(self.ring, 0,0,0)
             end
-
-            -- temp: use fixed scale
-            setScale(self.ring, 1,1,1)
         end
     end
+end
+
+---Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
+function CutPositionIndicator:registerActionEvents()
+    local _, actionEventId = g_inputBinding:registerActionEvent('CYCLE_CUT_INDICATOR', self, CutPositionIndicator.cycleCutIndicator, true, false, false, true)
+    self.cycleActionEventId = actionEventId
+    g_inputBinding:setActionEventTextPriority(actionEventId, GS_PRIO_LOW)
+    g_inputBinding:setActionEventActive(actionEventId, false)
+    g_inputBinding:setActionEventText(actionEventId, "")
+end
+
+---Updates the help menu when applicable
+---@param chainsaw table @The chainsaw
+function CutPositionIndicator:after_chainsawUpdate(chainsaw, dt, allowInput)
+    if chainsaw.isClient then
+        g_inputBinding:setActionEventText(self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, "m"))
+    end
+end
+
+function CutPositionIndicator:cycleCutIndicator()
+    self.cutIndicationWidth = 1 + self.cutIndicationWidth % 12 -- from 1 to 12
+    g_inputBinding:setActionEventText(self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, "m"))
 end
 
 -- Register all our functions as late as possible just in case other mods which are further behind in the alphabet replace methods 
 -- rather than overriding them properly.
 Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
+    -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
     Chainsaw.delete = Utils.prependedFunction(Chainsaw.delete, function(chainsaw) cutPositionIndicator:before_chainsawDelete(chainsaw) end)
     Chainsaw.onDeactivate = Utils.prependedFunction(Chainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
     Chainsaw.postLoad = Utils.appendedFunction(Chainsaw.postLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
     Chainsaw.updateRingSelector = Utils.appendedFunction(Chainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
+    Chainsaw.update = Utils.appendedFunction(Chainsaw.update, function(chainsaw, dt, allowInput) cutPositionIndicator:after_chainsawUpdate(chainsaw, dt, allowInput) end)
+
+    Player.registerActionEvents = Utils.appendedFunction(Player.registerActionEvents, function(player) cutPositionIndicator:registerActionEvents() end)
 end)

@@ -90,4 +90,14 @@ Version 1.0.1.0:
     </extraSourceFiles>
 
     <l10n filenamePrefix="i18n/locale" />
+
+    <actions>
+        <action name="CYCLE_CUT_INDICATOR" axisType="HALF"/>
+    </actions>
+    <inputBinding>
+        <actionBinding action="CYCLE_CUT_INDICATOR">
+            <binding device="KB_MOUSE_DEFAULT" input="key_z"/>
+            <binding device="GAMEPAD_DEFAULT" input="BUTTON_4"/>
+        </actionBinding>
+    </inputBinding>
 </modDesc>
