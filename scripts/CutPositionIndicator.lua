@@ -119,6 +119,40 @@ function CutPositionIndicator.rotateObjectAroundYAxis(object, xx,xy,xz)
     setRotation(object, 0, yRotation, 0)
 end
 
+---Calculates a corner of a search square at a fixed width from the start of the log
+---@param chainsawX number @The X part of the chainsaw's ring selector
+---@param chainsawY number @The Y part of the chainsaw's ring selector
+---@param chainsawZ number @The Z part of the chainsaw's ring selector
+---@param xx number @The X part of the unit vector along the log's X axis
+---@param xy number @The Y part of the unit vector along the log's X axis
+---@param xz number @The Z part of the unit vector along the log's X axis
+---@param yx number @The X part of the unit vector along the log's Y axis
+---@param yy number @The Y part of the unit vector along the log's Y axis
+---@param yz number @The Z part of the unit vector along the log's Y axis
+---@param zx number @The X part of the unit vector along the log's Z axis
+---@param zy number @The Y part of the unit vector along the log's Z axis
+---@param zz number @The Z part of the unit vector along the log's Z axis
+---@param lenBelow number @The amount of meters between the start of the log and the chainsaw's ring selector
+---@param searchSquareSize number @The size of one side of the search square
+---@return table @The X/Y/Z coordinates of the search square corner
+function CutPositionIndicator:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+    -- Determine how far the projected cut location must be from the chainsaw focus location
+    local xDiff = self.cutIndicationWidth - lenBelow
+
+    -- Shift the chainsaw location by the required X distance, along the local X axis of the tree
+    local desiredLocation = {}
+    desiredLocation.x, desiredLocation.y, desiredLocation.z = chainsawX + xDiff * xx, chainsawY + xDiff * xy, chainsawZ + xDiff * xz
+
+    -- Find the tree at this location
+    local searchSquareHalfSize = searchSquareSize / 2
+    local searchSquareCorner = {
+        x = desiredLocation.x - yx * searchSquareHalfSize - zx * searchSquareHalfSize,
+        y = desiredLocation.y - yy * searchSquareHalfSize - zy * searchSquareHalfSize,
+        z = desiredLocation.z - yz * searchSquareHalfSize - zz * searchSquareHalfSize
+    }
+    return searchSquareCorner
+end
+
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
 ---@param chainsaw table @The chain saw
 function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
@@ -144,25 +178,15 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             -- Detect how far the beginning of the tree is away
             local lenBelow = getSplitShapePlaneExtents(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz)
 
-            -- Determine how far the projected cut location must be from the chainsaw focus location
-            local xDiff = self.cutIndicationWidth - lenBelow
-
-            -- Shift the chainsaw location by the required X distance, along the local X axis of the tree
-            local desiredLocation = {}
-            desiredLocation.x, desiredLocation.y, desiredLocation.z = chainsawX + xDiff * xx, chainsawY + xDiff * xy, chainsawZ + xDiff * xz
-
-            -- Find the tree at this location
-            local searchSquareHalfSize = .6
-            local searchSquareSize = searchSquareHalfSize * 2
-            local searchSquareCorner = {
-                x = desiredLocation.x - yx * searchSquareHalfSize - zx * searchSquareHalfSize,
-                y = desiredLocation.y - yy * searchSquareHalfSize - zy * searchSquareHalfSize,
-                z = desiredLocation.z - yz * searchSquareHalfSize - zz * searchSquareHalfSize
-            }
+            -- Make a large enough search square to find the tree again
+            local searchSquareSize = 2
+            local searchSquareCorner = {}
+            if true then
+                searchSquareCorner = self:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+            end
 
             if self.debugPositionDetection then
                 DebugUtil.drawDebugGizmoAtWorldPos(chainsawX,chainsawY,chainsawZ, yx,yy,yz, zx,zy,zz, "Cut", false)
-                DebugUtil.drawDebugGizmoAtWorldPos(desiredLocation.x, desiredLocation.y, desiredLocation.z, yx,yy,yz, zx,zy,zz, "desired", false)
                 DebugUtil.drawDebugGizmoAtWorldPos(searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, yx,yy,yz, zx,zy,zz, "search", false)
                 DebugUtil.drawDebugAreaRectangle(
                     searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z,
