@@ -15,7 +15,7 @@
         <text name="tvi_good" text="хорошо" />
         <text name="tvi_acceptable" text="приемлемо" />
         <text name="tvi_bad" text="плохо" />
-        <text name="tvi_change_length" text="Желаемая длина" />
-        <text name="input_CYCLE_CUT_INDICATOR" text="Изменить желаемую длину" />
+        <text name="tvi_change_length" text="Длина распила" />
+        <text name="input_CYCLE_CUT_INDICATOR" text="Изменить длину распила" />
     </texts>
 </l10n>
