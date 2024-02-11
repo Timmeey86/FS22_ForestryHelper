@@ -22,7 +22,6 @@ function CutPositionIndicator.new()
     self.cutIndicationWidth = 1
     self.chainsawIsSnapped = false
 
-
     self.debugPositionDetection = false
     self.debugIndicator = false
     return self
@@ -153,6 +152,94 @@ function CutPositionIndicator:getIndicatorSearchLocationForFixedWidth(chainsawX,
     return searchSquareCorner
 end
 
+---comment
+---@param shapeId any
+---@param chainsawX any
+---@param chainsawY any
+---@param chainsawZ any
+---@param xx any
+---@param xy any
+---@param xz any
+---@param yx any
+---@param yy any
+---@param yz any
+---@param zx any
+---@param zy any
+---@param zz any
+---@param lenBelow any
+---@param searchSquareSize any
+---@return any
+function CutPositionIndicator:getIndicatorSearchLocationForFixedMass(shapeId, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+
+    -- Find the radius at the tree's start
+    local adjustedLenBelow = lenBelow - .1
+    local treeStartLocation = {
+        x = chainsawX - adjustedLenBelow * xx,
+        y = chainsawY - adjustedLenBelow * xy,
+        z = chainsawZ - adjustedLenBelow * xz
+    }
+    local searchSquareHalfSize = searchSquareSize / 2
+    local searchSquareCorner = {
+        x = treeStartLocation.x - yx * searchSquareHalfSize - zx * searchSquareHalfSize,
+        y = treeStartLocation.y - yy * searchSquareHalfSize - zy * searchSquareHalfSize,
+        z = treeStartLocation.z - yz * searchSquareHalfSize - zz * searchSquareHalfSize
+    }
+    if self.debugPositionDetection then
+        DebugUtil.drawDebugGizmoAtWorldPos(searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, yx,yy,yz, zx,zy,zz, "startSearch", false)
+        DebugUtil.drawDebugAreaRectangle(
+            searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z,
+            searchSquareCorner.x + yx * searchSquareSize,
+            searchSquareCorner.y + yy * searchSquareSize,
+            searchSquareCorner.z + yz * searchSquareSize,
+            searchSquareCorner.x + zx * searchSquareSize,
+            searchSquareCorner.y + zy * searchSquareSize,
+            searchSquareCorner.z + zz * searchSquareSize,
+            false, .7,0,.7
+        )
+    end
+    local minY, maxY, minZ, maxZ = testSplitShape(shapeId, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
+    if minY == nil then
+        return nil
+    end
+    -- else: Tree was found, calculate the radius
+    local radius = math.max((maxY - minY), (maxZ - minZ)) / 2.0
+
+    -- Get the density of the tree
+    local density = getMass(shapeId) / getVolume(shapeId)
+
+    -- Calculate the volume we'd need for 200kg
+    local targetVolume = 200 / density / 1000
+
+    -- Calculate the length a perfect cylinder would have to have that volume (since the log is not a perfect cylinder, it will have less than 200kg)
+    local area = math.pi * radius * radius
+    -- Increase the length by a factor to cope for the fact that the log is more like the frustom of a cone
+    local targetLength = targetVolume / area * 1.25
+
+    if self.debugPositionDetection then
+        local textSize = getCorrectTextSize(0.015)
+        local color = {1,1,1}
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .6, searchSquareCorner.z, ('density: %.3f'):format(density), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .55, searchSquareCorner.z, ('targetVolume: %.3f'):format(targetVolume), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .5, searchSquareCorner.z, ('area: %.3f'):format(area), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .45, searchSquareCorner.z, ('targetLength: %.3f'):format(targetLength), textSize, 0, color)
+    end
+
+    -- Determine how far the projected cut location must be from the chainsaw focus location
+    local xDiff = targetLength - lenBelow
+
+    -- Shift the chainsaw location by the required X distance, along the local X axis of the tree
+    local desiredLocation = {}
+    desiredLocation.x, desiredLocation.y, desiredLocation.z = chainsawX + xDiff * xx, chainsawY + xDiff * xy, chainsawZ + xDiff * xz
+
+    -- Find the tree at this location
+    searchSquareCorner = {
+        x = desiredLocation.x - yx * searchSquareHalfSize - zx * searchSquareHalfSize,
+        y = desiredLocation.y - yy * searchSquareHalfSize - zy * searchSquareHalfSize,
+        z = desiredLocation.z - yz * searchSquareHalfSize - zz * searchSquareHalfSize
+    }
+    return searchSquareCorner
+end
+
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
 ---@param chainsaw table @The chain saw
 function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
@@ -181,11 +268,13 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             -- Make a large enough search square to find the tree again
             local searchSquareSize = 2
             local searchSquareCorner = {}
-            if true then
+            if false then
                 searchSquareCorner = self:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+            else
+                searchSquareCorner = self:getIndicatorSearchLocationForFixedMass(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
             end
 
-            if self.debugPositionDetection then
+            if searchSquareCorner ~= nil and self.debugPositionDetection then
                 DebugUtil.drawDebugGizmoAtWorldPos(chainsawX,chainsawY,chainsawZ, yx,yy,yz, zx,zy,zz, "Cut", false)
                 DebugUtil.drawDebugGizmoAtWorldPos(searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, yx,yy,yz, zx,zy,zz, "search", false)
                 DebugUtil.drawDebugAreaRectangle(
@@ -201,7 +290,10 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             end
 
             -- Search in a square starting in the search square corner. We supply X and Y unit vectors, but the function will actually search in the Y/Z plane
-            local minY, maxY, minZ, maxZ = testSplitShape(shape, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
+            local minY, maxY, minZ, maxZ = nil, nil, nil, nil
+            if searchSquareCorner ~= nil then
+                minY, maxY, minZ, maxZ = testSplitShape(shape, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
+            end
             if minY ~= nil then
                 -- Move the corner of the search square used above to the center of the found location. min/max Y/Z are relative to the search square corner
                 local yCenter = (minY + maxY) / 2.0
