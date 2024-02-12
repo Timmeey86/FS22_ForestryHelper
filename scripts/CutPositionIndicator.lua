@@ -4,7 +4,17 @@
 CutPositionIndicator = {
     -- Constants for translations
     I18N_IDS = {
-        CHANGE_LENGTH = 'tvi_change_length'
+        DESIRED_LENGTH = 'tvi_desired_length',
+        WEIGHT_LIMIT = 'tvi_weight_limit',
+        INDICATOR_MODE = 'tvi_indicator_mode',
+        MODE_OFF = 'tvi_mode_off',
+        MODE_LENGTH = 'tvi_mode_length',
+        MODE_WEIGHT = 'tvi_mode_weight'
+    },
+    INDICATOR_MODE = {
+        OFF = 0,
+        LENGTH = 1,
+        WEIGHT = 2
     }
 }
 
@@ -18,8 +28,12 @@ function CutPositionIndicator.new()
     self.ring = nil
     self.loadRequestId = nil
     self.chainsawIsDeleted = false
-    self.cycleActionEventId = nil
-    self.cutIndicationWidth = 1
+    self.lengthActionEventId = nil
+    self.weightActionEventId = nil
+    self.modeActionEventId = nil
+    self.indicationLength = 1
+    self.weightLimit = 200
+    self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.LENGTH
     self.chainsawIsSnapped = false
 
     self.debugPositionDetection = false
@@ -56,8 +70,10 @@ function CutPositionIndicator:before_chainsawDeactivate(chainsaw)
         end
     end
 
-    -- Allow cut indication width cycling
-    g_inputBinding:setActionEventActive(self.cycleActionEventId, false)
+    -- Disable menu actions
+    g_inputBinding:setActionEventActive(self.modeActionEventId, false)
+    g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
+    g_inputBinding:setActionEventActive(self.weightActionEventId, false)
 end
 
 ---This gets called by the game engine once the I3D for the ring selector has finished loading. Note that this is not an override of a chainsaw function
@@ -78,9 +94,13 @@ function CutPositionIndicator:onOwnRingLoaded(node, failedReason, args)
         end
         delete(node)
 
-        -- Allow cut indication width cycling
-        g_inputBinding:setActionEventActive(self.cycleActionEventId, true)
-        self:updateHelpMenuText()
+        --- Enable action events
+        g_inputBinding:setActionEventActive(self.modeActionEventId, true)
+        if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
+            g_inputBinding:setActionEventActive(self.lengthActionEventId, true)
+        elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
+            g_inputBinding:setActionEventActive(self.weightActionEventId, true)
+        end
     end
 end
 
@@ -136,7 +156,7 @@ end
 ---@return table @The X/Y/Z coordinates of the search square corner
 function CutPositionIndicator:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
     -- Determine how far the projected cut location must be from the chainsaw focus location
-    local xDiff = self.cutIndicationWidth - lenBelow
+    local xDiff = self.indicationLength - lenBelow
 
     -- Shift the chainsaw location by the required X distance, along the local X axis of the tree
     local desiredLocation = {}
@@ -152,24 +172,24 @@ function CutPositionIndicator:getIndicatorSearchLocationForFixedWidth(chainsawX,
     return searchSquareCorner
 end
 
----comment
----@param shapeId any
----@param chainsawX any
----@param chainsawY any
----@param chainsawZ any
----@param xx any
----@param xy any
----@param xz any
----@param yx any
----@param yy any
----@param yz any
----@param zx any
----@param zy any
----@param zz any
----@param lenBelow any
----@param searchSquareSize any
----@return any
-function CutPositionIndicator:getIndicatorSearchLocationForFixedMass(shapeId, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+---Calculates a search corner to find the indicator position for the weight limit mode
+---@param shapeId number @The ID of the log shape
+---@param chainsawX number @The X part of the chainsaw's ring selector
+---@param chainsawY number @The Y part of the chainsaw's ring selector
+---@param chainsawZ number @The Z part of the chainsaw's ring selector
+---@param xx number @The X part of the unit vector along the log's X axis
+---@param xy number @The Y part of the unit vector along the log's X axis
+---@param xz number @The Z part of the unit vector along the log's X axis
+---@param yx number @The X part of the unit vector along the log's Y axis
+---@param yy number @The Y part of the unit vector along the log's Y axis
+---@param yz number @The Z part of the unit vector along the log's Y axis
+---@param zx number @The X part of the unit vector along the log's Z axis
+---@param zy number @The Y part of the unit vector along the log's Z axis
+---@param zz number @The Z part of the unit vector along the log's Z axis
+---@param lenBelow number @The amount of meters between the start of the log and the chainsaw's ring selector
+---@param searchSquareSize number @The size of one side of the search square
+---@return table @The X/Y/Z coordinates of the search square corner
+function CutPositionIndicator:getIndicatorSearchLocationForWeightLimit(shapeId, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
 
     -- Find the radius at the tree's start
     local adjustedLenBelow = lenBelow - .1
@@ -208,12 +228,15 @@ function CutPositionIndicator:getIndicatorSearchLocationForFixedMass(shapeId, ch
     local density = getMass(shapeId) / getVolume(shapeId)
 
     -- Calculate the volume we'd need for 200kg
-    local targetVolume = 200 / density / 1000
+    local targetVolume = self.weightLimit / density / 1000 -- density is tons / liter so we divide by 1000 to get kg / liter
 
     -- Calculate the length a perfect cylinder would have to have that volume (since the log is not a perfect cylinder, it will have less than 200kg)
     local area = math.pi * radius * radius
     -- Increase the length by a factor to cope for the fact that the log is more like the frustom of a cone
-    local targetLength = targetVolume / area * 1.25
+    local targetLength = targetVolume / area
+
+    -- Adjust the length since it's not an actual cone (so we get closer to 200kg)
+    targetLength = targetLength * 1.04 ^ targetLength
 
     if self.debugPositionDetection then
         local textSize = getCorrectTextSize(0.015)
@@ -222,6 +245,7 @@ function CutPositionIndicator:getIndicatorSearchLocationForFixedMass(shapeId, ch
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .55, searchSquareCorner.z, ('targetVolume: %.3f'):format(targetVolume), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .5, searchSquareCorner.z, ('area: %.3f'):format(area), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .45, searchSquareCorner.z, ('targetLength: %.3f'):format(targetLength), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .4, searchSquareCorner.z, ('radius: %.3f'):format(radius), textSize, 0, color)
     end
 
     -- Determine how far the projected cut location must be from the chainsaw focus location
@@ -248,7 +272,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
         -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
         local cutIndicatorShallBeVisible = false
         if getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) == RigidBodyType.DYNAMIC then
-            cutIndicatorShallBeVisible = true
+            cutIndicatorShallBeVisible = (self.indicatorMode ~= CutPositionIndicator.INDICATOR_MODE.OFF)
         end
         setVisibility(self.ring, cutIndicatorShallBeVisible)
 
@@ -268,10 +292,10 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             -- Make a large enough search square to find the tree again
             local searchSquareSize = 2
             local searchSquareCorner = {}
-            if false then
+            if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
                 searchSquareCorner = self:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
-            else
-                searchSquareCorner = self:getIndicatorSearchLocationForFixedMass(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+            elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
+                searchSquareCorner = self:getIndicatorSearchLocationForWeightLimit(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
             end
 
             if searchSquareCorner ~= nil and self.debugPositionDetection then
@@ -345,26 +369,95 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
     end
 end
 
----Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
-function CutPositionIndicator:registerActionEvents()
+---Registers an action event which will trigger on key press
+---@param eventKey string @The event key from the modDesc.xml
+---@param callbackFunction function @The function to be called on press
+---@return integer @The ID of the action event
+function CutPositionIndicator:registerOnPressAction(eventKey, callbackFunction)
     -- Register the action. Bool variables: Trigger on key release, trigger on key press, trigger always, unknown
-    local _, actionEventId = g_inputBinding:registerActionEvent('CYCLE_CUT_INDICATOR', self, CutPositionIndicator.cycleCutIndicator, false, true, false, true)
-    self.cycleActionEventId = actionEventId
+    local _, actionEventId = g_inputBinding:registerActionEvent(eventKey, self, callbackFunction, false, true, false, true)
     g_inputBinding:setActionEventTextPriority(actionEventId, GS_PRIO_LOW)
     g_inputBinding:setActionEventActive(actionEventId, false)
     g_inputBinding:setActionEventText(actionEventId, "")
+    return actionEventId
+end
+---Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
+function CutPositionIndicator:registerActionEvents()
+    self.lengthActionEventId = self:registerOnPressAction('CYCLE_LENGTH_INDICATOR', CutPositionIndicator.cycleLengthIndicator)
+    self.weightActionEventId = self:registerOnPressAction('CYCLE_WEIGHT_INDICATOR', CutPositionIndicator.cycleWeightIndicator)
+    self.modeActionEventId = self:registerOnPressAction('SWITCH_INDICATOR_MODE', CutPositionIndicator.cycleIndicatorMode)
+
+    self:updateIndicatorModeText()
+    self:updateLengthIndicatorText()
+    self:updateWeightIndicatorText()
 end
 
 ---Cycles the desired cut length
-function CutPositionIndicator:cycleCutIndicator()
-    self.cutIndicationWidth = 1 + self.cutIndicationWidth % 12 -- from 1 to 12
-    self:updateHelpMenuText()
+function CutPositionIndicator:cycleLengthIndicator()
+    self.indicationLength = 1 + self.indicationLength % 12 -- from 1 to 12
+    self:updateLengthIndicatorText()
 end
 
----Updates the text of "desired length" option in the help menu so it reflects the current cut indication width
-function CutPositionIndicator:updateHelpMenuText()
+---Cycles the weight limit
+function CutPositionIndicator:cycleWeightIndicator()
+     -- 200 (base game) to 1000 (max lumberjack strength setting)
+    self.weightLimit = (self.weightLimit - 100) % 900 + 200
+    self:updateWeightIndicatorText()
+end
+
+-- Cycles the indication mode
+function CutPositionIndicator:cycleIndicatorMode()
+
+    if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.OFF then
+
+        -- Next mode: Length
+        g_inputBinding:setActionEventActive(self.lengthActionEventId, true)
+        self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.LENGTH
+
+    elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
+
+        -- Next mode: Weight
+        g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
+        g_inputBinding:setActionEventActive(self.weightActionEventId, true)
+        self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.WEIGHT
+
+    elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
+
+        -- Next mode: off
+        g_inputBinding:setActionEventActive(self.weightActionEventId, false)
+        self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.OFF
+
+    end
+    self:updateIndicatorModeText()
+end
+
+---Updates the text of the length indicator help menu entry
+function CutPositionIndicator:updateLengthIndicatorText()
     g_inputBinding:setActionEventText(
-        self.cycleActionEventId, ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.CHANGE_LENGTH), self.cutIndicationWidth, g_i18n:getText("unit_mShort")))
+        self.lengthActionEventId,
+        ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.DESIRED_LENGTH), self.indicationLength, g_i18n:getText("unit_mShort")))
+end
+
+---Updates the text of the weight indicator help menu entry
+function CutPositionIndicator:updateWeightIndicatorText()
+    g_inputBinding:setActionEventText(
+        self.weightActionEventId,
+        ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.WEIGHT_LIMIT), self.weightLimit, g_i18n:getText("unit_kg")))
+end
+
+---Updates the text of the indicator mode entry
+function CutPositionIndicator:updateIndicatorModeText()
+    local indicatorModeText = ""
+    if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.OFF then
+        indicatorModeText = g_i18n:getText(CutPositionIndicator.I18N_IDS.MODE_OFF)
+    elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
+        indicatorModeText = g_i18n:getText(CutPositionIndicator.I18N_IDS.MODE_LENGTH)
+    elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
+        indicatorModeText = g_i18n:getText(CutPositionIndicator.I18N_IDS.MODE_WEIGHT)
+    end
+    g_inputBinding:setActionEventText(
+        self.modeActionEventId,
+        ('%s: %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.INDICATOR_MODE), indicatorModeText))
 end
 
 ---Overrides the cut location in case the chainsaw is currently snapped to the cut indicator. Without this, the cut would be in the wrong location
