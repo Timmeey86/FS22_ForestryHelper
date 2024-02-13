@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <l10n>
-    <translationContributors>Gonimy_Vetrom, vitalii2011</translationContributors>
+    <translationContributors>Gonimy_Vetrom, nagor</translationContributors>
     <texts>
         <text name="tvi_volume" text="Объём" />
         <text name="tvi_current_value" text="Текущая стоимость" />
@@ -16,13 +16,13 @@
         <text name="tvi_acceptable" text="приемлемо" />
         <text name="tvi_bad" text="плохо" />
         <text name="tvi_desired_length" text="Длина распила" />
-        <text name="tvi_weight_limit" text="Weight limit" />
-        <text name="tvi_indicator_mode" text="Indication mode" />
-        <text name="tvi_mode_off" text="Off" />
-        <text name="tvi_mode_length" text="Length" />
-        <text name="tvi_mode_weight" text="Weight" />
+        <text name="tvi_weight_limit" text="Предел веса" />
+        <text name="tvi_indicator_mode" text="Режим индикации" />
+        <text name="tvi_mode_off" text="Выкл" />
+        <text name="tvi_mode_length" text="Длина" />
+        <text name="tvi_mode_weight" text="Вес" />
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Изменить длину распила" />
-        <text name="input_CYCLE_WEIGHT_INDICATOR" text="Change weight limit" />
-        <text name="input_SWITCH_INDICATOR_MODE" text="Change indication mode" />
+        <text name="input_CYCLE_WEIGHT_INDICATOR" text="Изменить ограничение по весу" />
+        <text name="input_SWITCH_INDICATOR_MODE" text="Изменить режим индикации" />
     </texts>
 </l10n>
