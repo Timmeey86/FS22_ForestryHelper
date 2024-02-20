@@ -15,7 +15,14 @@
         <text name="tvi_good" text="Gut" />
         <text name="tvi_acceptable" text="Akzeptabel" />
         <text name="tvi_bad" text="Schlecht" />
-        <text name="tvi_change_length" text="Wunschlänge" />
-        <text name="input_CYCLE_CUT_INDICATOR" text="Wunschlänge ändern" />
+        <text name="tvi_desired_length" text="Wunschlänge" />
+        <text name="tvi_weight_limit" text="Gewichtsgrenze" />
+        <text name="tvi_indicator_mode" text="Kennzeichnungsmodus" />
+        <text name="tvi_mode_off" text="Aus" />
+        <text name="tvi_mode_length" text="Länge" />
+        <text name="tvi_mode_weight" text="Gewicht" />
+        <text name="input_CYCLE_LENGTH_INDICATOR" text="Wunschlänge ändern" />
+        <text name="input_CYCLE_WEIGHT_INDICATOR" text="Gewichtsgrenze ändern" />
+        <text name="input_SWITCH_INDICATOR_MODE" text="Kennzeichnungsmodus ändern" />
     </texts>
 </l10n>
