@@ -235,8 +235,38 @@ function CutPositionIndicator:getIndicatorSearchLocationForWeightLimit(shapeId, 
     -- Increase the length by a factor to cope for the fact that the log is more like the frustom of a cone
     local targetLength = targetVolume / area
 
-    -- Adjust the length since it's not an actual cone (so we get closer to 200kg)
-    targetLength = targetLength * 1.04 ^ targetLength
+    -- Get the radius at the target length
+    searchSquareCorner.x = searchSquareCorner.x + xx * targetLength
+    searchSquareCorner.y = searchSquareCorner.y + xy * targetLength
+    searchSquareCorner.z = searchSquareCorner.z + xz * targetLength
+    if self.debugPositionDetection then
+        DebugUtil.drawDebugGizmoAtWorldPos(searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, yx,yy,yz, zx,zy,zz, "secondSearch", false)
+        DebugUtil.drawDebugAreaRectangle(
+            searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z,
+            searchSquareCorner.x + yx * searchSquareSize,
+            searchSquareCorner.y + yy * searchSquareSize,
+            searchSquareCorner.z + yz * searchSquareSize,
+            searchSquareCorner.x + zx * searchSquareSize,
+            searchSquareCorner.y + zy * searchSquareSize,
+            searchSquareCorner.z + zz * searchSquareSize,
+            false, .7,0,.7
+        )
+    end
+    minY, maxY, minZ, maxZ = testSplitShape(shapeId, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z,  xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
+    if minY == nil then
+        return nil
+    end
+    -- else: Tree was still found, get the new radius
+    local radius2 = math.max((maxY - minY), (maxZ - minZ)) / 2.0
+
+    -- Calculate the volume again
+    local averageRadius = (radius + radius2) / 2
+    local estimatedLength = targetLength
+    local estimatedVolume = math.pi * averageRadius * averageRadius * estimatedLength
+    local estimatedMass = estimatedVolume * density * 1000
+
+    -- Adjust the target length accordingly
+    targetLength = targetLength * self.weightLimit / estimatedMass
 
     if self.debugPositionDetection then
         local textSize = getCorrectTextSize(0.015)
@@ -246,6 +276,9 @@ function CutPositionIndicator:getIndicatorSearchLocationForWeightLimit(shapeId, 
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .5, searchSquareCorner.z, ('area: %.3f'):format(area), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .45, searchSquareCorner.z, ('targetLength: %.3f'):format(targetLength), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .4, searchSquareCorner.z, ('radius: %.3f'):format(radius), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .35, searchSquareCorner.z, ('estimatedLength: %.3f'):format(estimatedLength), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .3, searchSquareCorner.z, ('estimatedVolume: %.3f'):format(estimatedVolume), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .25, searchSquareCorner.z, ('estimatedMass: %.3f'):format(estimatedMass), textSize, 0, color)
     end
 
     -- Determine how far the projected cut location must be from the chainsaw focus location

@@ -16,7 +16,7 @@ The mod offers three modes for cutting with a chain saw, through which you can c
 - "Indication Mode: Length": Cut to exact lengths from 1-12 meters (Cycle lengths with key Z)
 - "Indication Mode: Weight": Cut to pieces which can be carried. This produces pieces less than the given weight limit most of the time.
 
-The weight mode is however just an approximation with a large margin of error, so for 200kg you'll mostly get pieces from 150-195kg, for example.
+The weight mode is however just a rough estimate and can deviated by up to 100kg from the target weight, especially for things like oak trees.
 The weight mode can scale up to 1000kg to match the possible strength settings of the Lumberjack mod.
 
 With any of the active indication modes, the chainsaw will snap to the indicated location once within 20cm. The angle still has to be adjusted manually, however.
@@ -68,8 +68,8 @@ Die Mod bietet drei Modi zum Zuschneiden mit einer Kettensäge, durch die man mi
 - "Kennzeichnungsmodus: Länge": Auf exakte Länge zuschneiden, von 1-12 Meter (Längen kann man über die Taste Y ändern)
 - "Kennzeichnungsmodus: Gewicht": Auf tragbare Stücke zuschneiden. Dieser Modus produziert meistens Stücke mit einem Gewicht unter dem Limit.
 
-Beim Gewichts-Modus ist jedoch nur eine Annäherung mit einer großen Toleranz möglich, wodurch man z.B. bei 200kg meistens Stücke zwischen 150-195kg bekommt.
-Der Gewichtsmodus skaliert bis 1000kg, was den Einstellungen der Holzfäller Mod entspricht.
+Der Gewichts-Modus arbeitet jedoch nur mit einer groben Schätzung, die bis zu 100kg in beide Richtungen abweichen kann, vor allem bei Bäumen wie Eichen.
+Der Gewichtsmodus skaliert bis 1000kg, was den Einstellungmöglichkeiten der Holzfäller Mod entspricht.
 
 Bei den beiden aktiven Kennzeichnungsmodi rastet die Kettensäge bei der angezeigten Position ein, sobald man sich innerhalb von 20cm davon befindet.
 Der Winkel muss jedoch manuell eingestellt werden.
