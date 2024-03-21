@@ -36,7 +36,6 @@ end
 
 local treeValueInfo = TreeValueInfo.new()
 
-
 -- Define a function which returns the appropriate quality text based on defined thresholds
 
 ---Retrieves a translated "perfect", "good", "acceptable", or "bad" text based on the current quality and the provided thresholds.
@@ -97,7 +96,10 @@ function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
     playerHudUpdater.objectBox:addLine(g_i18n:getText(TreeValueInfo.I18N_IDS.VOLUME), g_i18n:formatFluid(shapeData.volume))
 
     -- If the player is looking at a piece of wood on the ground
-    if getIsSplitShapeSplit(treeOrPieceOfWood) and getRigidBodyType(treeOrPieceOfWood) == RigidBodyType.DYNAMIC then
+    -- Note: A the body type for a piece of wood on the ground returns DYNAMIC on servers/in single player, but KINEMATIC on multiplayer clients (reason unknown)
+    --       Therefore we just filter for "not equal to static"
+    if getIsSplitShapeSplit(treeOrPieceOfWood) and getRigidBodyType(treeOrPieceOfWood) ~= RigidBodyType.STATIC then
+
         local pieceOfWood = treeOrPieceOfWood -- alias for readability
 
         -- Check if the player is sitting in a wood harvester

@@ -45,6 +45,7 @@
         "getWorldTranslation",
         "ChainsawUtil",
         "getMass",
-        "getCorrectTextSize"
+        "getCorrectTextSize",
+        "g_currentModName"
     ]
 }

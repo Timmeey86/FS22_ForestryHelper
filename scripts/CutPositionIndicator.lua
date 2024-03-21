@@ -304,7 +304,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
 
         -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
         local cutIndicatorShallBeVisible = false
-        if getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) == RigidBodyType.DYNAMIC then
+        if getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) ~= RigidBodyType.STATIC then
             cutIndicatorShallBeVisible = (self.indicatorMode ~= CutPositionIndicator.INDICATOR_MODE.OFF)
         end
         setVisibility(self.ring, cutIndicatorShallBeVisible)
