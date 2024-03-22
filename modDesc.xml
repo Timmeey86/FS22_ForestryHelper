@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.4.2</version>
+    <version>1.0.4.6</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -39,7 +39,7 @@ While sitting in a wood harvester, you will see basic information about the tree
 It is recommended to use the lumberjack or the measure mod in order to find the desired cut position.
 
 Changelog:
-Version 1.0.4.2
+Version 1.0.4.6
 - Fixed an issue which prevented the mod from working in multiplayer
 
 Version 1.0.4.1
@@ -93,7 +93,7 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Es wird empfohlen, die Holzfäller Mod oder die Maßband Mod zu verwenden, um die gewünschte Stelle für den Schnitt zu finden.
 
 Changelog:
-Version 1.0.4.2
+Version 1.0.4.6
 - Problem behoben, durch das die Mod im Mehrspielermodus nicht funktioniert hat
 
 Version 1.0.4.1

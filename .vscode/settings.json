@@ -46,6 +46,7 @@
         "ChainsawUtil",
         "getMass",
         "getCorrectTextSize",
-        "g_currentModName"
+        "g_currentModName",
+        "Logging"
     ]
 }

@@ -1,3 +1,5 @@
+MOD_NAME = "ForestryHelper"
+
 -- Create a table to store everything related to TreeValueInfo. This will also act like a class
 TreeValueInfo = {
     -- Define some constants for lookup of translated texts. The strings must match the i18n/locale_...xml entries
@@ -183,7 +185,7 @@ local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape)
     superFunc(chainsaw, shape)
 
     -- If the ring selector is displayed, and a shape was detected which is not the root shape
-    if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 then
+    if chainsaw.isClient and chainsaw.player.isEntered and chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 then
         -- Remember the shape
         treeValueInfo.currentShape = shape
     else

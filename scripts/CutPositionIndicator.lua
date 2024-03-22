@@ -35,6 +35,7 @@ function CutPositionIndicator.new()
     self.weightLimit = 200
     self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.LENGTH
     self.chainsawIsSnapped = false
+    self.eventsAreRegisteredAlready = false
 
     self.debugPositionDetection = false
     self.debugIndicator = false
@@ -47,7 +48,7 @@ local cutPositionIndicator = CutPositionIndicator.new()
 ---Deletes our own ring before the chainsaw gets deleted
 ---@param chainsaw table @The chainsaw which will be deleted afterwards
 function CutPositionIndicator:before_chainsawDelete(chainsaw)
-    if chainsaw.isClient then
+    if chainsaw.player.isEntered and chainsaw.isClient then
         if self.ring ~= nil then
             delete(self.ring)
             self.ring = nil
@@ -64,16 +65,16 @@ end
 ---Hides our own ring before the chainsaw gets deactivated
 ---@param chainsaw table @The chainsaw
 function CutPositionIndicator:before_chainsawDeactivate(chainsaw)
-    if chainsaw.isClient then
+    if chainsaw.player.isEntered and chainsaw.isClient then
         if self.ring ~= nil then
             setVisibility(self.ring, false)
         end
-    end
 
-    -- Disable menu actions
-    g_inputBinding:setActionEventActive(self.modeActionEventId, false)
-    g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
-    g_inputBinding:setActionEventActive(self.weightActionEventId, false)
+        -- Disable menu actions
+        g_inputBinding:setActionEventActive(self.modeActionEventId, false)
+        g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
+        g_inputBinding:setActionEventActive(self.weightActionEventId, false)
+    end
 end
 
 ---This gets called by the game engine once the I3D for the ring selector has finished loading. Note that this is not an override of a chainsaw function
@@ -108,17 +109,19 @@ end
 ---@param chainsaw table @The chainsaw
 ---@param xmlFile table @The object which contains the chainsaw XML file's contents
 function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
-    -- Load another ring selector in addition to the one used by the base game chainsaw
-    local filename = xmlFile:getValue("handTool.chainsaw.ringSelector#file")
-    if filename ~= nil then
-        filename = Utils.getFilename(filename, chainsaw.baseDirectory)
-        -- Base game "pins" the shared I3D in cache, but there's no point in doing that twice (it's a shared cache, after all), so we skip that step
+    if chainsaw.player.isEntered and chainsaw.isClient then
+        -- Load another ring selector in addition to the one used by the base game chainsaw
+        local filename = xmlFile:getValue("handTool.chainsaw.ringSelector#file")
+        if filename ~= nil then
+            filename = Utils.getFilename(filename, chainsaw.baseDirectory)
+            -- Base game "pins" the shared I3D in cache, but there's no point in doing that twice (it's a shared cache, after all), so we skip that step
 
-        -- Load the file again
-        self.loadRequestId = g_i3DManager:loadSharedI3DFileAsync(filename, false, false, self.onOwnRingLoaded, self, chainsaw.player)
+            -- Load the file again
+            self.loadRequestId = g_i3DManager:loadSharedI3DFileAsync(filename, false, false, self.onOwnRingLoaded, self, chainsaw.player)
+        end
+        self.chainsawIsDeleted = false
+        self.chainsawIsSnapped = false
     end
-    self.chainsawIsDeleted = false
-    self.chainsawIsSnapped = false
 end
 
 ---Rotates an object so its own X axis points along the given unit vector
@@ -300,11 +303,11 @@ end
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
 ---@param chainsaw table @The chain saw
 function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
-    if self.ring ~= nil then
+    if chainsaw.player.isEntered and chainsaw.isClient and self.ring ~= nil then
 
         -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
         local cutIndicatorShallBeVisible = false
-        if getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) ~= RigidBodyType.STATIC then
+        if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) ~= RigidBodyType.STATIC then
             cutIndicatorShallBeVisible = (self.indicatorMode ~= CutPositionIndicator.INDICATOR_MODE.OFF)
         end
         setVisibility(self.ring, cutIndicatorShallBeVisible)
@@ -405,7 +408,7 @@ end
 ---Registers an action event which will trigger on key press
 ---@param eventKey string @The event key from the modDesc.xml
 ---@param callbackFunction function @The function to be called on press
----@return integer @The ID of the action event
+---@return string @The ID of the action event
 function CutPositionIndicator:registerOnPressAction(eventKey, callbackFunction)
     -- Register the action. Bool variables: Trigger on key release, trigger on key press, trigger always, unknown
     local _, actionEventId = g_inputBinding:registerActionEvent(eventKey, self, callbackFunction, false, true, false, true)
@@ -416,6 +419,11 @@ function CutPositionIndicator:registerOnPressAction(eventKey, callbackFunction)
 end
 ---Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
 function CutPositionIndicator:registerActionEvents()
+    if self.eventsAreRegisteredAlready then
+        -- When starting a fresh save game, this seems to get called twice, so we skip the second call
+        return
+    end
+    self.eventsAreRegisteredAlready = true
     self.lengthActionEventId = self:registerOnPressAction('CYCLE_LENGTH_INDICATOR', CutPositionIndicator.cycleLengthIndicator)
     self.weightActionEventId = self:registerOnPressAction('CYCLE_WEIGHT_INDICATOR', CutPositionIndicator.cycleWeightIndicator)
     self.modeActionEventId = self:registerOnPressAction('SWITCH_INDICATOR_MODE', CutPositionIndicator.cycleIndicatorMode)
