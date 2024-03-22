@@ -390,7 +390,8 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             local xDiff,yDiff,zDiff = xInd-xCut, yInd-yCut, zInd-zCut
             local distance = math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff)
 
-            if distance < 0.2 then -- +/- 20cm
+            -- TEMP: Turn off snapping features on multiplayer clients since the server would not know about the snap when cutting
+            if distance < 0.2 and chainsaw.isServer then -- +/- 20cm
                 -- Figure out the position of our own ring in the local coordinate system of the chainsaw's ring selector
                 -- The chainsaw's ring selector's translation is relative to some other object, so we use the coordinate system of that object instead
                 -- Not sure why that's the right thing, but Chainsaw:updateRingSelector does it, too, and it won't work without the getParent call
