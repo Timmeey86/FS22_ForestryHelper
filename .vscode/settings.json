@@ -47,6 +47,7 @@
         "getMass",
         "getCorrectTextSize",
         "g_currentModName",
-        "Logging"
+        "Logging",
+        "g_server"
     ]
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.4.7</version>
+    <version>1.0.5.0</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -40,9 +40,10 @@ While sitting in a wood harvester, you will see basic information about the tree
 This mod is of course compatible with the lumberjack mod.
 
 Changelog:
-Version 1.0.4.7
+Version 1.0.5.0
 - Fixed an issue which prevented the mod from working in multiplayer at all
 - Disabled snapping feature in multiplayer since it does not work there yet
+- Disabled cutting to weight feature in multiplayer until a way was found to receive either mass or density of a tree on a multiplayer client
 
 Version 1.0.4.1
 - Added a feature which indicates a desired cutting length and snaps the chainsaw to it when the chainsaw is within 20cm of that location
@@ -94,9 +95,10 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Diese Mod ist selbstverständlich mit der Holzfäller mod kompatibel.
 
 Changelog:
-Version 1.0.4.7
+Version 1.0.5.0
 - Problem behoben, durch das die Mod im Mehrspielermodus nicht funktioniert hat
 - Einrastfunktion im Mehrspielermodus deaktiviert, da sie dort noch nicht funktioniert
+- Zusägen auf Gewicht im Mehrspielermodus deaktiviert, bis ein Weg gefunden wurde, an die Masse oder Dichte eines Stücks Holz als Client im Mehrspielermodus heranzukommen
 
 Version 1.0.4.1
 - Funktion hinzugefügt, die eine gewünschte Schnittlänge anzeigen kann. Die Kettensäge rastet an dieser Position ein, wenn sie max. 20cm entfernt ist.

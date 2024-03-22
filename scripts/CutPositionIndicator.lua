@@ -274,6 +274,8 @@ function CutPositionIndicator:getIndicatorSearchLocationForWeightLimit(shapeId, 
     if self.debugPositionDetection then
         local textSize = getCorrectTextSize(0.015)
         local color = {1,1,1}
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .7, searchSquareCorner.z, ('mass: %.3f'):format(getMass(shapeId)), textSize, 0, color)
+        Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .65, searchSquareCorner.z, ('volume: %.3f'):format(getVolume(shapeId)), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .6, searchSquareCorner.z, ('density: %.3f'):format(density), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .55, searchSquareCorner.z, ('targetVolume: %.3f'):format(targetVolume), textSize, 0, color)
         Utils.renderTextAtWorldPosition(searchSquareCorner.x, searchSquareCorner.y + .5, searchSquareCorner.z, ('area: %.3f'):format(area), textSize, 0, color)
@@ -458,10 +460,16 @@ function CutPositionIndicator:cycleIndicatorMode()
 
     elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
 
-        -- Next mode: Weight
-        g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
-        g_inputBinding:setActionEventActive(self.weightActionEventId, true)
-        self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.WEIGHT
+        if g_server ~= nil then
+            -- Next mode: Weight
+            g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
+            g_inputBinding:setActionEventActive(self.weightActionEventId, true)
+            self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.WEIGHT
+        else
+            -- multiplayer: We currently can't get the mass or density of split shapes -> weight mode is not possible
+            g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
+            self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.OFF
+        end
 
     elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
 
