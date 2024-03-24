@@ -1,1 +1,2 @@
+del -q "%USERPROFILE%\Documents\my games\FarmingSimulator2022\mods\FS22_TreeValueInfo.zip"
 robocopy . "%USERPROFILE%\Documents\my games\FarmingSimulator2022\mods\FS22_TreeValueInfo" /mir /XD ".git" ".vscode" ".VSCodeCounter" "screenshots" /XF "*.bat" "*.md" "LICENSE" ".gitignore"

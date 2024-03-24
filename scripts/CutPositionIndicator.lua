@@ -35,7 +35,6 @@ function CutPositionIndicator.new()
     self.weightLimit = 200
     self.indicatorMode = CutPositionIndicator.INDICATOR_MODE.LENGTH
     self.chainsawIsSnapped = false
-    self.eventsAreRegisteredAlready = false
 
     self.debugPositionDetection = false
     self.debugIndicator = false
@@ -48,7 +47,7 @@ local cutPositionIndicator = CutPositionIndicator.new()
 ---Deletes our own ring before the chainsaw gets deleted
 ---@param chainsaw table @The chainsaw which will be deleted afterwards
 function CutPositionIndicator:before_chainsawDelete(chainsaw)
-    if chainsaw.player.isEntered and chainsaw.isClient then
+    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode then
         if self.ring ~= nil then
             delete(self.ring)
             self.ring = nil
@@ -65,7 +64,7 @@ end
 ---Hides our own ring before the chainsaw gets deactivated
 ---@param chainsaw table @The chainsaw
 function CutPositionIndicator:before_chainsawDeactivate(chainsaw)
-    if chainsaw.player.isEntered and chainsaw.isClient then
+    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode then
         if self.ring ~= nil then
             setVisibility(self.ring, false)
         end
@@ -109,7 +108,7 @@ end
 ---@param chainsaw table @The chainsaw
 ---@param xmlFile table @The object which contains the chainsaw XML file's contents
 function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
-    if chainsaw.player.isEntered and chainsaw.isClient then
+    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode then
         -- Load another ring selector in addition to the one used by the base game chainsaw
         local filename = xmlFile:getValue("handTool.chainsaw.ringSelector#file")
         if filename ~= nil then
@@ -305,7 +304,7 @@ end
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
 ---@param chainsaw table @The chain saw
 function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
-    if chainsaw.player.isEntered and chainsaw.isClient and self.ring ~= nil then
+    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode and self.ring ~= nil then
 
         -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
         local cutIndicatorShallBeVisible = false
@@ -411,25 +410,27 @@ end
 ---Registers an action event which will trigger on key press
 ---@param eventKey string @The event key from the modDesc.xml
 ---@param callbackFunction function @The function to be called on press
+---@return boolean @True if event registration was succesful, false if events had been registered already
 ---@return string @The ID of the action event
 function CutPositionIndicator:registerOnPressAction(eventKey, callbackFunction)
     -- Register the action. Bool variables: Trigger on key release, trigger on key press, trigger always, unknown
-    local _, actionEventId = g_inputBinding:registerActionEvent(eventKey, self, callbackFunction, false, true, false, true)
-    g_inputBinding:setActionEventTextPriority(actionEventId, GS_PRIO_LOW)
-    g_inputBinding:setActionEventActive(actionEventId, false)
-    g_inputBinding:setActionEventText(actionEventId, "")
-    return actionEventId
+    local registrationSuccessful, actionEventId = g_inputBinding:registerActionEvent(eventKey, self, callbackFunction, false, true, false, true)
+    if registrationSuccessful then
+        g_inputBinding:setActionEventTextPriority(actionEventId, GS_PRIO_LOW)
+        g_inputBinding:setActionEventActive(actionEventId, false)
+        g_inputBinding:setActionEventText(actionEventId, "")
+    end
+    return registrationSuccessful, actionEventId
 end
 ---Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
 function CutPositionIndicator:registerActionEvents()
-    if self.eventsAreRegisteredAlready then
-        -- When starting a fresh save game, this seems to get called twice, so we skip the second call
-        return
-    end
-    self.eventsAreRegisteredAlready = true
-    self.lengthActionEventId = self:registerOnPressAction('CYCLE_LENGTH_INDICATOR', CutPositionIndicator.cycleLengthIndicator)
-    self.weightActionEventId = self:registerOnPressAction('CYCLE_WEIGHT_INDICATOR', CutPositionIndicator.cycleWeightIndicator)
-    self.modeActionEventId = self:registerOnPressAction('SWITCH_INDICATOR_MODE', CutPositionIndicator.cycleIndicatorMode)
+    local isValid, actionEventId
+    isValid, actionEventId = self:registerOnPressAction('CYCLE_LENGTH_INDICATOR', CutPositionIndicator.cycleLengthIndicator)
+    if isValid then self.lengthActionEventId = actionEventId end
+    isValid, actionEventId = self:registerOnPressAction('CYCLE_WEIGHT_INDICATOR', CutPositionIndicator.cycleWeightIndicator)
+    if isValid then self.weightActionEventId = actionEventId end
+    isValid, actionEventId = self:registerOnPressAction('SWITCH_INDICATOR_MODE', CutPositionIndicator.cycleIndicatorMode)
+    if isValid then self.modeActionEventId = actionEventId end
 
     self:updateIndicatorModeText()
     self:updateLengthIndicatorText()
@@ -526,6 +527,7 @@ end
 ---@param cutSizeZ number @The size of the search rectangle in Z dimension
 ---@param farmId number @The ID of the farm (not sure why this is needed, maybe for statistics)
 function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    print(("%s: Checking if chainsaw snapping needs to be adjusted at (%.3f|%.3f|%.3f)"):format(MOD_NAME, x, y, z))
     if self.chainsawIsSnapped then
         x,y,z = getWorldTranslation(self.ring)
         local halfCutSizeY = cutSizeY / 2.0
@@ -534,9 +536,14 @@ function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,
         x = x - yx * halfCutSizeY - zx * halfCutSizeZ
         y = y - yy * halfCutSizeY - zy * halfCutSizeZ
         z = z - yz * halfCutSizeY - zz * halfCutSizeZ
+        print(("%s: Cut was adjusted to (%.3f|%.3f|%.3f)"):format(MOD_NAME, x, y, z))
+    else
+        print(MOD_NAME .. ": No adaptation required since chainsaw is not snapped")
     end
 
     superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+
+    print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
 end
 
 -- Register all our functions as late as possible just in case other mods which are further behind in the alphabet replace methods 
