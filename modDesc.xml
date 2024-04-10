@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.5.3</version>
+    <version>1.0.5.4</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -40,6 +40,9 @@ While sitting in a wood harvester, you will see basic information about the tree
 This mod is of course compatible with the lumberjack mod.
 
 Changelog:
+Version 1.0.5.4
+- Added Polish translation (provided by Ziuta)
+
 Version 1.0.5.3
 - Fixed an issue which prevented the mod from working in multiplayer at all
 - Disabled snapping feature in multiplayer since it does not work there yet
@@ -96,6 +99,9 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Diese Mod ist selbstverständlich mit der Holzfäller mod kompatibel.
 
 Changelog:
+Version 1.0.5.4
+- Polnische Übersetzung hinzugefügt (bereitgestellt von Ziuta)
+
 Version 1.0.5.3
 - Problem behoben, durch das die Mod im Mehrspielermodus nicht funktioniert hat
 - Einrastfunktion im Mehrspielermodus deaktiviert, da sie dort noch nicht funktioniert
