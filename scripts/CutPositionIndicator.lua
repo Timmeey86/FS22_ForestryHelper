@@ -391,8 +391,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             local xDiff,yDiff,zDiff = xInd-xCut, yInd-yCut, zInd-zCut
             local distance = math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff)
 
-            -- TEMP: Turn off snapping features on multiplayer clients since the server would not know about the snap when cutting
-            if distance < 0.2 and not g_currentMission.missionDynamicInfo.isMultiplayer then -- +/- 20cm
+            if distance < 0.2 then -- +/- 20cm
                 -- Figure out the position of our own ring in the local coordinate system of the chainsaw's ring selector
                 -- The chainsaw's ring selector's translation is relative to some other object, so we use the coordinate system of that object instead
                 -- Not sure why that's the right thing, but Chainsaw:updateRingSelector does it, too, and it won't work without the getParent call
@@ -527,8 +526,14 @@ end
 ---@param cutSizeZ number @The size of the search rectangle in Z dimension
 ---@param farmId number @The ID of the farm (not sure why this is needed, maybe for statistics)
 function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    x, y, z = self:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
+    superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
+end
+
+function CutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
     print(("%s: Checking if chainsaw snapping needs to be adjusted at (%.3f|%.3f|%.3f)"):format(MOD_NAME, x, y, z))
-    if self.chainsawIsSnapped and not g_currentMission.missionDynamicInfo.isMultiplayer then
+    if self.chainsawIsSnapped then
         x,y,z = getWorldTranslation(self.ring)
         local halfCutSizeY = cutSizeY / 2.0
         local halfCutSizeZ = cutSizeZ / 2.0
@@ -540,10 +545,7 @@ function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,
     else
         print(MOD_NAME .. ": No adaptation required since chainsaw is not snapped")
     end
-
-    superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
-
-    print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
+    return x, y, z
 end
 
 -- Register all our functions as late as possible just in case other mods which are further behind in the alphabet replace methods 
@@ -561,4 +563,10 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
     end)
 
     Player.registerActionEvents = Utils.appendedFunction(Player.registerActionEvents, function(player) cutPositionIndicator:registerActionEvents() end)
+
+    -- Multiplayer synchronization
+    ChainsawCutEvent.new = Utils.overwrittenFunction(ChainsawCutEvent.new, function(splitShapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+        x, y, z = cutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
+        return superFunc(splitShapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    end)
 end)

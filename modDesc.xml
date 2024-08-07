@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="79">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.5.4</version>
+    <version>1.0.5.5</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -20,8 +20,7 @@ The mod offers three modes for cutting with a chain saw, through which you can c
 The weight mode is however just a rough estimate and can deviated by up to 100kg from the target weight, especially for things like oak trees.
 The weight mode can scale up to 1000kg to match the possible strength settings of the Lumberjack mod.
 
-In single player, the chainsaw will snap to the indicated location once within 20cm. The angle still has to be adjusted manually, however.
-The feature has been temporarily turned off in multiplayer since it would not work anyway. It will be added again once a fix was found.
+The chainsaw will snap to the indicated location once within 20cm. The angle still has to be adjusted manually, however.
 
 Additionally, the following information is displayed the help window:
 - The volume of the piece of wood in liters. This is also being displayed before felling.
@@ -41,6 +40,9 @@ While sitting in a wood harvester, you will see basic information about the tree
 This mod is of course compatible with the lumberjack mod.
 
 Changelog:
+Version 1.0.5.5
+- Chainsaw snapping now works in multiplayer
+
 Version 1.0.5.4
 - Added Polish translation (provided by Ziuta)
 
@@ -82,8 +84,7 @@ Die Mod bietet drei Modi zum Zuschneiden mit einer Kettensäge, durch die man mi
 Der Gewichts-Modus arbeitet jedoch nur mit einer groben Schätzung, die bis zu 100kg in beide Richtungen abweichen kann, vor allem bei Bäumen wie Eichen.
 Der Gewichtsmodus skaliert bis 1000kg, was den Einstellungmöglichkeiten der Holzfäller Mod entspricht.
 
-Im Karriere-Modus rastet die Kettensäge bei der angezeigten Position ein, sobald man sich innerhalb von 20cm davon befindet. Der Winkel muss jedoch manuell eingestellt werden.
-Dieses Feature wurde vorübergehend für den Mehrspielermodus deaktiviert, da es dort nicht funktionieren würde. Es wird wieder aktiviert, sobald eine Lösung für den Mehrspielermodus gefunden wurde.
+Die Kettensäge rastet bei der angezeigten Position ein, sobald man sich innerhalb von 20cm davon befindet. Der Winkel muss jedoch manuell eingestellt werden.
 
 Die Mod zeigt zusätzlich folgende Informationen an:
 - Das Volumen des Holzstücks in Litern. Dies wird auch dann angezeigt, wenn der Baum noch nicht gefällt wurde.
@@ -97,9 +98,12 @@ Die Mod zeigt zusätzlich folgende Informationen an:
 Beachtet, dass man die maximale Qualität nur dann erreicht, wenn das Holzstück nahezu einem perfekten Kegelstumpf gleicht, 6-11m lang ist und keine Äste mehr vorhanden sind.
 Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 
-Diese Mod ist selbstverständlich mit der Holzfäller mod kompatibel.
+Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
 
 Changelog:
+Version 1.0.5.5
+- Chainsaw snapping funktioniert jetzt auch im Mehrspieler-Modus
+
 Version 1.0.5.4
 - Polnische Übersetzung hinzugefügt (bereitgestellt von Ziuta)
 
