@@ -158,7 +158,7 @@ end
 ---@return table @The X/Y/Z coordinates of the search square corner
 function CutPositionIndicator:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
     -- Determine how far the projected cut location must be from the chainsaw focus location
-    local xDiff = self.indicationLength - lenBelow
+    local xDiff = g_currentMission.forestryHelperSettings:getAdjustedLength(self.indicationLength) - lenBelow
 
     -- Shift the chainsaw location by the required X distance, along the local X axis of the tree
     local desiredLocation = {}
@@ -483,9 +483,10 @@ end
 
 ---Updates the text of the length indicator help menu entry
 function CutPositionIndicator:updateLengthIndicatorText()
+    local length = g_currentMission.forestryHelperSettings:getAdjustedLength(self.indicationLength)
     g_inputBinding:setActionEventText(
         self.lengthActionEventId,
-        ('%s: %d %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.DESIRED_LENGTH), self.indicationLength, g_i18n:getText("unit_mShort")))
+        ('%s: %.2f %s'):format(g_i18n:getText(CutPositionIndicator.I18N_IDS.DESIRED_LENGTH), length, g_i18n:getText("unit_mShort")))
 end
 
 ---Updates the text of the weight indicator help menu entry

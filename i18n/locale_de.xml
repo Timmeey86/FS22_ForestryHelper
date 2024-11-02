@@ -24,5 +24,15 @@
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Wunschlänge ändern" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Gewichtsgrenze ändern" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Kennzeichnungsmodus ändern" />
+        <!-- UI Settings -->
+        <text name="tvi_group_title" text="Forstwirtschaftshelfer" />
+        <text name="tvi_length_factor_mode_short" text="Längenanpassung" />
+        <text name="tvi_length_factor_mode_long" text="Stellt den Modus für eine automatische Längenapassung beim Sägen auf Wunschlänge." />
+        <text name="tvi_length_factor_mode_abs" text="Absolut" />
+        <text name="tvi_length_factor_mode_rel" text="Relativ" />
+        <text name="tvi_length_factor_abs_short" text="Zusätzliche Länge" />
+        <text name="tvi_length_factor_abs_long" text="Bestimmt, wie viel Meter auf die Wunschlänge drauf gerechnet werden." />
+        <text name="tvi_length_factor_rel_short" text="Längenmultiplikator" />
+        <text name="tvi_length_factor_rel_long" text="Bestimmt, wie viel Prozent auf die Wunschlänge drauf gerechnet werden." />
     </texts>
 </l10n>

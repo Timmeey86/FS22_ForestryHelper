@@ -48,6 +48,11 @@
         "getCorrectTextSize",
         "g_currentModName",
         "Logging",
-        "g_server"
+        "g_server",
+        "g_modSettingsDirectory",
+        "TextElement",
+        "InGameMenuGeneralSettingsFrame",
+        "BaseMission",
+        "FSBaseMission"
     ]
 }

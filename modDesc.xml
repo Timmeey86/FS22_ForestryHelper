@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="80">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.5.6</version>
+    <version>1.0.6.0</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -14,7 +14,7 @@
 
 The mod offers three modes for cutting with a chain saw, through which you can cycle with a customizable keybind (default: C):
 - "Indication Mode: Off": Base game behavior
-- "Indication Mode: Length": Cut to exact lengths from 1-12 meters (Cycle lengths with key Z)
+- "Indication Mode: Length": Cut to exact lengths from 1-12 meters (Cycle lengths with key Z). An additional length or factor can be added through the settings.
 - "Indication Mode: Weight": Cut to pieces which can be carried. This produces pieces less than the given weight limit most of the time.
 
 The weight mode is however just a rough estimate and can deviated by up to 100kg from the target weight, especially for things like oak trees.
@@ -40,6 +40,9 @@ While sitting in a wood harvester, you will see basic information about the tree
 This mod is of course compatible with the lumberjack mod.
 
 Changelog:
+Version 1.0.6.0
+- It is now possible to add a length buffer when cutting to length (absolute or relative)
+
 Version 1.0.5.6
 - Fixed an issue which prevented the mod from working in multiplayer at all
 - Chainsaw snapping now works in multiplayer
@@ -73,7 +76,7 @@ Version 1.0.1.0:
 
 Die Mod bietet drei Modi zum Zuschneiden mit einer Kettensäge, durch die man mit einem konfigurierbaren Tastenkürzel durchschalten kann (Standard: C):
 - "Kennzeichnungsmodus: Aus": Standard-Verhalten des Spiels
-- "Kennzeichnungsmodus: Länge": Auf exakte Länge zuschneiden, von 1-12 Meter (Längen kann man über die Taste Y ändern)
+- "Kennzeichnungsmodus: Länge": Auf exakte Länge zuschneiden, von 1-12 Meter (Längen kann man über die Taste Y ändern). In den Optionen kann hier noch Überlänge dazu gerechnet werden.
 - "Kennzeichnungsmodus: Gewicht": Auf tragbare Stücke zuschneiden. Dieser Modus produziert meistens Stücke mit einem Gewicht unter dem Limit.
 
 Der Gewichts-Modus arbeitet jedoch nur mit einer groben Schätzung, die bis zu 100kg in beide Richtungen abweichen kann, vor allem bei Bäumen wie Eichen.
@@ -96,6 +99,9 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
 
 Changelog:
+Version 1.0.6.0
+- Es ist jetzt möglich, beim Zusägen auf Länge noch etwas Verschnitt mit einzuplanen (absolut oder relativ)
+
 Version 1.0.5.6
 - Problem behoben, durch das die Mod im Mehrspielermodus nicht funktioniert hat
 - Die Einrastfunktion funktioniert jetzt auch im Mehrspieler-Modus
@@ -135,6 +141,10 @@ Version 1.0.1.0:
         <sourceFile filename="scripts/CutPositionIndicator.lua" />
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
         <sourceFile filename="scripts/WoodHarvesterInjection.lua" />
+        <sourceFile filename="scripts/lib/UIHelper.lua" />
+        <sourceFile filename="scripts/settings/FHSettings.lua" />
+        <sourceFile filename="scripts/settings/FHSettingsRepository.lua" />
+        <sourceFile filename="scripts/settings/FHSettingsUI.lua" />
         <sourceFile filename="scripts/TreeValueInfo.lua" />
     </extraSourceFiles>
 

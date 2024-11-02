@@ -24,5 +24,15 @@
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Change desired length" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Change weight limit" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Change indication mode" />
+        <!-- UI Settings -->
+        <text name="tvi_group_title" text="Forestry Helper" />
+        <text name="tvi_length_factor_mode_short" text="Length Adjustment" />
+        <text name="tvi_length_factor_mode_long" text="Defines the mode for the automatic length adjustment when cutting to desired length." />
+        <text name="tvi_length_factor_mode_abs" text="Absolute" />
+        <text name="tvi_length_factor_mode_rel" text="Relative" />
+        <text name="tvi_length_factor_abs_short" text="Additional Length" />
+        <text name="tvi_length_factor_abs_long" text="Defines the amount of meters which will be added to the desired length." />
+        <text name="tvi_length_factor_rel_short" text="Length Multiplier" />
+        <text name="tvi_length_factor_rel_long" text="Defines the percentage which will be added to the desired length." />
     </texts>
 </l10n>
