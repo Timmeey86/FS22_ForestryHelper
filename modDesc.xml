@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="80">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.6.0</version>
+    <version>1.0.6.1</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -40,8 +40,9 @@ While sitting in a wood harvester, you will see basic information about the tree
 This mod is of course compatible with the lumberjack mod.
 
 Changelog:
-Version 1.0.6.0
+Version 1.0.6.1
 - It is now possible to add a length buffer when cutting to length (absolute or relative)
+- Indication mode settings and additional length settings are now saved (independent of the save game)
 
 Version 1.0.5.6
 - Fixed an issue which prevented the mod from working in multiplayer at all
@@ -99,8 +100,9 @@ Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
 
 Changelog:
-Version 1.0.6.0
+Version 1.0.6.1
 - Es ist jetzt möglich, beim Zusägen auf Länge noch etwas Verschnitt mit einzuplanen (absolut oder relativ)
+- Die Einstellungen für den Kennzeichnungsmodus und die zusätzliche Länge werden nun gespeichert (unabhängig vom Spielstand)
 
 Version 1.0.5.6
 - Problem behoben, durch das die Mod im Mehrspielermodus nicht funktioniert hat

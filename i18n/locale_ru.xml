@@ -24,6 +24,7 @@
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Изменить длину распила" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Изменить ограничение по весу" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Изменить режим индикации" />
+        <text name="tvi_cut_not_possible" text="Резка не удалась. Удалите ветки или попробуйте другое место." />
         <!-- UI Settings -->
         <text name="tvi_group_title" text="Forestry Helper" />
         <text name="tvi_length_factor_mode_short" text="Настройка длины" />

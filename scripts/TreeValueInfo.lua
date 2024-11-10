@@ -1,4 +1,4 @@
-MOD_NAME = "ForestryHelper"
+MOD_NAME = "FS22_ForestryHelper"
 
 -- Create a table to store everything related to TreeValueInfo. This will also act like a class
 TreeValueInfo = {
@@ -65,7 +65,7 @@ end
 -- Define a method which will add more information to the info box for trees or wood. The last argument is defined by the method we are extending
 
 ---This function adds information about the value of trees
----@param playerHudUpdater table @The object used by the base game to display the information. We are interested in its "objectBox"
+---@param playerHudUpdater PlayerHUDUpdater @The object used by the base game to display the information. We are interested in its "objectBox"
 ---@param superFunc function @The base game function which is extended by this one.
 ---@param splitShape table @The split shape which might be a tree or a piece of wood (or something else).
 function TreeValueInfo.addTreeValueInfo(playerHudUpdater, superFunc, splitShape)
@@ -218,9 +218,39 @@ local function onChainsawUpdate(chainsaw, superFunc, deltaTime, allowInput)
     end
 end
 
+local cutPositionIndicator = CutPositionIndicator.new()
+local settings = FHSettings.new(cutPositionIndicator)
+local settingsRepository = FHSettingsRepository.new(settings)
+
 -- Register our overrides as late as possible in order to not be affected by mods which override the same methods, but don't call superFunc
 Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
+    -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
+    Chainsaw.delete = Utils.prependedFunction(Chainsaw.delete, function(chainsaw) cutPositionIndicator:before_chainsawDelete(chainsaw) end)
+    Chainsaw.onDeactivate = Utils.prependedFunction(Chainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
+    Chainsaw.postLoad = Utils.appendedFunction(Chainsaw.postLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
+    Chainsaw.updateRingSelector = Utils.appendedFunction(Chainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
+
+    -- Note: When overriding non-member functions, superFunc will still be the second argument, even though the first argument isn't "self"
+    ChainsawUtil.cutSplitShape = Utils.overwrittenFunction(ChainsawUtil.cutSplitShape, function(shapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+        cutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    end)
+
+    Player.registerActionEvents = Utils.appendedFunction(Player.registerActionEvents, function(player) cutPositionIndicator:registerActionEvents() end)
+
+    -- Multiplayer synchronization
+    ChainsawCutEvent.new = Utils.overwrittenFunction(ChainsawCutEvent.new, function(splitShapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+        x, y, z = cutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
+        return superFunc(splitShapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    end)
     PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, TreeValueInfo.addTreeValueInfo)
     Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, onChainsawUpdateRingSelector)
     Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, onChainsawUpdate)
+
+    FSBaseMission.saveSavegame = Utils.appendedFunction(FSBaseMission.saveSavegame, function()
+        settingsRepository:storeSettings()
+    end)
+
+    g_currentMission.forestryHelperSettings = settings
+    settingsRepository:restoreSettings()
+
 end)

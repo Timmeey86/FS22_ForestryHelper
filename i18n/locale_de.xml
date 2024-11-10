@@ -24,6 +24,7 @@
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Wunschlänge ändern" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Gewichtsgrenze ändern" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Kennzeichnungsmodus ändern" />
+        <text name="tvi_cut_not_possible" text="Das Sägen ist fehlgeschlagen. Entferne Äste oder versuche es an einer anderen Stelle." />
         <!-- UI Settings -->
         <text name="tvi_group_title" text="Forstwirtschaftshelfer" />
         <text name="tvi_length_factor_mode_short" text="Längenanpassung" />

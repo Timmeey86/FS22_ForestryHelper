@@ -24,6 +24,7 @@
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Zmiana żądanej długości" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Zmiana limitu wagowego" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Zmiana trybu pomocnika" />
+        <text name="tvi_cut_not_possible" text="Cięcie nie powiodło się. Usuń gałęzie lub wypróbuj inną lokalizację." />
         <!-- UI Settings -->
         <text name="tvi_group_title" text="Pomocnik pilarza" />
         <text name="tvi_length_factor_mode_short" text="Dostosowanie długości" />

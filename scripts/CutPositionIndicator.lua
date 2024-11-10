@@ -41,9 +41,6 @@ function CutPositionIndicator.new()
     return self
 end
 
--- Create an object now so it can be referenced by method overrides
-local cutPositionIndicator = CutPositionIndicator.new()
-
 ---Deletes our own ring before the chainsaw gets deleted
 ---@param chainsaw table @The chainsaw which will be deleted afterwards
 function CutPositionIndicator:before_chainsawDelete(chainsaw)
@@ -431,6 +428,11 @@ function CutPositionIndicator:registerActionEvents()
     isValid, actionEventId = self:registerOnPressAction('SWITCH_INDICATOR_MODE', CutPositionIndicator.cycleIndicatorMode)
     if isValid then self.modeActionEventId = actionEventId end
 
+    self:updateF1MenuTexts()
+end
+
+---Updates the texts of all F1 menu entries (no matter if visible or not)
+function CutPositionIndicator:updateF1MenuTexts()
     self:updateIndicatorModeText()
     self:updateLengthIndicatorText()
     self:updateWeightIndicatorText()
@@ -529,7 +531,11 @@ end
 function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
     x, y, z = self:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
     superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
-    print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
+    if #ChainsawUtil.curSplitShapes == 0 then
+        g_currentMission:showBlinkingWarning(g_i18n:getText("tvi_cut_not_possible", 2000))
+    else
+        print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
+    end
 end
 
 function CutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
@@ -548,26 +554,3 @@ function CutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, 
     end
     return x, y, z
 end
-
--- Register all our functions as late as possible just in case other mods which are further behind in the alphabet replace methods 
--- rather than overriding them properly.
-Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
-    -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
-    Chainsaw.delete = Utils.prependedFunction(Chainsaw.delete, function(chainsaw) cutPositionIndicator:before_chainsawDelete(chainsaw) end)
-    Chainsaw.onDeactivate = Utils.prependedFunction(Chainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
-    Chainsaw.postLoad = Utils.appendedFunction(Chainsaw.postLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
-    Chainsaw.updateRingSelector = Utils.appendedFunction(Chainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
-
-    -- Note: When overriding non-member functions, superFunc will still be the second argument, even though the first argument isn't "self"
-    ChainsawUtil.cutSplitShape = Utils.overwrittenFunction(ChainsawUtil.cutSplitShape, function(shapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
-        cutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
-    end)
-
-    Player.registerActionEvents = Utils.appendedFunction(Player.registerActionEvents, function(player) cutPositionIndicator:registerActionEvents() end)
-
-    -- Multiplayer synchronization
-    ChainsawCutEvent.new = Utils.overwrittenFunction(ChainsawCutEvent.new, function(splitShapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
-        x, y, z = cutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
-        return superFunc(splitShapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
-    end)
-end)

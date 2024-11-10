@@ -1,4 +1,6 @@
 ---This file allows configuring the Forestry Helper settings within the ingame settings menu
+---@class FHSettingsUI
+---@field private settings FHSettings @The settings object
 FHSettingsUI = {
     I18N_IDS = {
         GROUP_TITLE = "tvi_group_title",
@@ -75,6 +77,7 @@ InGameMenuGeneralSettingsFrame.onFrameOpen = Utils.appendedFunction(InGameMenuGe
 
 ---Updates the UI elements to the reflect the current settings
 function FHSettingsUI:updateUiElements()
+    print(MOD_NAME .. ": Updating UI elements")
     -- Reflect the current settings state in the UI
     self.lengthFactorMode:setState(self.settings.lengthFactorMode)
     local isAbsMode = self.settings.lengthFactorMode == FHSettings.LENGTH_FACTOR_TYPE_ABS
@@ -92,14 +95,17 @@ function FHSettingsUI:onLengthFactorModeChanged(newState)
     self.settings.lengthFactorMode = newState
     -- Update dependent fields
     self:updateUiElements()
+    self.settings.cutPositionIndicator:updateF1MenuTexts()
 end
 ---Reacts to changes of the absolute length factor
 ---@param newState number @The new state
 function FHSettingsUI:onAbsFactorChanged(newState)
     self.settings.lengthFactorAbsIndex = newState
+    self.settings.cutPositionIndicator:updateF1MenuTexts()
 end
 ---Reacts to changes of the relative length factor
 ---@param newState number @The new state
 function FHSettingsUI:onRelFactorChanged(newState)
     self.settings.lengthFactorRelIndex = newState
+    self.settings.cutPositionIndicator:updateF1MenuTexts()
 end

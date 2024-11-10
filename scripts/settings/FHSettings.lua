@@ -1,5 +1,9 @@
 ---Stores settings for the forestry helper
 ---@class FHSettings
+---@field public lengthFactorMode integer @The mode for additional length (absolute or relative)
+---@field public lengthFactorAbsIndex integer @The index of the additional absolute length setting
+---@field public lengthFactorRelIndex integer @The index of the additional relative length setting
+---@field public cutPositionIndicator CutPositionIndicator @The cut position indicator which also stores some settings
 FHSettings = {
     LENGTH_FACTOR_TYPE_ABS = 1,
     LENGTH_FACTOR_TYPE_REL = 2,
@@ -13,13 +17,16 @@ FHSettings = {
 local FHSettings_mt = Class(FHSettings)
 
 ---Creates a new instance of this clas
----@return table @The new instance
-function FHSettings.new()
+---@param cutPositionIndicator CutPositionIndicator @The class instance which handles the adjusted cut position
+---@return FHSettings @The new instance
+function FHSettings.new(cutPositionIndicator)
+    print(MOD_NAME .. ": Creating settings")
     local self = setmetatable({}, FHSettings_mt)
 
     self.lengthFactorMode = FHSettings.LENGTH_FACTOR_TYPE_ABS
     self.lengthFactorAbsIndex = 1
     self.lengthFactorRelIndex = 1
+    self.cutPositionIndicator = cutPositionIndicator
 
     return self
 end
@@ -42,6 +49,10 @@ end
 ---@param length number @The current length
 ---@return number @The potentially adusted length
 function FHSettings:getAdjustedLength(length)
+    if length == nil then
+        Logging.error("Method called with nil length")
+        printCallstack()
+    end
     local adjustedFactor
     if self.lengthFactorMode == FHSettings.LENGTH_FACTOR_TYPE_ABS then
         adjustedFactor = length + toAbsFactor(self.lengthFactorAbsIndex)
@@ -50,18 +61,3 @@ function FHSettings:getAdjustedLength(length)
     end
     return adjustedFactor
 end
-
--- Note: These settings are meant to be per-player and are thus not being synchronized
-
-Mission00.load = Utils.prependedFunction(Mission00.load, function(mission)
-    mission.forestryHelperSettings = FHSettings:new()
-end)
-BaseMission.loadMapFinished = Utils.prependedFunction(BaseMission.loadMapFinished, function(...)
-    FHSettingsRepository.restoreSettings()
-end)
-FSBaseMission.delete = Utils.appendedFunction(FSBaseMission.delete, function()
-    g_currentMission.forestryHelperSettings = nil
-end)
-FSBaseMission.saveSavegame = Utils.appendedFunction(FSBaseMission.saveSavegame, function()
-    FHSettingsRepository.storeSettings()
-end)

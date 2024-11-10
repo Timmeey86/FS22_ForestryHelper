@@ -24,6 +24,7 @@
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Change desired length" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Change weight limit" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Change indication mode" />
+        <text name="tvi_cut_not_possible" text="Cutting failed. Remove branches or try at a different location." />
         <!-- UI Settings -->
         <text name="tvi_group_title" text="Forestry Helper" />
         <text name="tvi_length_factor_mode_short" text="Length Adjustment" />
