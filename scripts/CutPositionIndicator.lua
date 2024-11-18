@@ -4,12 +4,12 @@
 CutPositionIndicator = {
     -- Constants for translations
     I18N_IDS = {
-        DESIRED_LENGTH = 'tvi_desired_length',
-        WEIGHT_LIMIT = 'tvi_weight_limit',
-        INDICATOR_MODE = 'tvi_indicator_mode',
-        MODE_OFF = 'tvi_mode_off',
-        MODE_LENGTH = 'tvi_mode_length',
-        MODE_WEIGHT = 'tvi_mode_weight'
+        DESIRED_LENGTH = 'fh_desired_length',
+        WEIGHT_LIMIT = 'fh_weight_limit',
+        INDICATOR_MODE = 'fh_indicator_mode',
+        MODE_OFF = 'fh_mode_off',
+        MODE_LENGTH = 'fh_mode_length',
+        MODE_WEIGHT = 'fh_mode_weight'
     },
     INDICATOR_MODE = {
         OFF = 0,
@@ -532,7 +532,7 @@ function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,
     x, y, z = self:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
     superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
     if #ChainsawUtil.curSplitShapes == 0 then
-        g_currentMission:showBlinkingWarning(g_i18n:getText("tvi_cut_not_possible", 2000))
+        g_currentMission:showBlinkingWarning(g_i18n:getText("fh_cut_not_possible", 2000))
     else
         print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
     end

@@ -3,14 +3,14 @@
 ---@field private settings FHSettings @The settings object
 FHSettingsUI = {
     I18N_IDS = {
-        GROUP_TITLE = "tvi_group_title",
-        LENGTH_FACTOR_MODE = "tvi_length_factor_mode",
-        LENGTH_FACTOR_ABS = "tvi_length_factor_abs",
-        LENGTH_FACTOR_REL = "tvi_length_factor_rel"
+        GROUP_TITLE = "fh_group_title",
+        LENGTH_FACTOR_MODE = "fh_length_factor_mode",
+        LENGTH_FACTOR_ABS = "fh_length_factor_abs",
+        LENGTH_FACTOR_REL = "fh_length_factor_rel"
     },
     LENGTH_FACTOR_MODE_I18N_IDS = {
-        { index = 1, i18nTextId = "tvi_length_factor_mode_abs" },
-        { index = 2, i18nTextId = "tvi_length_factor_mode_rel" }
+        { index = 1, i18nTextId = "fh_length_factor_mode_abs" },
+        { index = 2, i18nTextId = "fh_length_factor_mode_rel" }
     }
 }
 
@@ -73,7 +73,7 @@ function FHSettingsUI.onFrameOpen(generalSettingsPage)
     generalSettingsPage.forestryHelperSettings = fhSettingsUI
     generalSettingsPage.forestryHelperInitialized = true
 end
-InGameMenuGeneralSettingsFrame.onFrameOpen = Utils.appendedFunction(InGameMenuGeneralSettingsFrame.onFrameOpen, FHSettingsUI.onFrameOpen)
+--InGameMenuGeneralSettingsFrame.onFrameOpen = Utils.appendedFunction(InGameMenuGeneralSettingsFrame.onFrameOpen, FHSettingsUI.onFrameOpen)
 
 ---Updates the UI elements to the reflect the current settings
 function FHSettingsUI:updateUiElements()

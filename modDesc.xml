@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="80">
+<modDesc descVersion="92">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>1.0.6.1</version>
+    <version>0.1.0.0</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -38,40 +38,6 @@ The info box will also be displayed whenever a chainsaw is equipped and the ring
 While sitting in a wood harvester, you will see basic information about the tree, but no quality details, since those can only be calculated for the full tree, not for the next piece to be cut unfortunately.
 
 This mod is of course compatible with the lumberjack mod.
-
-Changelog:
-Version 1.0.6.1
-- It is now possible to add a length buffer when cutting to length (absolute or relative)
-- Indication mode settings and additional length settings are now saved (independent of the save game)
-
-Version 1.0.5.6
-- Fixed an issue which prevented the mod from working in multiplayer at all
-- Chainsaw snapping now works in multiplayer
-- Disabled cutting to weight feature in multiplayer since clients have no information about the mass of logs
-- Fixed an issue where entering and leaving a vehicle would break the F1 menu entries
-- Added Polish translation (provided by Ziuta)
-
-Version 1.0.4.1
-- Added a feature which indicates a desired cutting length and snaps the chainsaw to it when the chainsaw is within 20cm of that location
-- Added a feature which indicates a target cutting weight
-- Added keybinds for these features (default: Z on English keyboards) and for cycling through the indication modes (default: c)
-- Renamed mod from "Tree Value Info" to "Forestry Helper" since it is no longer a mere display
-
-Version 1.0.3.1
-- Resolved a mod conflict with Wood Harvester Controls and decreased likelyhood of similar conflicts with other mods
-- More Russian translations (provided by vitalii2011)
-
-Version 1.0.3.0
-- Added more detailed quality information
-- Added russian translation (provided by Gonimy-Vetrom)
-- Info box is now displayed while sitting in a wood harvester
-
-Version 1.0.2.0:
-- Info Box is now displayed whenever the ring around a piece of wood is visible (caused by an equipped chainsaw)
-- Removed cut length recommendation (too inaccurate) and added quality
-
-Version 1.0.1.0:
-- Added wood chip info
 ]]></en>
         <de><![CDATA[Diese Mod (vormals "Holzpreis Info") zeigt nützliche Informationen für Baumstämme und hilft dabei, auf gewünschte Längen oder Gewichte zuzusägen.
 
@@ -98,46 +64,12 @@ Beachtet, dass man die maximale Qualität nur dann erreicht, wenn das Holzstück
 Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
 
 Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
-
-Changelog:
-Version 1.0.6.1
-- Es ist jetzt möglich, beim Zusägen auf Länge noch etwas Verschnitt mit einzuplanen (absolut oder relativ)
-- Die Einstellungen für den Kennzeichnungsmodus und die zusätzliche Länge werden nun gespeichert (unabhängig vom Spielstand)
-
-Version 1.0.5.6
-- Problem behoben, durch das die Mod im Mehrspielermodus nicht funktioniert hat
-- Die Einrastfunktion funktioniert jetzt auch im Mehrspieler-Modus
-- Das Zusägen auf Gewicht wurde im Mehrspielermodus deaktiviert, da auf den Clients keine Information über das Gewicht von Holzstücken vorliegt.
-- Problem behoben, durch das beim Verlassen eines Fahrzeugs Einträge im F1 Menü verschwunden sind
-- Polnische Übersetzung hinzugefügt (bereitgestellt von Ziuta)
-
-Version 1.0.4.1
-- Funktion hinzugefügt, die eine gewünschte Schnittlänge anzeigen kann. Die Kettensäge rastet an dieser Position ein, wenn sie max. 20cm entfernt ist.
-- Funktion hinzugefügt, die ein Gewichtsziel anzeigen kann (das ist eine Abschätzung, keine exakte Berechnung)
-- Tastatürkürzel für die Funktionen hinzugefügt (Standard: Y auf deutscher Tastatur) und zum Durchschalten der Modi (Standard: C)
-- Mod von "Holzpreis Info" in "Forstwirtschaftshelfer" umbenannt, da sie keine reine Anzeige mehr ist
-
-Version 1.0.3.1
-- Konflikts mit Holzvollernter-Steuerungen gelöst und Chance reduziert, dass vergleichbare Konflikte auftreten
-- Russische Übersetzung überarbeitet (bereitgestellt von vitalii2011)
-
-Version 1.0.3.0
-- Mehr Detailinformationen über die Qualität hinzugefügt
-- Russische Übersetzung hinzugefügt (bereitgestellt von Gonimy-Vetrom)
-- Die Info Box wird nun auch angezeigt, während man in einem Hollzvollernter (Harvester) sitzt
-
-Version 1.0.2.0:
-- Info Box wird nun immer angezeigt, solange ein Ring um ein Stück Holz sichtbar ist (wenn man eine Kettensäge benutzt)
-- Vorschlag zur optimalen Schnittlänge entfernt (zu ungenau) und Qualitäts-Wert hinzugefügt
-
-Version 1.0.1.0:
-- Informationen für Hackschnitzel hinzugefügt
 ]]></de>
     </description>
     
     <multiplayer supported="true" />
 
-    <iconFilename>icon_TreeValueInfo.dds</iconFilename>
+    <iconFilename>icon_ForestryHelper.dds</iconFilename>
 
     <extraSourceFiles>
         <sourceFile filename="scripts/CutPositionIndicator.lua" />
@@ -147,7 +79,7 @@ Version 1.0.1.0:
         <sourceFile filename="scripts/settings/FHSettings.lua" />
         <sourceFile filename="scripts/settings/FHSettingsRepository.lua" />
         <sourceFile filename="scripts/settings/FHSettingsUI.lua" />
-        <sourceFile filename="scripts/TreeValueInfo.lua" />
+        <sourceFile filename="scripts/ForestryHelper.lua" />
     </extraSourceFiles>
 
     <l10n filenamePrefix="i18n/locale" />

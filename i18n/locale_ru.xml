@@ -2,38 +2,38 @@
 <l10n>
     <translationContributors>Gonimy_Vetrom, nagor</translationContributors>
     <texts>
-        <text name="tvi_volume" text="Объём" />
-        <text name="tvi_current_value" text="Текущая стоимость" />
-        <text name="tvi_total_quality" text="Общее качество (макс. 120%)" />
-        <text name="tvi_liters_if_chipped" text="Получится щепы" />
-        <text name="tvi_current_value_if_chipped" text="Стоимость щепы (текущ.)" />
-        <text name="tvi_potential_value_if_chipped" text="Стоимость щепы (макс.)" />
-        <text name="tvi_shape" text="Кривизна ствола" />
-        <text name="tvi_length" text="Длина" />
-        <text name="tvi_attachments" text="Количество сучков" />
-        <text name="tvi_perfect" text="отлично" />
-        <text name="tvi_good" text="хорошо" />
-        <text name="tvi_acceptable" text="приемлемо" />
-        <text name="tvi_bad" text="плохо" />
-        <text name="tvi_desired_length" text="Длина распила" />
-        <text name="tvi_weight_limit" text="Предел веса" />
-        <text name="tvi_indicator_mode" text="Режим индикации" />
-        <text name="tvi_mode_off" text="Выкл" />
-        <text name="tvi_mode_length" text="Длина" />
-        <text name="tvi_mode_weight" text="Вес" />
+        <text name="fh_volume" text="Объём" />
+        <text name="fh_current_value" text="Текущая стоимость" />
+        <text name="fh_total_quality" text="Общее качество (макс. 120%)" />
+        <text name="fh_liters_if_chipped" text="Получится щепы" />
+        <text name="fh_current_value_if_chipped" text="Стоимость щепы (текущ.)" />
+        <text name="fh_potential_value_if_chipped" text="Стоимость щепы (макс.)" />
+        <text name="fh_shape" text="Кривизна ствола" />
+        <text name="fh_length" text="Длина" />
+        <text name="fh_attachments" text="Количество сучков" />
+        <text name="fh_perfect" text="отлично" />
+        <text name="fh_good" text="хорошо" />
+        <text name="fh_acceptable" text="приемлемо" />
+        <text name="fh_bad" text="плохо" />
+        <text name="fh_desired_length" text="Длина распила" />
+        <text name="fh_weight_limit" text="Предел веса" />
+        <text name="fh_indicator_mode" text="Режим индикации" />
+        <text name="fh_mode_off" text="Выкл" />
+        <text name="fh_mode_length" text="Длина" />
+        <text name="fh_mode_weight" text="Вес" />
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Изменить длину распила" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Изменить ограничение по весу" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Изменить режим индикации" />
-        <text name="tvi_cut_not_possible" text="Резка не удалась. Удалите ветки или попробуйте другое место." />
+        <text name="fh_cut_not_possible" text="Резка не удалась. Удалите ветки или попробуйте другое место." />
         <!-- UI Settings -->
-        <text name="tvi_group_title" text="Forestry Helper" />
-        <text name="tvi_length_factor_mode_short" text="Настройка длины" />
-        <text name="tvi_length_factor_mode_long" text="Определяет режим автоматической регулировки длины при обрезке до нужной длины." />
-        <text name="tvi_length_factor_mode_abs" text="Абсолютный" />
-        <text name="tvi_length_factor_mode_rel" text="Относительный" />
-        <text name="tvi_length_factor_abs_short" text="Дополнительная длина" />
-        <text name="tvi_length_factor_abs_long" text="Определяет количество метров, которое будет добавлено к желаемой длине." />
-        <text name="tvi_length_factor_rel_short" text="Множитель длины" />
-        <text name="tvi_length_factor_rel_long" text="Определяет процент, который будет добавлен к желаемой длине." />
+        <text name="fh_group_title" text="Forestry Helper" />
+        <text name="fh_length_factor_mode_short" text="Настройка длины" />
+        <text name="fh_length_factor_mode_long" text="Определяет режим автоматической регулировки длины при обрезке до нужной длины." />
+        <text name="fh_length_factor_mode_abs" text="Абсолютный" />
+        <text name="fh_length_factor_mode_rel" text="Относительный" />
+        <text name="fh_length_factor_abs_short" text="Дополнительная длина" />
+        <text name="fh_length_factor_abs_long" text="Определяет количество метров, которое будет добавлено к желаемой длине." />
+        <text name="fh_length_factor_rel_short" text="Множитель длины" />
+        <text name="fh_length_factor_rel_long" text="Определяет процент, который будет добавлен к желаемой длине." />
     </texts>
 </l10n>

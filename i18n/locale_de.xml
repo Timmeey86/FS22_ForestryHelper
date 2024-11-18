@@ -2,38 +2,38 @@
 <l10n>
     <translationContributors>Farmsim Tim</translationContributors>
     <texts>
-        <text name="tvi_volume" text="Volumen" />
-        <text name="tvi_current_value" text="Aktueller Wert" />
-        <text name="tvi_total_quality" text="Gesamt-Qualität (max 120%)" />
-        <text name="tvi_liters_if_chipped" text="Liter an Hackschnitzeln" />
-        <text name="tvi_current_value_if_chipped" text="Hackschnitzel-Wert (Jetzt)" />
-        <text name="tvi_potential_value_if_chipped" text="Hackschnitzel-Wert (Max.)" />
-        <text name="tvi_shape" text="Form" />
-        <text name="tvi_length" text="Länge" />
-        <text name="tvi_attachments" text="Anzahl Äste" />
-        <text name="tvi_perfect" text="Perfekt" />
-        <text name="tvi_good" text="Gut" />
-        <text name="tvi_acceptable" text="Akzeptabel" />
-        <text name="tvi_bad" text="Schlecht" />
-        <text name="tvi_desired_length" text="Wunschlänge" />
-        <text name="tvi_weight_limit" text="Gewichtsgrenze" />
-        <text name="tvi_indicator_mode" text="Kennzeichnungsmodus" />
-        <text name="tvi_mode_off" text="Aus" />
-        <text name="tvi_mode_length" text="Länge" />
-        <text name="tvi_mode_weight" text="Gewicht" />
+        <text name="fh_volume" text="Volumen" />
+        <text name="fh_current_value" text="Aktueller Wert" />
+        <text name="fh_total_quality" text="Gesamt-Qualität (max 120%)" />
+        <text name="fh_liters_if_chipped" text="Liter an Hackschnitzeln" />
+        <text name="fh_current_value_if_chipped" text="Hackschnitzel-Wert (Jetzt)" />
+        <text name="fh_potential_value_if_chipped" text="Hackschnitzel-Wert (Max.)" />
+        <text name="fh_shape" text="Form" />
+        <text name="fh_length" text="Länge" />
+        <text name="fh_attachments" text="Anzahl Äste" />
+        <text name="fh_perfect" text="Perfekt" />
+        <text name="fh_good" text="Gut" />
+        <text name="fh_acceptable" text="Akzeptabel" />
+        <text name="fh_bad" text="Schlecht" />
+        <text name="fh_desired_length" text="Wunschlänge" />
+        <text name="fh_weight_limit" text="Gewichtsgrenze" />
+        <text name="fh_indicator_mode" text="Kennzeichnungsmodus" />
+        <text name="fh_mode_off" text="Aus" />
+        <text name="fh_mode_length" text="Länge" />
+        <text name="fh_mode_weight" text="Gewicht" />
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Wunschlänge ändern" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Gewichtsgrenze ändern" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Kennzeichnungsmodus ändern" />
-        <text name="tvi_cut_not_possible" text="Das Sägen ist fehlgeschlagen. Entferne Äste oder versuche es an einer anderen Stelle." />
+        <text name="fh_cut_not_possible" text="Das Sägen ist fehlgeschlagen. Entferne Äste oder versuche es an einer anderen Stelle." />
         <!-- UI Settings -->
-        <text name="tvi_group_title" text="Forstwirtschaftshelfer" />
-        <text name="tvi_length_factor_mode_short" text="Längenanpassung" />
-        <text name="tvi_length_factor_mode_long" text="Stellt den Modus für eine automatische Längenapassung beim Sägen auf Wunschlänge." />
-        <text name="tvi_length_factor_mode_abs" text="Absolut" />
-        <text name="tvi_length_factor_mode_rel" text="Relativ" />
-        <text name="tvi_length_factor_abs_short" text="Zusätzliche Länge" />
-        <text name="tvi_length_factor_abs_long" text="Bestimmt, wie viel Meter auf die Wunschlänge drauf gerechnet werden." />
-        <text name="tvi_length_factor_rel_short" text="Längenmultiplikator" />
-        <text name="tvi_length_factor_rel_long" text="Bestimmt, wie viel Prozent auf die Wunschlänge drauf gerechnet werden." />
+        <text name="fh_group_title" text="Forstwirtschaftshelfer" />
+        <text name="fh_length_factor_mode_short" text="Längenanpassung" />
+        <text name="fh_length_factor_mode_long" text="Stellt den Modus für eine automatische Längenapassung beim Sägen auf Wunschlänge." />
+        <text name="fh_length_factor_mode_abs" text="Absolut" />
+        <text name="fh_length_factor_mode_rel" text="Relativ" />
+        <text name="fh_length_factor_abs_short" text="Zusätzliche Länge" />
+        <text name="fh_length_factor_abs_long" text="Bestimmt, wie viel Meter auf die Wunschlänge drauf gerechnet werden." />
+        <text name="fh_length_factor_rel_short" text="Längenmultiplikator" />
+        <text name="fh_length_factor_rel_long" text="Bestimmt, wie viel Prozent auf die Wunschlänge drauf gerechnet werden." />
     </texts>
 </l10n>

@@ -2,38 +2,38 @@
 <l10n>
     <translationContributors>Ziuta</translationContributors>
     <texts>
-        <text name="tvi_volume" text="Objętość" />
-        <text name="tvi_current_value" text="Aktualna wartość" />
-        <text name="tvi_total_quality" text="Całkowita jakość (maks. 120%)" />
-        <text name="tvi_liters_if_chipped" text="Objętość zrębków" />
-        <text name="tvi_current_value_if_chipped" text="Wartość zrębków (teraz)" />
-        <text name="tvi_potential_value_if_chipped" text="Wartość zrębków (maks.)" />
-        <text name="tvi_shape" text="Kształt" />
-        <text name="tvi_length" text="Długość" />
-        <text name="tvi_attachments" text="Liczba gałęzi" />
-        <text name="tvi_perfect" text="Perfekcyjnie" />
-        <text name="tvi_good" text="Dobrze" />
-        <text name="tvi_acceptable" text="Akceptowalnie" />
-        <text name="tvi_bad" text="Źle" />
-        <text name="tvi_desired_length" text="Żądana długość" />
-        <text name="tvi_weight_limit" text="Limit wagowy" />
-        <text name="tvi_indicator_mode" text="Tryb pomocnika" />
-        <text name="tvi_mode_off" text="Wyłączonoy" />
-        <text name="tvi_mode_length" text="Długość" />
-        <text name="tvi_mode_weight" text="Waga" />
+        <text name="fh_volume" text="Objętość" />
+        <text name="fh_current_value" text="Aktualna wartość" />
+        <text name="fh_total_quality" text="Całkowita jakość (maks. 120%)" />
+        <text name="fh_liters_if_chipped" text="Objętość zrębków" />
+        <text name="fh_current_value_if_chipped" text="Wartość zrębków (teraz)" />
+        <text name="fh_potential_value_if_chipped" text="Wartość zrębków (maks.)" />
+        <text name="fh_shape" text="Kształt" />
+        <text name="fh_length" text="Długość" />
+        <text name="fh_attachments" text="Liczba gałęzi" />
+        <text name="fh_perfect" text="Perfekcyjnie" />
+        <text name="fh_good" text="Dobrze" />
+        <text name="fh_acceptable" text="Akceptowalnie" />
+        <text name="fh_bad" text="Źle" />
+        <text name="fh_desired_length" text="Żądana długość" />
+        <text name="fh_weight_limit" text="Limit wagowy" />
+        <text name="fh_indicator_mode" text="Tryb pomocnika" />
+        <text name="fh_mode_off" text="Wyłączonoy" />
+        <text name="fh_mode_length" text="Długość" />
+        <text name="fh_mode_weight" text="Waga" />
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Zmiana żądanej długości" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Zmiana limitu wagowego" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Zmiana trybu pomocnika" />
-        <text name="tvi_cut_not_possible" text="Cięcie nie powiodło się. Usuń gałęzie lub wypróbuj inną lokalizację." />
+        <text name="fh_cut_not_possible" text="Cięcie nie powiodło się. Usuń gałęzie lub wypróbuj inną lokalizację." />
         <!-- UI Settings -->
-        <text name="tvi_group_title" text="Pomocnik pilarza" />
-        <text name="tvi_length_factor_mode_short" text="Dostosowanie długości" />
-        <text name="tvi_length_factor_mode_long" text="Określa tryb automatycznej regulacji długości podczas cięcia na żądaną długość." />
-        <text name="tvi_length_factor_mode_abs" text="Bezwzględna" />
-        <text name="tvi_length_factor_mode_rel" text="Względna" />
-        <text name="tvi_length_factor_abs_short" text="Dodatkowa długość" />
-        <text name="tvi_length_factor_abs_long" text="Określa ilość metrów, która zostanie dodana do żądanej długości." />
-        <text name="tvi_length_factor_rel_short" text="Współczynnik długości" />
-        <text name="tvi_length_factor_rel_long" text="Określa wartość procentową, która zostanie dodana do żądanej długości." />
+        <text name="fh_group_title" text="Pomocnik pilarza" />
+        <text name="fh_length_factor_mode_short" text="Dostosowanie długości" />
+        <text name="fh_length_factor_mode_long" text="Określa tryb automatycznej regulacji długości podczas cięcia na żądaną długość." />
+        <text name="fh_length_factor_mode_abs" text="Bezwzględna" />
+        <text name="fh_length_factor_mode_rel" text="Względna" />
+        <text name="fh_length_factor_abs_short" text="Dodatkowa długość" />
+        <text name="fh_length_factor_abs_long" text="Określa ilość metrów, która zostanie dodana do żądanej długości." />
+        <text name="fh_length_factor_rel_short" text="Współczynnik długości" />
+        <text name="fh_length_factor_rel_long" text="Określa wartość procentową, która zostanie dodana do żądanej długości." />
     </texts>
 </l10n>

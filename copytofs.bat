@@ -1,2 +1,5 @@
-del -q "%USERPROFILE%\Documents\my games\FarmingSimulator2022\mods\FS22_TreeValueInfo.zip"
-robocopy . "%USERPROFILE%\Documents\my games\FarmingSimulator2022\mods\FS22_TreeValueInfo" /mir /XD ".git" ".vscode" ".VSCodeCounter" "screenshots" /XF "*.bat" "*.md" "LICENSE" ".gitignore"
+@echo off
+for %%a in ("%~dp0\.") do set "modname=%%~nxa"
+set "targetDir=%USERPROFILE%\Documents\my games\FarmingSimulator2025\mods"
+del -q "%targetDir%\%modname%.zip"
+robocopy . "%targetDir%\%modname%" /mir /XD ".git" ".vscode" "screenshots" /XF "*.bat" "*.md" "LICENSE" ".gitignore" ".gitattributes"

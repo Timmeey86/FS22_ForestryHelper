@@ -2,38 +2,38 @@
 <l10n>
     <translationContributors>Farmsim Tim</translationContributors>
     <texts>
-        <text name="tvi_volume" text="Volume" />
-        <text name="tvi_current_value" text="Current value" />
-        <text name="tvi_total_quality" text="Total quality (max. 120%)" />
-        <text name="tvi_liters_if_chipped" text="Volume if chipped" />
-        <text name="tvi_current_value_if_chipped" text="Wood chip value (now)" />
-        <text name="tvi_potential_value_if_chipped" text="Wood chip value (max.)" />
-        <text name="tvi_shape" text="Shape" />
-        <text name="tvi_length" text="Length" />
-        <text name="tvi_attachments" text="Number of branches" />
-        <text name="tvi_perfect" text="perfect" />
-        <text name="tvi_good" text="good" />
-        <text name="tvi_acceptable" text="acceptable" />
-        <text name="tvi_bad" text="bad" />
-        <text name="tvi_desired_length" text="Desired length" />
-        <text name="tvi_weight_limit" text="Weight limit" />
-        <text name="tvi_indicator_mode" text="Indication mode" />
-        <text name="tvi_mode_off" text="Off" />
-        <text name="tvi_mode_length" text="Length" />
-        <text name="tvi_mode_weight" text="Weight" />
+        <text name="fh_volume" text="Volume" />
+        <text name="fh_current_value" text="Current value" />
+        <text name="fh_total_quality" text="Total quality (max. 120%)" />
+        <text name="fh_liters_if_chipped" text="Volume if chipped" />
+        <text name="fh_current_value_if_chipped" text="Wood chip value (now)" />
+        <text name="fh_potential_value_if_chipped" text="Wood chip value (max.)" />
+        <text name="fh_shape" text="Shape" />
+        <text name="fh_length" text="Length" />
+        <text name="fh_attachments" text="Number of branches" />
+        <text name="fh_perfect" text="perfect" />
+        <text name="fh_good" text="good" />
+        <text name="fh_acceptable" text="acceptable" />
+        <text name="fh_bad" text="bad" />
+        <text name="fh_desired_length" text="Desired length" />
+        <text name="fh_weight_limit" text="Weight limit" />
+        <text name="fh_indicator_mode" text="Indication mode" />
+        <text name="fh_mode_off" text="Off" />
+        <text name="fh_mode_length" text="Length" />
+        <text name="fh_mode_weight" text="Weight" />
         <text name="input_CYCLE_LENGTH_INDICATOR" text="Change desired length" />
         <text name="input_CYCLE_WEIGHT_INDICATOR" text="Change weight limit" />
         <text name="input_SWITCH_INDICATOR_MODE" text="Change indication mode" />
-        <text name="tvi_cut_not_possible" text="Cutting failed. Remove branches or try at a different location." />
+        <text name="fh_cut_not_possible" text="Cutting failed. Remove branches or try at a different location." />
         <!-- UI Settings -->
-        <text name="tvi_group_title" text="Forestry Helper" />
-        <text name="tvi_length_factor_mode_short" text="Length Adjustment" />
-        <text name="tvi_length_factor_mode_long" text="Defines the mode for the automatic length adjustment when cutting to desired length." />
-        <text name="tvi_length_factor_mode_abs" text="Absolute" />
-        <text name="tvi_length_factor_mode_rel" text="Relative" />
-        <text name="tvi_length_factor_abs_short" text="Additional Length" />
-        <text name="tvi_length_factor_abs_long" text="Defines the amount of meters which will be added to the desired length." />
-        <text name="tvi_length_factor_rel_short" text="Length Multiplier" />
-        <text name="tvi_length_factor_rel_long" text="Defines the percentage which will be added to the desired length." />
+        <text name="fh_group_title" text="Forestry Helper" />
+        <text name="fh_length_factor_mode_short" text="Length Adjustment" />
+        <text name="fh_length_factor_mode_long" text="Defines the mode for the automatic length adjustment when cutting to desired length." />
+        <text name="fh_length_factor_mode_abs" text="Absolute" />
+        <text name="fh_length_factor_mode_rel" text="Relative" />
+        <text name="fh_length_factor_abs_short" text="Additional Length" />
+        <text name="fh_length_factor_abs_long" text="Defines the amount of meters which will be added to the desired length." />
+        <text name="fh_length_factor_rel_short" text="Length Multiplier" />
+        <text name="fh_length_factor_rel_long" text="Defines the percentage which will be added to the desired length." />
     </texts>
 </l10n>
