@@ -1,6 +1,13 @@
 MOD_NAME = "FS22_ForestryHelper"
 
--- Create a table to store everything related to ForestryHelper. This will also act like a class
+---Create a table to store everything related to ForestryHelper. This will also act like a class
+---@class ForestryHelper
+---@field volumeLine table @The line in the info box which displays the volume
+---@field valueLine table @The line in the info box which displays the value (only after cutting)
+---@field shapeLine table @The line in the info box which displays the shape score (only after cutting)
+---@field lengthLine table @The line in the info box which displays the length (only after cutting)
+---@field attachmentLine table @The line in the info box which displays the number of branches still attached (only after cutting)
+---@field qualityLine table @The line in the info box which displays the total quality score (only after cutting)
 ForestryHelper = {
     -- Define some constants for lookup of translated texts. The strings must match the i18n/locale_...xml entries
     -- tvi is just a prefix for ForestryHelper
@@ -33,10 +40,51 @@ function ForestryHelper.new()
     self.debugValueDetails = false
     self.debugShapeDetails = false
     self.currentShape = nil
+
+    self.volumeLine = {
+        key = g_i18n:getText(ForestryHelper.I18N_IDS.VOLUME),
+        value = g_i18n:formatFluid(0),
+        isActive = true
+    }
+    self.valueLine = {
+        key = g_i18n:getText(ForestryHelper.I18N_IDS.CURRENT_VALUE),
+        value = "",
+        isActive = false
+    }
+    self.shapeLine = {
+        key = g_i18n:getText(ForestryHelper.I18N_IDS.SHAPE),
+        value = "",
+        isActive = false
+    }
+    self.lengthLine = {
+        key = g_i18n:getText(ForestryHelper.I18N_IDS.LENGTH),
+        value = "",
+        isActive = false
+    }
+    self.attachmentLine = {
+        key = g_i18n:getText(ForestryHelper.I18N_IDS.ATTACHMENTS),
+        value = "",
+        isActive = false
+    }
+    self.qualityLine = {
+        key = g_i18n:getText(ForestryHelper.I18N_IDS.TOTAL_QUALITY),
+        value = "",
+        isActive = false
+    }
     return self
 end
 
-local ForestryHelper = ForestryHelper.new()
+local debugOverlay = false
+local function dbgOverlayPrint(message, arg1, ...)
+    if debugOverlay then
+        if arg1 then
+            print("[FH_Overlay] " .. message:format(arg1, ...))
+        else
+            print("[FH_Overlay] " .. message)
+        end
+    end
+end
+local forestryHelper = ForestryHelper.new()
 
 -- Define a function which returns the appropriate quality text based on defined thresholds
 
@@ -62,17 +110,44 @@ function ForestryHelper.getQualityText(quality, perfectThreshold, goodThreshold,
     return g_i18n:getText(translationKey)
 end
 
--- Define a method which will add more information to the info box for trees or wood. The last argument is defined by the method we are extending
+---Performs a one-time registration of any lines to be displayed in the info box
+---@param objectBox any
+function ForestryHelper:registerObjectBoxLines(objectBox)
+    if #objectBox.lines < 3 then
+        -- Work around base game code dynamically adding and overwriting a third line based on the index
+        -- dependend on whether the player looks at a standing or a cut tree first...
+        table.insert(objectBox.lines, { key = "", value = "", isActive = false })
+    end
+    if not objectBox.hasForestryHelperLines then
+        table.insert(objectBox.lines, self.volumeLine)
+        table.insert(objectBox.lines, self.valueLine)
+        table.insert(objectBox.lines, self.lengthLine)
+        table.insert(objectBox.lines, self.shapeLine)
+        table.insert(objectBox.lines, self.attachmentLine)
+        table.insert(objectBox.lines, self.qualityLine)
+        objectBox.hasForestryHelperLines = true
+    end
+end
 
+---Sets the line active (i.e. visible) and assigns the new value
+---@param line table @The line with key, value and isActive properties
+---@param value string @The new value
+function ForestryHelper:displayValue(line, value)
+    line.isActive = true
+    line.value = value
+end
+
+-- Define a method which will add more information to the info box for trees or wood. The last argument is defined by the method we are extending
 ---This function adds information about the value of trees
 ---@param playerHudUpdater PlayerHUDUpdater @The object used by the base game to display the information. We are interested in its "objectBox"
 ---@param superFunc function @The base game function which is extended by this one.
 ---@param splitShape table @The split shape which might be a tree or a piece of wood (or something else).
-function ForestryHelper.addForestryHelper(playerHudUpdater, superFunc, splitShape)
+function ForestryHelper:extendSplitShapeOverlay(playerHudUpdater, superFunc, splitShape)
 
     -- Call the base game behavior (including other mods which were registered before our mod)
     -- This way, if Giants changes their code, we don't have to adapt our mod in many cases
     superFunc(playerHudUpdater, splitShape)
+    self:registerObjectBoxLines(playerHudUpdater.objectBox)
 
     -- Do nothing if we're not looking at a tree or piece of wood
     if not entityExists(splitShape) or getSplitType(splitShape) == 0 then
@@ -80,9 +155,11 @@ function ForestryHelper.addForestryHelper(playerHudUpdater, superFunc, splitShap
         --       so it felt like we should probably do the same.
         -- Note: The split type seems to be the type of tree, starting from 1, so a type of 0 would mean this is not a tree. It also looks like trees are the
         --       only thing which classify as split shape (with a type > 0).
+        dbgOverlayPrint("Existing because entity does not exist. Split Shape = %s", splitShape)
         return
     end
     local treeOrPieceOfWood = splitShape -- alias for readability
+    dbgOverlayPrint("Split shape is tree or piece of wood")
 
     -- Retrieve data about the tree or piece of wood
     local data = WoodPriceCalculation.calculateWoodParameters(treeOrPieceOfWood)
@@ -95,7 +172,7 @@ function ForestryHelper.addForestryHelper(playerHudUpdater, superFunc, splitShap
 
     -- Display the number of liters
     local currencySymbol = g_i18n:getCurrencySymbol(true)
-    playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.VOLUME), g_i18n:formatFluid(shapeData.volume))
+    self:displayValue(self.volumeLine, g_i18n:formatFluid(shapeData.volume))
 
     -- If the player is looking at a piece of wood on the ground
     -- Note: A the body type for a piece of wood on the ground returns DYNAMIC on servers/in single player, but KINEMATIC on multiplayer clients (reason unknown)
@@ -111,44 +188,44 @@ function ForestryHelper.addForestryHelper(playerHudUpdater, superFunc, splitShap
         if not isInWoodHarvester then
 
             -- Display the current value (if the tree/piece of wood was sold in its current shape)
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.CURRENT_VALUE), ('%d %s'):format(currentValue, currencySymbol))
+            self:displayValue(self.valueLine, ('%d %s'):format(currentValue, currencySymbol))
 
             -- Display hints about different aspects which influence the total quality
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.SHAPE), ForestryHelper.getQualityText(valueData.qualityScale, 1.0, 0.7, 0.5)) -- min 0.05
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.LENGTH), ForestryHelper.getQualityText(valueData.lengthScale, 1.2, 1.0, 0.8)) -- min 0.6
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.ATTACHMENTS), ('%d'):format(shapeData.numAttachments))
+            self:displayValue(self.shapeLine, ForestryHelper.getQualityText(valueData.qualityScale, 1.0, 0.7, 0.5)) -- min 0.05
+            self:displayValue(self.lengthLine, ForestryHelper.getQualityText(valueData.lengthScale, 1.2, 1.0, 0.8)) -- min 0.6
+            self:displayValue(self.attachmentLine, ('%d'):format(shapeData.numAttachments))
 
             -- Display the total quality of the tree, which is proportional to the sell price
-            playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.TOTAL_QUALITY), ('%d %%'):format(totalQuality * 100))
+            self:displayValue(self.qualityLine, ('%d %%'):format(totalQuality * 100))
 
             -- Display detailed info if enabled
-            if ForestryHelper.debugShapeDetails then
-                playerHudUpdater.objectBox:addLine("Size X", ('%.3f'):format(shapeData.sizeX))
-                playerHudUpdater.objectBox:addLine("Size Y", ('%.3f'):format(shapeData.sizeY))
-                playerHudUpdater.objectBox:addLine("Size Z", ('%.3f'):format(shapeData.sizeZ))
-                playerHudUpdater.objectBox:addLine("# Convexes", ('%d'):format(shapeData.numConvexes))
-                playerHudUpdater.objectBox:addLine("# Attachments", ('%d'):format(shapeData.numAttachments))
+            if forestryHelper.debugShapeDetails then
+                --addLine(playerHudUpdater.objectBox, "Size X", ('%.3f'):format(shapeData.sizeX))
+                --addLine(playerHudUpdater.objectBox, "Size Y", ('%.3f'):format(shapeData.sizeY))
+                --addLine(playerHudUpdater.objectBox, "Size Z", ('%.3f'):format(shapeData.sizeZ))
+                --addLine(playerHudUpdater.objectBox, "# Convexes", ('%d'):format(shapeData.numConvexes))
+                --addLine(playerHudUpdater.objectBox, "# Attachments", ('%d'):format(shapeData.numAttachments))
             end
-            if ForestryHelper.debugValueDetails then
-                playerHudUpdater.objectBox:addLine("Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
-                playerHudUpdater.objectBox:addLine("Volume Quality", ('%.3f'):format(valueData.volumeQuality))
-                playerHudUpdater.objectBox:addLine("Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
-                playerHudUpdater.objectBox:addLine("Quality Scale", ('%.3f'):format(valueData.qualityScale))
-                playerHudUpdater.objectBox:addLine("Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
-                playerHudUpdater.objectBox:addLine("Length Scale", ('%.3f'):format(valueData.lengthScale))
+            if forestryHelper.debugValueDetails then
+                --addLine(playerHudUpdater.objectBox, "Price per Liter", ('%.3f %s/l'):format(valueData.pricePerLiter, currencySymbol))
+                --addLine(playerHudUpdater.objectBox, "Volume Quality", ('%.3f'):format(valueData.volumeQuality))
+                --addLine(playerHudUpdater.objectBox, "Convexity Quality", ('%.3f'):format(valueData.convexityQuality))
+                --addLine(playerHudUpdater.objectBox, "Quality Scale", ('%.3f'):format(valueData.qualityScale))
+                --addLine(playerHudUpdater.objectBox, "Defoliage Scale", ('%.3f'):format(valueData.defoliageScale))
+                --addLine(playerHudUpdater.objectBox, "Length Scale", ('%.3f'):format(valueData.lengthScale))
             end
         end
 
         -- Information about wood chips might help the player decide whether or not to chip the top part of the tree
 
         -- Get the amount of wood chips this piece of wood would produce
-        local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
+        local splitType = g_splitShapeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
         local litersIfChipped = shapeData.volume * splitType.woodChipsPerLiter
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.LITERS_IF_CHIPPED), g_i18n:formatFluid(litersIfChipped))
+        --addLine(playerHudUpdater.objectBox, g_i18n:getText(ForestryHelper.I18N_IDS.LITERS_IF_CHIPPED), g_i18n:formatFluid(litersIfChipped))
 
         -- Calculate the price for the wood chips if sold right away
         local currentWoodChipValue = g_currentMission.economyManager:getPricePerLiter(FillType.WOODCHIPS) * litersIfChipped
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.CURRENT_VALUE_IF_CHIPPED), ('%d %s'):format(currentWoodChipValue, currencySymbol))
+        --addLine(playerHudUpdater.objectBox, g_i18n:getText(ForestryHelper.I18N_IDS.CURRENT_VALUE_IF_CHIPPED), ('%d %s'):format(currentWoodChipValue, currencySymbol))
 
         -- Calculate the maximum price for the wood chips
         local highestFactor = 0.1
@@ -166,7 +243,13 @@ function ForestryHelper.addForestryHelper(playerHudUpdater, superFunc, splitShap
         local difficultyMultiplier = g_currentMission.economyManager:getPriceMultiplier()
         local maximumPricePerLiter = woodChipFillType.pricePerLiter * highestFactor * difficultyMultiplier
         local potentialWoodChipValue = litersIfChipped * maximumPricePerLiter
-        playerHudUpdater.objectBox:addLine(g_i18n:getText(ForestryHelper.I18N_IDS.POTENTIAL_VALUE_IF_CHIPPED), ('%d %s'):format(potentialWoodChipValue, currencySymbol))
+        --addLine(playerHudUpdater.objectBox, g_i18n:getText(ForestryHelper.I18N_IDS.POTENTIAL_VALUE_IF_CHIPPED), ('%d %s'):format(potentialWoodChipValue, currencySymbol))
+    else
+        self.valueLine.isActive = false
+        self.shapeLine.isActive = false
+        self.lengthLine.isActive = false
+        self.attachmentLine.isActive = false
+        self.qualityLine.isActive = false
     end
 end
 
@@ -187,9 +270,9 @@ local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape)
     -- If the ring selector is displayed, and a shape was detected which is not the root shape
     if chainsaw.isClient and chainsaw.player.isEntered and chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 then
         -- Remember the shape
-        ForestryHelper.currentShape = shape
+        forestryHelper.currentShape = shape
     else
-        ForestryHelper.currentShape = nil
+        forestryHelper.currentShape = nil
     end
 end
 
@@ -207,11 +290,11 @@ local function onChainsawUpdate(chainsaw, superFunc, deltaTime, allowInput)
     if player ~= nil and player.hudUpdater ~= nil and player.hudUpdater.objectBox ~= nil then
 
         -- If the chainsaw is pointing at a tree and..
-        if ForestryHelper.currentShape ~= nil then
+        if forestryHelper.currentShape ~= nil then
             -- ... the info hud would not be displayed currently
             if not player.hudUpdater.objectBox:canDraw() then
                 -- Display the info hud on the next frame
-                player.hudUpdater:showSplitShapeInfo(ForestryHelper.currentShape)
+                player.hudUpdater:showSplitShapeInfo(forestryHelper.currentShape)
             end
             -- else: the box will be displayed already; nothing to do
         end
@@ -225,10 +308,10 @@ local settingsRepository = FHSettingsRepository.new(settings)
 -- Register our overrides as late as possible in order to not be affected by mods which override the same methods, but don't call superFunc
 Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
     -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
-    Chainsaw.delete = Utils.prependedFunction(Chainsaw.delete, function(chainsaw) cutPositionIndicator:before_chainsawDelete(chainsaw) end)
-    Chainsaw.onDeactivate = Utils.prependedFunction(Chainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
-    Chainsaw.postLoad = Utils.appendedFunction(Chainsaw.postLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
-    Chainsaw.updateRingSelector = Utils.appendedFunction(Chainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
+    HandToolChainsaw.onDelete = Utils.prependedFunction(HandToolChainsaw.onDelete, function(chainsaw) cutPositionIndicator:before_chainsawDelete(chainsaw) end)
+    HandToolChainsaw.onDeactivate = Utils.prependedFunction(HandToolChainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
+    HandToolChainsaw.onPostLoad = Utils.appendedFunction(HandToolChainsaw.onPostLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
+    HandToolChainsaw.updateRingSelector = Utils.appendedFunction(HandToolChainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
 
     -- Note: When overriding non-member functions, superFunc will still be the second argument, even though the first argument isn't "self"
     ChainsawUtil.cutSplitShape = Utils.overwrittenFunction(ChainsawUtil.cutSplitShape, function(shapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
@@ -242,9 +325,11 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
         x, y, z = cutPositionIndicator:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
         return superFunc(splitShapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
     end)
-    PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, ForestryHelper.addForestryHelper)
-    Chainsaw.updateRingSelector = Utils.overwrittenFunction(Chainsaw.updateRingSelector, onChainsawUpdateRingSelector)
-    Chainsaw.update = Utils.overwrittenFunction(Chainsaw.update, onChainsawUpdate)
+    PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, function(...)
+        forestryHelper:extendSplitShapeOverlay(...)
+    end)
+    HandToolChainsaw.updateRingSelector = Utils.overwrittenFunction(HandToolChainsaw.updateRingSelector, onChainsawUpdateRingSelector)
+    HandToolChainsaw.update = Utils.overwrittenFunction(HandToolChainsaw.update, onChainsawUpdate)
 
     FSBaseMission.saveSavegame = Utils.appendedFunction(FSBaseMission.saveSavegame, function()
         settingsRepository:storeSettings()

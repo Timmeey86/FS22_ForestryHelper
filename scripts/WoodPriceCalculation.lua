@@ -10,7 +10,7 @@ WoodPriceCalculation = {}
 ---@return table @Two subtables containing information about the shape (shapeData) and the value (valueData)
 function WoodPriceCalculation.calculateWoodParameters(objectId)
     local volume = getVolume(objectId)
-    local splitType = g_splitTypeManager:getSplitTypeByIndex(getSplitType(objectId))
+    local splitType = g_splitShapeManager:getSplitTypeByIndex(getSplitType(objectId))
     local sizeX, sizeY, sizeZ, numConvexes, numAttachments = getSplitShapeStats(objectId)
 
     local shapeData = {
@@ -45,8 +45,8 @@ function WoodPriceCalculation.calculateWoodBaseValueForData(volume, splitType, s
     if sizeX ~= nil and volume > 0 then
         local bvVolume = sizeX*sizeY*sizeZ
         local volumeRatio = bvVolume / volume
-        volumeQuality = 1-math.sqrt(MathUtil.clamp((volumeRatio-3)/7, 0,1)) * 0.95  --  ratio <= 3: 100%, ratio >= 10: 5%
-        convexityQuality = 1-MathUtil.clamp((numConvexes-2)/(6-2), 0,1) * 0.95  -- 0-2: 100%:, >= 6: 5%
+        volumeQuality = 1-math.sqrt(math.clamp((volumeRatio-3)/7, 0,1)) * 0.95  --  ratio <= 3: 100%, ratio >= 10: 5%
+        convexityQuality = 1-math.clamp((numConvexes-2)/(6-2), 0,1) * 0.95  -- 0-2: 100%:, >= 6: 5%
         local maxSize = math.max(sizeX, sizeY, sizeZ)
         -- 1m: 60%, 6-11m: 120%, 19m: 60%
         if maxSize < 11 then
