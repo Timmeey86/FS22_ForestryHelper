@@ -8,6 +8,9 @@ MOD_NAME = "FS22_ForestryHelper"
 ---@field lengthLine table @The line in the info box which displays the length (only after cutting)
 ---@field attachmentLine table @The line in the info box which displays the number of branches still attached (only after cutting)
 ---@field qualityLine table @The line in the info box which displays the total quality score (only after cutting)
+---@field chippedLitersLine table @The line in the info box which displays the amount of liters when processing the log into wood chips (only after cutting)
+---@field chippedValueLine table @The line in the info box which displays the wood chip value if sold now (only after cutting)
+---@field chippedMaxValueLine table @The line in the info box which displays the wood chip value if sold at peak (only after cutting)
 ForestryHelper = {
     -- Define some constants for lookup of translated texts. The strings must match the i18n/locale_...xml entries
     -- tvi is just a prefix for ForestryHelper
@@ -31,6 +34,17 @@ ForestryHelper = {
     PROFITABLE_LENGTH_MAX = 11
 }
 
+---Creates a new line in the object box
+---@param i18nKey string @The localization key
+---@return table @The line in the object box
+local function createObjectBoxLine(i18nKey)
+    return {
+        key = g_i18n:getText(i18nKey),
+        value = "",
+        isActive = false
+    }
+end
+
 -- Define a constructor, then create a new instance just so we can store some variables for the current session
 -- This is how you define a proper class with a metatable and a constructor in FS22 lua:
 local ForestryHelper_mt = Class(ForestryHelper)
@@ -41,36 +55,15 @@ function ForestryHelper.new()
     self.debugShapeDetails = false
     self.currentShape = nil
 
-    self.volumeLine = {
-        key = g_i18n:getText(ForestryHelper.I18N_IDS.VOLUME),
-        value = g_i18n:formatFluid(0),
-        isActive = true
-    }
-    self.valueLine = {
-        key = g_i18n:getText(ForestryHelper.I18N_IDS.CURRENT_VALUE),
-        value = "",
-        isActive = false
-    }
-    self.shapeLine = {
-        key = g_i18n:getText(ForestryHelper.I18N_IDS.SHAPE),
-        value = "",
-        isActive = false
-    }
-    self.lengthLine = {
-        key = g_i18n:getText(ForestryHelper.I18N_IDS.LENGTH),
-        value = "",
-        isActive = false
-    }
-    self.attachmentLine = {
-        key = g_i18n:getText(ForestryHelper.I18N_IDS.ATTACHMENTS),
-        value = "",
-        isActive = false
-    }
-    self.qualityLine = {
-        key = g_i18n:getText(ForestryHelper.I18N_IDS.TOTAL_QUALITY),
-        value = "",
-        isActive = false
-    }
+    self.volumeLine = createObjectBoxLine(ForestryHelper.I18N_IDS.VOLUME)
+    self.valueLine = createObjectBoxLine(ForestryHelper.I18N_IDS.CURRENT_VALUE)
+    self.shapeLine = createObjectBoxLine(ForestryHelper.I18N_IDS.SHAPE)
+    self.lengthLine = createObjectBoxLine(ForestryHelper.I18N_IDS.LENGTH)
+    self.attachmentLine = createObjectBoxLine(ForestryHelper.I18N_IDS.ATTACHMENTS)
+    self.qualityLine = createObjectBoxLine(ForestryHelper.I18N_IDS.TOTAL_QUALITY)
+    self.chippedLitersLine = createObjectBoxLine(ForestryHelper.I18N_IDS.LITERS_IF_CHIPPED)
+    self.chippedValueLine = createObjectBoxLine(ForestryHelper.I18N_IDS.CURRENT_VALUE_IF_CHIPPED)
+    self.chippedMaxValueLine = createObjectBoxLine(ForestryHelper.I18N_IDS.POTENTIAL_VALUE_IF_CHIPPED)
     return self
 end
 
@@ -125,6 +118,9 @@ function ForestryHelper:registerObjectBoxLines(objectBox)
         table.insert(objectBox.lines, self.shapeLine)
         table.insert(objectBox.lines, self.attachmentLine)
         table.insert(objectBox.lines, self.qualityLine)
+        table.insert(objectBox.lines, self.chippedLitersLine)
+        table.insert(objectBox.lines, self.chippedValueLine)
+        table.insert(objectBox.lines, self.chippedMaxValueLine)
         objectBox.hasForestryHelperLines = true
     end
 end
@@ -221,11 +217,11 @@ function ForestryHelper:extendSplitShapeOverlay(playerHudUpdater, superFunc, spl
         -- Get the amount of wood chips this piece of wood would produce
         local splitType = g_splitShapeManager:getSplitTypeByIndex(getSplitType(pieceOfWood))
         local litersIfChipped = shapeData.volume * splitType.woodChipsPerLiter
-        --addLine(playerHudUpdater.objectBox, g_i18n:getText(ForestryHelper.I18N_IDS.LITERS_IF_CHIPPED), g_i18n:formatFluid(litersIfChipped))
+        self:displayValue(self.chippedLitersLine, g_i18n:formatFluid(litersIfChipped))
 
         -- Calculate the price for the wood chips if sold right away
         local currentWoodChipValue = g_currentMission.economyManager:getPricePerLiter(FillType.WOODCHIPS) * litersIfChipped
-        --addLine(playerHudUpdater.objectBox, g_i18n:getText(ForestryHelper.I18N_IDS.CURRENT_VALUE_IF_CHIPPED), ('%d %s'):format(currentWoodChipValue, currencySymbol))
+        self:displayValue(self.chippedValueLine, ('%d %s'):format(currentWoodChipValue, currencySymbol))
 
         -- Calculate the maximum price for the wood chips
         local highestFactor = 0.1
@@ -243,13 +239,16 @@ function ForestryHelper:extendSplitShapeOverlay(playerHudUpdater, superFunc, spl
         local difficultyMultiplier = g_currentMission.economyManager:getPriceMultiplier()
         local maximumPricePerLiter = woodChipFillType.pricePerLiter * highestFactor * difficultyMultiplier
         local potentialWoodChipValue = litersIfChipped * maximumPricePerLiter
-        --addLine(playerHudUpdater.objectBox, g_i18n:getText(ForestryHelper.I18N_IDS.POTENTIAL_VALUE_IF_CHIPPED), ('%d %s'):format(potentialWoodChipValue, currencySymbol))
+        self:displayValue(self.chippedMaxValueLine, ('%d %s'):format(potentialWoodChipValue, currencySymbol))
     else
         self.valueLine.isActive = false
         self.shapeLine.isActive = false
         self.lengthLine.isActive = false
         self.attachmentLine.isActive = false
         self.qualityLine.isActive = false
+        self.chippedLitersLine.isActive = false
+        self.chippedValueLine.isActive = false
+        self.chippedMaxValueLine.isActive = false
     end
 end
 
