@@ -28,6 +28,11 @@ CutPositionIndicator = {
         OFF = 0,
         LENGTH = 1,
         WEIGHT = 2
+    },
+    ACTION_NAMES = {
+        SWITCH_INDICATOR_MODE = "SWITCH_INDICATOR_MODE",
+        CYCLE_LENGTH_INDICATOR = "CYCLE_LENGTH_INDICATOR",
+        CYCLE_WEIGHT_INDICATOR = "CYCLE_WEIGHT_INDICATOR"
     }
 }
 
@@ -83,7 +88,9 @@ function CutPositionIndicator:after_chainsawOnHeldStart(chainsaw)
     end
     if chainsaw.carryingPlayer and chainsaw.carryingPlayer == g_localPlayer then
         --- Register menu actions if necessary (doing that in InputComponent.onRegisterActionEvents seemed to be too early)
-        if not g_inputBinding.actionEvents["SWITCH_INDICATOR_MODE"] then
+        local nameAction = g_inputBinding.nameActions[CutPositionIndicator.ACTION_NAMES.SWITCH_INDICATOR_MODE]
+        if nameAction and not g_inputBinding.actionEvents[nameAction] then
+
             self:registerActionEvents()
         end
 

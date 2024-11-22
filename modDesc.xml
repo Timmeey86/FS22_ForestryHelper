@@ -85,9 +85,9 @@ Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
     <l10n filenamePrefix="i18n/locale" />
 
     <actions>
-        <action name="CYCLE_LENGTH_INDICATOR" axis="HALF"/>
-        <action name="CYCLE_WEIGHT_INDICATOR" axis="HALF"/>
-        <action name="SWITCH_INDICATOR_MODE" axis="HALF"/>
+        <action name="CYCLE_LENGTH_INDICATOR" category="ONFOOT" axis="HALF"/>
+        <action name="CYCLE_WEIGHT_INDICATOR" category="ONFOOT" axis="HALF"/>
+        <action name="SWITCH_INDICATOR_MODE" category="ONFOOT" axis="HALF"/>
     </actions>
     <inputBinding>
         <actionBinding action="CYCLE_LENGTH_INDICATOR">
