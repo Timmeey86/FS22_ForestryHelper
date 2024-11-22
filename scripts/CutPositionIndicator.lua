@@ -1,6 +1,19 @@
----@class CutPositionIndicator
 ---This class is responsible for displaying an indicator for the desired cut position
 ---Most of this code was created by taking a look at the LUADOC for the chainsaw class and see where it uses the ringSelector
+---@class CutPositionIndicator
+---@field ring number @The ID of our own 3d ring used to indicate the target cut position
+---@field loadRequestId number @The ID of the request to load our own 3d ring
+---@field chainsawIsDeleted boolean @True if the chainsaw was deleted
+---@field lengthActionEventId number @The event ID for the "change cut length" action
+---@field weightActionEventId number @The event ID for the "change cut weight" action
+---@field modeActionEventId number @The event ID for the "change cut mode" action
+---@field indicationLength number @The desired cut length in meters
+---@field weightLimit number @The desired weight in kg
+---@field indicatorMode number @The currently selected indicator mode (length or weight)
+---@field chainsawIsSnapped boolean @True if the chainsaw is currently snapped
+---@field debugPositionDetection boolean @True if position detection shall be debugged
+---@field debugIndicator boolean @True if the cut indicator shall be debugged
+---@field traceHooks boolean @True if method injection shall be traced
 CutPositionIndicator = {
     -- Constants for translations
     I18N_IDS = {
@@ -38,13 +51,17 @@ function CutPositionIndicator.new()
 
     self.debugPositionDetection = false
     self.debugIndicator = false
+    self.traceHooks = true
     return self
 end
 
 ---Deletes our own ring before the chainsaw gets deleted
 ---@param chainsaw table @The chainsaw which will be deleted afterwards
 function CutPositionIndicator:before_chainsawDelete(chainsaw)
-    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode then
+    if self.traceHooks then
+        print(MOD_NAME .. "before_chainsawDelete")
+    end
+    if chainsaw.player and g_localPlayer and chainsaw.player.rootNode == g_localPlayer.rootNode then
         if self.ring ~= nil then
             delete(self.ring)
             self.ring = nil
@@ -58,10 +75,40 @@ function CutPositionIndicator:before_chainsawDelete(chainsaw)
     end
 end
 
+---Enables context menu actions when the chainsaw gets activated
+---@param chainsaw table @The chainsaw
+function CutPositionIndicator:after_chainsawOnHeldStart(chainsaw)
+    if self.traceHooks then
+        print(MOD_NAME .. ": after_chainsawOnHeldStart")
+    end
+    if chainsaw.carryingPlayer and chainsaw.carryingPlayer == g_localPlayer then
+        --- Register menu actions if necessary (doing that in InputComponent.onRegisterActionEvents seemed to be too early)
+        if not g_inputBinding.actionEvents["SWITCH_INDICATOR_MODE"] then
+            self:registerActionEvents()
+        end
+
+        --- Enable menu actions
+        g_inputBinding:setActionEventActive(self.modeActionEventId, true)
+        if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
+            g_inputBinding:setActionEventActive(self.lengthActionEventId, true)
+        elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
+            g_inputBinding:setActionEventActive(self.weightActionEventId, true)
+        end
+    else
+        if self.traceHooks then
+            print(MOD_NAME .. ": Ignoring event since this is not the correct player")
+            DebugUtil.printTableRecursively(chainsaw, "chainsaw ", 0, 2)
+        end
+    end
+end
+
 ---Hides our own ring before the chainsaw gets deactivated
 ---@param chainsaw table @The chainsaw
-function CutPositionIndicator:before_chainsawDeactivate(chainsaw)
-    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode then
+function CutPositionIndicator:before_chainsawOnHeldEnd(chainsaw)
+    if self.traceHooks then
+        print(MOD_NAME .. ": before_chainsawOnHeldEnd")
+    end
+    if chainsaw.carryingPlayer and chainsaw.carryingPlayer == g_localPlayer then
         if self.ring ~= nil then
             setVisibility(self.ring, false)
         end
@@ -70,6 +117,11 @@ function CutPositionIndicator:before_chainsawDeactivate(chainsaw)
         g_inputBinding:setActionEventActive(self.modeActionEventId, false)
         g_inputBinding:setActionEventActive(self.lengthActionEventId, false)
         g_inputBinding:setActionEventActive(self.weightActionEventId, false)
+    else
+        if self.traceHooks then
+            print(MOD_NAME .. ": Ignoring event since this is not the correct player")
+            DebugUtil.printTableRecursively(chainsaw, "chainsaw ", 0, 2)
+        end
     end
 end
 
@@ -77,8 +129,11 @@ end
 ---but a new one instead.
 ---@param node number @The ID of the 3D node which was created.
 ---@param failedReason table @A potential failure reason if the node couldn't be created.
----@param args table @Arguments (unknown)
+---@param args table @The arguments which were supplied to loadSharedI3DFileAsync (6th argument and beyond)
 function CutPositionIndicator:onOwnRingLoaded(node, failedReason, args)
+    if self.traceHooks then
+        print(MOD_NAME .. "onOwnRingLoaded")
+    end
     if node ~= 0 then
         if not self.chainsawIsDeleted then
             self.ring = getChildAt(node, 0)
@@ -90,14 +145,6 @@ function CutPositionIndicator:onOwnRingLoaded(node, failedReason, args)
             setShaderParameter(self.ring, "colorScale", 0.7, .0, 0.7, 1, false)
         end
         delete(node)
-
-        --- Enable action events
-        g_inputBinding:setActionEventActive(self.modeActionEventId, true)
-        if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
-            g_inputBinding:setActionEventActive(self.lengthActionEventId, true)
-        elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
-            g_inputBinding:setActionEventActive(self.weightActionEventId, true)
-        end
     end
 end
 
@@ -105,19 +152,38 @@ end
 ---@param chainsaw table @The chainsaw
 ---@param xmlFile table @The object which contains the chainsaw XML file's contents
 function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
-    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode then
-        -- Load another ring selector in addition to the one used by the base game chainsaw
-        local filename = xmlFile:getValue("handTool.chainsaw.ringSelector#file")
-        if filename ~= nil then
-            filename = Utils.getFilename(filename, chainsaw.baseDirectory)
-            -- Base game "pins" the shared I3D in cache, but there's no point in doing that twice (it's a shared cache, after all), so we skip that step
-
-            -- Load the file again
-            self.loadRequestId = g_i3DManager:loadSharedI3DFileAsync(filename, false, false, self.onOwnRingLoaded, self, chainsaw.player)
-        end
-        self.chainsawIsDeleted = false
-        self.chainsawIsSnapped = false
+    if self.traceHooks then
+        print(MOD_NAME .. "after_chainsawPostLoad")
     end
+
+    self.chainsawIsDeleted = false
+    self.chainsawIsSnapped = false
+
+    -- Load another ring selector in addition to the one used by the base game chainsaw:
+    -- 1: Get the name of the chainsaw XML file from the hand tool XML file
+    local chainsawXmlFileName = xmlFile.xmlFile:getValue(("%s#filename"):format(xmlFile.key))
+    if chainsawXmlFileName == nil then
+        Logging.warning("%s: Failed retrieving the chainsaw XML file name. Cut Position Indicator will not work.", MOD_NAME)
+        return
+    end
+    -- 2: Load the chainsaw XML file and get the path to the i3d of the ring selector
+    local chainsawXmlId = loadXMLFile("FH_ChainsawXml", chainsawXmlFileName, FHSettingsRepository.FH_KEY)
+    if chainsawXmlId == nil or chainsawXmlId == 0 then
+        Logging.warning("%s: Failed loading the chainsaw XML file from '%s'. Cut Position Indicator will not work.", MOD_NAME, chainsawXmlId)
+        return
+    end
+    local ringSelectorI3DFileName = getXMLString(chainsawXmlId, "handtool.chainsaw.ringSelector#filename")
+    if ringSelectorI3DFileName == nil then
+        Logging.warning("%s: Failed reading the ring selector filename from '%s'. Cut Position Indicator will not work.", MOD_NAME, chainsawXmlId)
+        return
+    end
+    ringSelectorI3DFileName = Utils.getFilename(ringSelectorI3DFileName, chainsaw.baseDirectory)
+    -- Load the file again
+    self.loadRequestId = g_i3DManager:loadSharedI3DFileAsync(ringSelectorI3DFileName, false, false, self.onOwnRingLoaded, self)
+    if self.traceHooks then
+        print(("%s: Triggered loading of ring selector I3D from %s with request ID %s"):format(MOD_NAME, ringSelectorI3DFileName, self.loadRequestId))
+    end
+
 end
 
 ---Rotates an object so its own X axis points along the given unit vector
@@ -301,7 +367,10 @@ end
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
 ---@param chainsaw table @The chain saw
 function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
-    if chainsaw.player and g_currentMission.player and chainsaw.player.rootNode == g_currentMission.player.rootNode and self.ring ~= nil then
+    if self.traceHooks then
+        print(MOD_NAME .. "after_chainsawUpdateRingSelector")
+    end
+    if chainsaw.player and g_localPlayer and chainsaw.player.rootNode == g_localPlayer.rootNode and self.ring ~= nil then
 
         -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
         local cutIndicatorShallBeVisible = false
@@ -409,17 +478,30 @@ end
 ---@return boolean @True if event registration was succesful, false if events had been registered already
 ---@return string @The ID of the action event
 function CutPositionIndicator:registerOnPressAction(eventKey, callbackFunction)
+    if self.traceHooks then
+        print(MOD_NAME .. ": registerOnPressAction")
+    end
     -- Register the action. Bool variables: Trigger on key release, trigger on key press, trigger always, unknown
     local registrationSuccessful, actionEventId = g_inputBinding:registerActionEvent(eventKey, self, callbackFunction, false, true, false, true)
     if registrationSuccessful then
         g_inputBinding:setActionEventTextPriority(actionEventId, GS_PRIO_LOW)
         g_inputBinding:setActionEventActive(actionEventId, false)
         g_inputBinding:setActionEventText(actionEventId, "")
+        g_inputBinding:setActionEventTextVisibility(actionEventId, true)
+        if self.traceHooks then
+            print(MOD_NAME .. ": Successfully registered " .. eventKey)
+        end
+    else
+        Logging.warning("%s: Failed registering action event for %s", MOD_NAME, eventKey)
     end
     return registrationSuccessful, actionEventId
 end
+
 ---Registers the "Cycle Cut Indicator" event so it can be displayed in the help menu
 function CutPositionIndicator:registerActionEvents()
+    if self.traceHooks then
+        print(MOD_NAME .. ": registerActionEvents")
+    end
     local isValid, actionEventId
     isValid, actionEventId = self:registerOnPressAction('CYCLE_LENGTH_INDICATOR', CutPositionIndicator.cycleLengthIndicator)
     if isValid then self.lengthActionEventId = actionEventId end
@@ -427,7 +509,6 @@ function CutPositionIndicator:registerActionEvents()
     if isValid then self.weightActionEventId = actionEventId end
     isValid, actionEventId = self:registerOnPressAction('SWITCH_INDICATOR_MODE', CutPositionIndicator.cycleIndicatorMode)
     if isValid then self.modeActionEventId = actionEventId end
-
     self:updateF1MenuTexts()
 end
 
@@ -440,12 +521,18 @@ end
 
 ---Cycles the desired cut length
 function CutPositionIndicator:cycleLengthIndicator()
+    if self.traceHooks then
+        print(MOD_NAME .. "cycleLengthIndicator")
+    end
     self.indicationLength = 1 + self.indicationLength % 12 -- from 1 to 12
     self:updateLengthIndicatorText()
 end
 
 ---Cycles the weight limit
 function CutPositionIndicator:cycleWeightIndicator()
+    if self.traceHooks then
+        print(MOD_NAME .. "cycleWeightIndicator")
+    end
      -- 200 (base game) to 1000 (max lumberjack strength setting)
     self.weightLimit = (self.weightLimit - 100) % 900 + 200
     self:updateWeightIndicatorText()
@@ -453,6 +540,9 @@ end
 
 -- Cycles the indication mode
 function CutPositionIndicator:cycleIndicatorMode()
+    if self.traceHooks then
+        print(MOD_NAME .. "cycleIndicatorMode")
+    end
 
     if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.OFF then
 
@@ -529,6 +619,9 @@ end
 ---@param cutSizeZ number @The size of the search rectangle in Z dimension
 ---@param farmId number @The ID of the farm (not sure why this is needed, maybe for statistics)
 function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
+    if self.traceHooks then
+        print(MOD_NAME .. "adaptCutIfNecessary")
+    end
     x, y, z = self:getAdjustedCutPosition(x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ)
     superFunc(shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
     if #ChainsawUtil.curSplitShapes == 0 then

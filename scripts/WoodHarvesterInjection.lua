@@ -17,7 +17,7 @@ function WoodHarvesterInjection.onWoodHarvesterUpdate(currentVehicle, superFunc,
     superFunc(currentVehicle, deltaTime, isActiveForInput, isActiveForInputIgnoreSelection, isSelected)
 
     -- Retrieve the current player instance
-    local player = g_currentMission.player
+    local player = g_localPlayer
     if player ~= nil and isActiveForInputIgnoreSelection then
         -- Retrieve the wood harvester specialization of the current vehicle
         local spec = currentVehicle.spec_woodHarvester
@@ -65,7 +65,7 @@ function WoodHarvesterInjection.onWoodHarvesterDraw(woodHarvester, superFunc, is
     superFunc(woodHarvester, isActiveForInput, isActiveForInputIgnoreSelection, isSelected)
 
     -- Draw only if the player HUD still exists and the player is sitting in the wood harvester
-    local player = g_currentMission.player
+    local player = g_localPlayer
     if player ~= nil and player.hudUpdater ~= nil and isActiveForInputIgnoreSelection then
 
         -- Retrieve the object box from the player HUD (that's what gets drawn when you look at a tree or any other object)

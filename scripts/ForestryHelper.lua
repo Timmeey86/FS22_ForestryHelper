@@ -1,4 +1,4 @@
-MOD_NAME = "FS22_ForestryHelper"
+MOD_NAME = "FS25_ForestryHelper"
 
 ---Create a table to store everything related to ForestryHelper. This will also act like a class
 ---@class ForestryHelper
@@ -285,7 +285,7 @@ local function onChainsawUpdate(chainsaw, superFunc, deltaTime, allowInput)
     superFunc(chainsaw, deltaTime, allowInput)
 
     -- Check that everything is properly initialized
-    local player = g_currentMission.player
+    local player = g_localPlayer
     if player ~= nil and player.hudUpdater ~= nil and player.hudUpdater.objectBox ~= nil then
 
         -- If the chainsaw is pointing at a tree and..
@@ -308,7 +308,8 @@ local settingsRepository = FHSettingsRepository.new(settings)
 Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
     -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
     HandToolChainsaw.onDelete = Utils.prependedFunction(HandToolChainsaw.onDelete, function(chainsaw) cutPositionIndicator:before_chainsawDelete(chainsaw) end)
-    HandToolChainsaw.onDeactivate = Utils.prependedFunction(HandToolChainsaw.onDeactivate, function(chainsaw, allowInput) cutPositionIndicator:before_chainsawDeactivate(chainsaw) end)
+    HandToolChainsaw.onHeldStart = Utils.prependedFunction(HandToolChainsaw.onHeldStart, function(chainsaw) cutPositionIndicator:after_chainsawOnHeldStart(chainsaw) end)
+    HandToolChainsaw.onHeldEnd = Utils.prependedFunction(HandToolChainsaw.onHeldEnd, function(chainsaw) cutPositionIndicator:before_chainsawOnHeldEnd(chainsaw) end)
     HandToolChainsaw.onPostLoad = Utils.appendedFunction(HandToolChainsaw.onPostLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
     HandToolChainsaw.updateRingSelector = Utils.appendedFunction(HandToolChainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
 
@@ -316,8 +317,6 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
     ChainsawUtil.cutSplitShape = Utils.overwrittenFunction(ChainsawUtil.cutSplitShape, function(shapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
         cutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
     end)
-
-    Player.registerActionEvents = Utils.appendedFunction(Player.registerActionEvents, function(player) cutPositionIndicator:registerActionEvents() end)
 
     -- Multiplayer synchronization
     ChainsawCutEvent.new = Utils.overwrittenFunction(ChainsawCutEvent.new, function(splitShapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
