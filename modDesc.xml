@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="92">
     <author>Farmsim Tim (timmeey86)</author>
-    <version>0.1.0.0</version>
+    <version>1.0.0.0</version>
     <title>
         <en>Forestry Helper</en>
         <de>Forstwirtschaftshelfer</de>
@@ -10,60 +10,51 @@
     </title>
     
     <description>
-        <en><![CDATA[This mod (formerly "Tree Value Info") displays helpful information for logs and helps with cutting to desired lengths or weights.        
+        <en><![CDATA[
+Description: 
+This mod displays helpful information for logs and helps with cutting to desired lengths or weights.
 
-The mod offers three modes for cutting with a chain saw, through which you can cycle with a customizable keybind (default: C):
-- "Indication Mode: Off": Base game behavior
-- "Indication Mode: Length": Cut to exact lengths from 1-12 meters (Cycle lengths with key Z). An additional length or factor can be added through the settings.
-- "Indication Mode: Weight": Cut to pieces which can be carried. This produces pieces less than the given weight limit most of the time.
-
-The weight mode is however just a rough estimate and can deviated by up to 100kg from the target weight, especially for things like oak trees.
-The weight mode can scale up to 1000kg to match the possible strength settings of the Lumberjack mod.
+You can use the hotkeys displayed in the F1 menu in order to switch between length and weight modes, and in order to select the target length/weight.
+Note that the while the length mode is exact, the weight mode is just an approximation. The weight mode is not available in multiplayer.
 
 The chainsaw will snap to the indicated location once within 20cm. The angle still has to be adjusted manually, however.
 
-Additionally, the following information is displayed the help window:
-- The volume of the piece of wood in liters. This is also being displayed before felling.
-- The current value, which is the amount of money you would get if you sold the piece of wood in its current form.
-- Hints on which kind of factors could reduce the value of the piece of wood like the shape, the length and the number of branches still attached.
-- The total quality of the piece of wood as calculated by the game, where 120% is the maximum.
-- The amount of liters you would get when processing the piece of wood with a wood chipper.
-- The amount of money you would get if you sold the wood chips right now.
-- An estimation of money you would get if you sold the wood chips at best price (sometimes you can get more than that, due to randonmness).
+The help window displays information which can help with deciding whether or not felling a tree or cutting it down further is worth it.
 
-Note that in order to get the maximum quality possible, a piece of wood needs to be a near perfect frustum of a cone, between 6-11m in length (about 20-36 feet) and may not have any branches still attached.
-A perfect shape is not possible for every piece of wood.
-
-The info box will also be displayed whenever a chainsaw is equipped and the ring around the tree to be cut is possible.
-While sitting in a wood harvester, you will see basic information about the tree, but no quality details, since those can only be calculated for the full tree, not for the next piece to be cut unfortunately.
+Note that in order to get the maximum quality possible in base game (which is 120%), a piece of wood needs to be a near perfect frustum of a cone, between 6-11m in length (about 20-36 feet) and may not have any branches still attached.
+It isn't always possible to achieve the maximum quality.
 
 This mod is of course compatible with the lumberjack mod.
+
+Hotkeys:
+[ C ] Switches between length mode and weight mode, or turns this feature off.
+[ Z ] Cycles through the possible target lengths and weights.
+
+GitHub link:
+https://github.com/Timmeey86/FS25_ForestryHelper
 ]]></en>
-        <de><![CDATA[Diese Mod (vormals "Holzpreis Info") zeigt nützliche Informationen für Baumstämme und hilft dabei, auf gewünschte Längen oder Gewichte zuzusägen.
+        <de><![CDATA[
+Beschreibung:
+Diese Mod zeigt hilfreiche Informationen für Baumstämme und hilft dabei, diese auf die gewünschte Länge oder das gewünschte Gewicht zuzuschneiden.
 
-Die Mod bietet drei Modi zum Zuschneiden mit einer Kettensäge, durch die man mit einem konfigurierbaren Tastenkürzel durchschalten kann (Standard: C):
-- "Kennzeichnungsmodus: Aus": Standard-Verhalten des Spiels
-- "Kennzeichnungsmodus: Länge": Auf exakte Länge zuschneiden, von 1-12 Meter (Längen kann man über die Taste Y ändern). In den Optionen kann hier noch Überlänge dazu gerechnet werden.
-- "Kennzeichnungsmodus: Gewicht": Auf tragbare Stücke zuschneiden. Dieser Modus produziert meistens Stücke mit einem Gewicht unter dem Limit.
+Du kannst die Tastenkombinationen, die im F1 Menü angezeigt werden, verwenden, um zwischen Längen- und Gewichtsmodus umzuschalten, und um Länge/Gewicht einzustellen.
+Beachte dass der Längenmodus exakt ist, der Gewichtsmodus jedoch nur eine Annäherung ist. Der Gewichtsmodus ist im Mehrspielermodus nicht verfügbar.
 
-Der Gewichts-Modus arbeitet jedoch nur mit einer groben Schätzung, die bis zu 100kg in beide Richtungen abweichen kann, vor allem bei Bäumen wie Eichen.
-Der Gewichtsmodus skaliert bis 1000kg, was den Einstellungmöglichkeiten der Holzfäller Mod entspricht.
+Die Kettensäge rastet an der angezeigten Stelle ein, sobald sie sich maximal 20cm davon entfernt befindet. Der Schnittwinkel muss jedoch immer manuell eingestellt werden.
 
-Die Kettensäge rastet bei der angezeigten Position ein, sobald man sich innerhalb von 20cm davon befindet. Der Winkel muss jedoch manuell eingestellt werden.
+Das Hilfefenster zeigt Informationen an, die dabei helfen können zu entscheiden, ob es sich lohnt, einen Baum zu fällen, oder ihn weiter zu zerteilen.
 
-Die Mod zeigt zusätzlich folgende Informationen an:
-- Das Volumen des Holzstücks in Litern. Dies wird auch dann angezeigt, wenn der Baum noch nicht gefällt wurde.
-- Der aktuelle Wert, den man bekommen würde, wenn man das Holzstück in seiner aktuellen Form verkaufen würde.
-- Hinweise darauf, welche Einflussfaktoren den Wert des Holzstücks reduzieren könnten, wie die Form, die Länge und die Anzahl an noch vorhandenen Ästen.
-- Die Gesamtqualität des Holzstücks, so wie sie vom Spiel berechnet wird, wobei 120% das Maximum ist.
-- Die Anzahl an Litern, die man bekommen würde, wenn man das Holzstück mit einem Häcksler verarbeiten würde.
-- Die Menge an Geld, die man bekommen würde, wenn man die Hackschnitzel sofort verkaufen würde.
-- Eine Abschätzung über den Preis, den man erzielen würde, wenn man die Hackschnitzel zum Bestpreis verkauft (manchmal bekommt man noch mehr, aufgrund von zufälligen Abweichungen).
-
-Beachtet, dass man die maximale Qualität nur dann erreicht, wenn das Holzstück nahezu einem perfekten Kegelstumpf gleicht, 6-11m lang ist und keine Äste mehr vorhanden sind.
-Es ist nicht mit jedem Holzstück möglich, die Perfekte Form zu erreichen.
+Beachte dass zum Erreichen der maximal möglichen Qualität im Basisspiel (die 120% ist) ein Stück Holz ein nahezu perfekter Kegelstumpf mit 6-11m Länge sein muss und keine Äste mehr haben darf.
+Es ist nicht immer möglich, die maximale Qualität zu erreichen.
 
 Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
+
+Tastenkombinationen:
+[ C ] Wechselt zwischen Längenmodus und Gewichtsmodus, oder schaltet diese Funktionalität ab.
+[ Y ] Schaltet durch die möglichen Längen und Gewichte.
+
+GitHub link:
+https://github.com/Timmeey86/FS25_ForestryHelper
 ]]></de>
     </description>
     
@@ -75,7 +66,6 @@ Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
         <sourceFile filename="scripts/CutPositionIndicator.lua" />
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
         <sourceFile filename="scripts/WoodHarvesterInjection.lua" />
-        <sourceFile filename="scripts/lib/DebugHelper.lua" />
         <sourceFile filename="scripts/lib/UIHelper.lua" />
         <sourceFile filename="scripts/settings/FHSettings.lua" />
         <sourceFile filename="scripts/settings/FHSettingsRepository.lua" />

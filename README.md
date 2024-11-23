@@ -1,4 +1,4 @@
-# FS22 Forestry Helper (formerly "Tree Value Info")
+# FS25 Forestry Helper
 
 ## Mod description
 
@@ -17,13 +17,13 @@ Info displayed in wood harvesters: (no quality info since that will change when 
 
 ## How to install
 
-1. Download the newest zip from the [Releases page](https://github.com/Timmeey86/FS22_ForestryHelper/releases)
+1. Download the newest zip from the [Releases page](https://github.com/Timmeey86/FS25_ForestryHelper/releases)
 1. Place the zip file in your FS22 mod folder
 1. Start the game and use like any other mod
 
 ## How to debug/code
 
-1. Obviously, own a copy of Farming Simulator 22
+1. Obviously, own a copy of Farming Simulator 25
 1. Clone this folder anywhere
 1. Use Visual Code with at least the Lua Language Server Plugin for coding
 1. When testing, execute copytofs.bat within the VSCode terminal and open that mod folder in Giants Studio
