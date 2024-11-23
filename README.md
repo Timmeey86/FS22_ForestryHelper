@@ -15,6 +15,10 @@ Indicator which helps cutting at desired lengths (it also snaps the chainsaw to 
 Info displayed in wood harvesters: (no quality info since that will change when cutting anyway).
 ![](screenshots/screen5.png)
 
+The modhub icon is built from:
+- [Chainsaw icons created by Good Ware - Flaticon](https://www.flaticon.com/free-icons/chainsaw)
+- [Construction and tools icons created by juicy_fish - Flaticon](https://www.flaticon.com/free-icons/construction-and-tools)
+
 ## How to install
 
 1. Download the newest zip from the [Releases page](https://github.com/Timmeey86/FS25_ForestryHelper/releases)
