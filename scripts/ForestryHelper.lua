@@ -262,12 +262,12 @@ end
 ---@param chainsaw table @The chainsaw instance
 ---@param superFunc function @The base game function
 ---@param shape any @The ID of the wood shape (or nil)
-local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape)
+local function onChainsawUpdateRingSelector(chainsaw, superFunc, shape, ...)
     -- Always call the superFunc
-    superFunc(chainsaw, shape)
+    superFunc(chainsaw, shape, ...)
 
     -- If the ring selector is displayed, and a shape was detected which is not the root shape
-    if chainsaw.isClient and chainsaw.player.isEntered and chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 then
+    if chainsaw.isClient and chainsaw.carryingPlayer and chainsaw.carryingPlayer.isEntered and chainsaw.spec_chainsaw.ringNode ~= nil and getVisibility(chainsaw.spec_chainsaw.ringNode) and shape ~= nil and shape ~= 0 then
         -- Remember the shape
         forestryHelper.currentShape = shape
     else
@@ -304,6 +304,10 @@ local cutPositionIndicator = CutPositionIndicator.new()
 local settings = FHSettings.new(cutPositionIndicator)
 local settingsRepository = FHSettingsRepository.new(settings)
 
+-- Note: For some reason this method won't be called if we register the new function within Mission00.loadMission00Finished, while stuff like onHeldStart has no issues
+HandToolChainsaw.updateRingSelector = Utils.appendedFunction(HandToolChainsaw.updateRingSelector, function(chainsaw, shape, ...) cutPositionIndicator:after_updateRingSelector(chainsaw, shape, ...) end)
+HandToolChainsaw.updateRingSelector = Utils.overwrittenFunction(HandToolChainsaw.updateRingSelector, onChainsawUpdateRingSelector)
+
 -- Register our overrides as late as possible in order to not be affected by mods which override the same methods, but don't call superFunc
 Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
     -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
@@ -311,7 +315,6 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
     HandToolChainsaw.onHeldStart = Utils.prependedFunction(HandToolChainsaw.onHeldStart, function(chainsaw) cutPositionIndicator:after_chainsawOnHeldStart(chainsaw) end)
     HandToolChainsaw.onHeldEnd = Utils.prependedFunction(HandToolChainsaw.onHeldEnd, function(chainsaw) cutPositionIndicator:before_chainsawOnHeldEnd(chainsaw) end)
     HandToolChainsaw.onPostLoad = Utils.appendedFunction(HandToolChainsaw.onPostLoad, function(chainsaw, xmlFile) cutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile) end)
-    HandToolChainsaw.updateRingSelector = Utils.appendedFunction(HandToolChainsaw.updateRingSelector, function(chainsaw, shape) cutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape) end)
 
     -- Note: When overriding non-member functions, superFunc will still be the second argument, even though the first argument isn't "self"
     ChainsawUtil.cutSplitShape = Utils.overwrittenFunction(ChainsawUtil.cutSplitShape, function(shapeId, superFunc, x,y,z, xx,xy,xz, yx,yy,yz, cutSizeY, cutSizeZ, farmId)
@@ -326,7 +329,6 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
     PlayerHUDUpdater.showSplitShapeInfo = Utils.overwrittenFunction(PlayerHUDUpdater.showSplitShapeInfo, function(...)
         forestryHelper:extendSplitShapeOverlay(...)
     end)
-    HandToolChainsaw.updateRingSelector = Utils.overwrittenFunction(HandToolChainsaw.updateRingSelector, onChainsawUpdateRingSelector)
     HandToolChainsaw.update = Utils.overwrittenFunction(HandToolChainsaw.update, onChainsawUpdate)
 
     FSBaseMission.saveSavegame = Utils.appendedFunction(FSBaseMission.saveSavegame, function()

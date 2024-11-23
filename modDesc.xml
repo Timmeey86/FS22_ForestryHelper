@@ -75,6 +75,7 @@ Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
         <sourceFile filename="scripts/CutPositionIndicator.lua" />
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
         <sourceFile filename="scripts/WoodHarvesterInjection.lua" />
+        <sourceFile filename="scripts/lib/DebugHelper.lua" />
         <sourceFile filename="scripts/lib/UIHelper.lua" />
         <sourceFile filename="scripts/settings/FHSettings.lua" />
         <sourceFile filename="scripts/settings/FHSettingsRepository.lua" />

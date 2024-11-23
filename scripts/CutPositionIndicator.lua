@@ -56,7 +56,7 @@ function CutPositionIndicator.new()
 
     self.debugPositionDetection = false
     self.debugIndicator = false
-    self.traceHooks = true
+    self.traceHooks = false
     return self
 end
 
@@ -66,7 +66,7 @@ function CutPositionIndicator:before_chainsawDelete(chainsaw)
     if self.traceHooks then
         print(MOD_NAME .. "before_chainsawDelete")
     end
-    if chainsaw.player and g_localPlayer and chainsaw.player.rootNode == g_localPlayer.rootNode then
+    if chainsaw.carryingPlayer and chainsaw.carryingPlayer == g_localPlayer then
         if self.ring ~= nil then
             delete(self.ring)
             self.ring = nil
@@ -373,31 +373,32 @@ end
 
 ---Show or hide our own ring whenever the visibliity of the chainsaw's ring selector changes
 ---@param chainsaw table @The chain saw
-function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
+---@param shape RingSelectorInfo @Contains information about the split shape the chainsaw is pointing at
+function CutPositionIndicator:after_updateRingSelector(chainsaw, shape, ...)
     if self.traceHooks then
-        print(MOD_NAME .. "after_chainsawUpdateRingSelector")
+        print(MOD_NAME .. ": after_updateRingSelector")
     end
-    if chainsaw.player and g_localPlayer and chainsaw.player.rootNode == g_localPlayer.rootNode and self.ring ~= nil then
-
+    if chainsaw.carryingPlayer and chainsaw.carryingPlayer == g_localPlayer and self.ring ~= nil then
         -- Just tie the visibility of our ring to the one of the chainsaw's ring selector, but don't show it if the tree hasn't been cut already
         local cutIndicatorShallBeVisible = false
-        if chainsaw.ringSelector ~= nil and getVisibility(chainsaw.ringSelector) and shape ~= nil and shape ~= 0 and getRigidBodyType(shape) ~= RigidBodyType.STATIC then
+        if chainsaw.spec_chainsaw.ringNode ~= nil and getVisibility(chainsaw.spec_chainsaw.ringNode) and shape.node ~= nil and shape.node ~= 0 and getRigidBodyType(shape.node) ~= RigidBodyType.STATIC then
             cutIndicatorShallBeVisible = (self.indicatorMode ~= CutPositionIndicator.INDICATOR_MODE.OFF)
         end
         setVisibility(self.ring, cutIndicatorShallBeVisible)
 
         if cutIndicatorShallBeVisible then
-            -- Find the center of the cut location in world coordinates
-            local chainsawX, chainsawY, chainsawZ = localToWorld(chainsaw.ringSelector, 0,0,0)
+            -- FS25: The center of the ring selector is now supplied as an argument
+            local chainsawX, chainsawY, chainsawZ = shape.x, shape.y, shape.z
+
             -- Unit vectors along the local X axis of the log, same for Y and Z below
             -- There is a special case for trees, however, since they grow in world Y direction, so the X axis is not their main axis
             -- In order to make the following code less confusing, we rotate the tree's axis system so it grows along its X axis
-            local xx,xy,xz = localDirectionToWorld(shape, 0,1,0)
-            local yx,yy,yz = localDirectionToWorld(shape, 1,0,0)
-            local zx,zy,zz = localDirectionToWorld(shape, 0,0,-1)
+            local xx,xy,xz = localDirectionToWorld(shape.node, 0,1,0)
+            local yx,yy,yz = localDirectionToWorld(shape.node, 1,0,0)
+            local zx,zy,zz = localDirectionToWorld(shape.node, 0,0,-1)
 
             -- Detect how far the beginning of the tree is away
-            local lenBelow = getSplitShapePlaneExtents(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz)
+            local lenBelow = getSplitShapePlaneExtents(shape.node, chainsawX, chainsawY, chainsawZ, xx,xy,xz)
 
             -- Make a large enough search square to find the tree again
             local searchSquareSize = 2
@@ -405,7 +406,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             if self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.LENGTH then
                 searchSquareCorner = self:getIndicatorSearchLocationForFixedWidth(chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
             elseif self.indicatorMode == CutPositionIndicator.INDICATOR_MODE.WEIGHT then
-                searchSquareCorner = self:getIndicatorSearchLocationForWeightLimit(shape, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
+                searchSquareCorner = self:getIndicatorSearchLocationForWeightLimit(shape.node, chainsawX, chainsawY, chainsawZ, xx,xy,xz, yx,yy,yz, zx,zy,zz, lenBelow, searchSquareSize)
             end
 
             if searchSquareCorner ~= nil and self.debugPositionDetection then
@@ -426,7 +427,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
             -- Search in a square starting in the search square corner. We supply X and Y unit vectors, but the function will actually search in the Y/Z plane
             local minY, maxY, minZ, maxZ = nil, nil, nil, nil
             if searchSquareCorner ~= nil then
-                minY, maxY, minZ, maxZ = testSplitShape(shape, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
+                minY, maxY, minZ, maxZ = testSplitShape(shape.node, searchSquareCorner.x, searchSquareCorner.y, searchSquareCorner.z, xx,xy,xz, yx,yy,yz, searchSquareSize, searchSquareSize)
             end
             if minY ~= nil then
                 -- Move the corner of the search square used above to the center of the found location. min/max Y/Z are relative to the search square corner
@@ -460,7 +461,7 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
         if getVisibility(self.ring) then
             -- Calculate the distance between the centers of the two rings
             local xInd,yInd,zInd = localToWorld(self.ring, 0,0,0)
-            local xCut,yCut,zCut = localToWorld(chainsaw.ringSelector, 0,0,0)
+            local xCut,yCut,zCut = localToWorld(chainsaw.spec_chainsaw.ringNode, 0,0,0)
             local xDiff,yDiff,zDiff = xInd-xCut, yInd-yCut, zInd-zCut
             local distance = math.sqrt(xDiff * xDiff + yDiff * yDiff + zDiff * zDiff)
 
@@ -468,14 +469,16 @@ function CutPositionIndicator:after_chainsawUpdateRingSelector(chainsaw, shape)
                 -- Figure out the position of our own ring in the local coordinate system of the chainsaw's ring selector
                 -- The chainsaw's ring selector's translation is relative to some other object, so we use the coordinate system of that object instead
                 -- Not sure why that's the right thing, but Chainsaw:updateRingSelector does it, too, and it won't work without the getParent call
-                local xCutLocal, yCutLocal, zCutLocal = worldToLocal(getParent(chainsaw.ringSelector), xInd, yInd, zInd)
+                local xCutLocal, yCutLocal, zCutLocal = worldToLocal(getParent(chainsaw.spec_chainsaw.ringNode), xInd, yInd, zInd)
                 -- Translate the chainsaw's ring selector onto those coordinates
-                setTranslation(chainsaw.ringSelector, xCutLocal, yCutLocal, zCutLocal)
+                setTranslation(chainsaw.spec_chainsaw.ringNode, xCutLocal, yCutLocal, zCutLocal)
                 self.chainsawIsSnapped = true
             else
                 self.chainsawIsSnapped = false
             end
         end
+    else
+        print(("%s // %s // %s"):format(chainsaw.carryingPlayer, g_localPlayer, self.ring))
     end
 end
 
