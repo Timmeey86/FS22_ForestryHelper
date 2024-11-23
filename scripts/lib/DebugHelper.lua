@@ -38,3 +38,38 @@ function DebugHelper.printSortedTableRecursively(inputTable, depth, maxDepth)
 		print("---------------------------------------------------")
 	end
 end
+function DebugHelper.hookFunction(cls_str, fnc_str)
+    local root = getmetatable(_G).__index
+    local cls = not cls_str and root or root[cls_str]
+    if not cls then
+        print("Error: Class " .. (cls_str or "nil") .. " not found")
+        return
+    end
+
+    local fnc = cls[fnc_str]
+    if not fnc then
+        print("Error: Function " .. (fnc_str or "nil") .. " not found in " .. (cls_str or "_G"))
+        return
+    end
+    
+    print("OVER-WRITTEN: " .. (cls_str or "_G") .. "." .. fnc_str)
+    cls[fnc_str] = Utils.overwrittenFunction(fnc, 
+        function(self, superFunc, ...)
+            local args = {...}
+            print("FUNCTION: " .. fnc_str)
+            print("self: " .. tostring(self))
+            
+            for i, v in ipairs(args) do
+                print("arg" .. i .. " - " .. tostring(v))
+            end
+
+            local results = {superFunc(self, table.unpack(args))}
+
+            for i, v in ipairs(results) do
+                print("return" .. i .. " - " .. tostring(v))
+            end
+
+            return table.unpack(results)
+        end
+    )
+end

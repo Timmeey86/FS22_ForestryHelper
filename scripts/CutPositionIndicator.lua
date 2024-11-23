@@ -39,7 +39,7 @@ CutPositionIndicator = {
 local CutPositionIndicator_mt = Class(CutPositionIndicator)
 
 ---Creates a new cut position indicator (handler)
----@return table @The new object
+---@return CutPositionIndicator @The new object
 function CutPositionIndicator.new()
     local self = setmetatable({}, CutPositionIndicator_mt)
 
@@ -157,7 +157,7 @@ end
 
 ---Trigger loading of a second ring after the chainsaw loaded its own ring selector
 ---@param chainsaw table @The chainsaw
----@param xmlFile table @The object which contains the chainsaw XML file's contents
+---@param xmlFile table @Unused
 function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
     if self.traceHooks then
         print(MOD_NAME .. "after_chainsawPostLoad")
@@ -168,7 +168,7 @@ function CutPositionIndicator:after_chainsawPostLoad(chainsaw, xmlFile)
 
     -- Load another ring selector in addition to the one used by the base game chainsaw:
     -- 1: Get the name of the chainsaw XML file from the hand tool XML file
-    local chainsawXmlFileName = xmlFile.xmlFile:getValue(("%s#filename"):format(xmlFile.key))
+    local chainsawXmlFileName = chainsaw.configFileName
     if chainsawXmlFileName == nil then
         Logging.warning("%s: Failed retrieving the chainsaw XML file name. Cut Position Indicator will not work.", MOD_NAME)
         return
@@ -477,8 +477,6 @@ function CutPositionIndicator:after_updateRingSelector(chainsaw, shape, ...)
                 self.chainsawIsSnapped = false
             end
         end
-    else
-        print(("%s // %s // %s"):format(chainsaw.carryingPlayer, g_localPlayer, self.ring))
     end
 end
 
