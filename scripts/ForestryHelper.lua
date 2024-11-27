@@ -337,5 +337,6 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
 
     g_currentMission.forestryHelperSettings = settings
     settingsRepository:restoreSettings()
+    FHSettingsUI.injectUiSettings(g_currentMission.forestryHelperSettings)
 
 end)

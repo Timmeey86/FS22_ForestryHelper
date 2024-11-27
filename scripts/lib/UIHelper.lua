@@ -1,4 +1,44 @@
+---This class allows easier creation of configuration options in the general settings page
+---@class UIHelper
 UIHelper = {}
+
+---Creates a new section with the given title
+---@param generalSettingsPage table @The general settings page of the base game
+---@param i18nTitleId string @The I18N ID of the title to be displayed
+---@return table|nil @The created section element
+function UIHelper.createSection(generalSettingsPage, i18nTitleId)
+    local sectionTitle = nil
+	for idx, elem in ipairs(generalSettingsPage.generalSettingsLayout.elements) do
+		if elem.name == "sectionHeader" then
+			sectionTitle = elem:clone(generalSettingsPage.generalSettingsLayout)
+            sectionTitle:setText(g_i18n:getText(i18nTitleId))
+			break
+		end
+	end
+    return sectionTitle
+end
+
+
+
+local function createElement(generalSettingsPage, template, id, i18nTextId, target, callbackFunc)
+    local elementBox = template:clone(generalSettingsPage.generalSettingsLayout)
+    elementBox.id = id .. "Box"
+    -- Assign the object which shall receive change events
+    local elementOption = elementBox.elements[1]
+    elementOption.target = target
+    -- Change generic values
+    elementOption.id = id
+    elementOption:setCallback("onClickCallback", callbackFunc)
+    elementOption:setDisabled(false)
+    -- Change the text element
+    local textElement = elementBox.elements[2]
+    textElement:setText(g_i18n:getText(i18nTextId .. "_short"))
+    -- Change the tooltip
+    local toolTip = elementOption.elements[1]
+    toolTip:setText(g_i18n:getText(i18nTextId .. "_long"))
+    return elementBox
+end
+
 
 ---Adds a simple yes/no switch to the UI
 ---@param generalSettingsPage   table       @The base game object for the settings page
@@ -8,19 +48,7 @@ UIHelper = {}
 ---@param callbackFunc          string      @The name of the function to call when the value changes
 ---@return                      table       @The created object
 function UIHelper.createBoolElement(generalSettingsPage, id, i18nTextId, target, callbackFunc)
-    -- Most other mods seem to clone an element rather than creating a new one
-    local boolElement = generalSettingsPage.checkUseEasyArmControl:clone()
-    -- Assign the object which shall receive change events
-    boolElement.target = target
-    -- Change relevant values
-    boolElement.id = id
-    boolElement:setLabel(g_i18n:getText(i18nTextId .. "_short"))
-    -- Element #6 is the tool tip. Maybe we can find a more robust way to get this in future
-    boolElement.elements[6]:setText(g_i18n:getText(i18nTextId .. "_long"))
-    boolElement:setCallback("onClickCallback", callbackFunc)
-    generalSettingsPage.boxLayout:addElement(boolElement)
-
-    return boolElement
+    return createElement(generalSettingsPage, generalSettingsPage.checkWoodHarvesterAutoCutBox, id, i18nTextId, target, callbackFunc)
 end
 
 ---Creates an element which allows choosing one out of several text values
@@ -32,16 +60,17 @@ end
 ---@param callbackFunc          string      @The name of the function to call when the value changes
 ---@return                      table       @The created object
 function UIHelper.createChoiceElement(generalSettingsPage, id, i18nTextId, i18nValueMap, target, callbackFunc)
-    -- Create a bool element and then change its values
-    local choiceElement = UIHelper.createBoolElement(generalSettingsPage, id, i18nTextId, target, callbackFunc)
+    local choiceElementBox = createElement(generalSettingsPage, generalSettingsPage.multiVolumeVoiceBox, id, i18nTextId, target, callbackFunc)
 
+    local choiceElement = choiceElementBox.elements[1]
     local texts = {}
     for _, valueEntry in pairs(i18nValueMap) do
         table.insert(texts, g_i18n:getText(valueEntry.i18nTextId))
     end
+    DebugUtil.printTableRecursively(choiceElement, "", 0, 0)
     choiceElement:setTexts(texts)
 
-    return choiceElement
+    return choiceElementBox
 end
 
 ---Creates an element which allows choosing one out of several integer values
@@ -56,12 +85,19 @@ end
 ---@param callbackFunc          string      @The name of the function to call when the value changes
 ---@return                      table       @The created object
 function UIHelper.createRangeElement(generalSettingsPage, id, i18nTextId, minValue, maxValue, step, unit, target, callbackFunc)
-    -- Create a bool element and then change its values
-    local rangeElement = UIHelper.createBoolElement(generalSettingsPage, id, i18nTextId, target, callbackFunc)
+    local rangeElementBox = createElement(generalSettingsPage, generalSettingsPage.multiVolumeVoiceBox, id, i18nTextId, target, callbackFunc)
 
+    local rangeElement = rangeElementBox.elements[1]
     local texts = {}
+    local digits = 0
+    local tmpStep = step
+    while tmpStep < 1 do
+        digits = digits + 1
+        tmpStep = tmpStep * 10
+    end
+    local formatTemplate = (".%df"):format(digits)
     for i = minValue, maxValue, step do
-        local text = tostring(i)
+        local text = ("%" .. formatTemplate):format(i)
         if unit then
             text = ("%s %s"):format(text, unit)
         end
@@ -69,5 +105,5 @@ function UIHelper.createRangeElement(generalSettingsPage, id, i18nTextId, minVal
     end
     rangeElement:setTexts(texts)
 
-    return rangeElement
+    return rangeElementBox
 end

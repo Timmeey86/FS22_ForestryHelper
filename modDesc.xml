@@ -24,6 +24,8 @@ The help window displays information which can help with deciding whether or not
 Note that in order to get the maximum quality possible in base game (which is 120%), a piece of wood needs to be a near perfect frustum of a cone, between 6-11m in length (about 20-36 feet) and may not have any branches still attached.
 It isn't always possible to achieve the maximum quality.
 
+Realism players may also add an absolute or relative additional length to the cut indication length in the general settings.
+
 This mod is of course compatible with the lumberjack mod.
 
 Hotkeys:
@@ -46,6 +48,8 @@ Das Hilfefenster zeigt Informationen an, die dabei helfen können zu entscheiden
 
 Beachte dass zum Erreichen der maximal möglichen Qualität im Basisspiel (die 120% ist) ein Stück Holz ein nahezu perfekter Kegelstumpf mit 6-11m Länge sein muss und keine Äste mehr haben darf.
 Es ist nicht immer möglich, die maximale Qualität zu erreichen.
+
+Realismusspieler können in den allgemeinen Einstellungen eine absolute oder prozentuale Länge als Puffer für den Längenmodus hinzufügen.
 
 Diese Mod ist selbstverständlich mit der Holzfäller Mod kompatibel.
 

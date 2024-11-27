@@ -20,27 +20,25 @@ function FHSettingsUI.new()
     return self
 end
 
----This gets called every time the settings page gets opened
----@param   generalSettingsPage     table   @The instance of the base game's general settings page
-function FHSettingsUI.onFrameOpen(generalSettingsPage)
-    if generalSettingsPage.forestryHelperInitialized then
-        -- Update the UI settings when opening the UI again
-        generalSettingsPage.forestryHelperSettings:updateUiElements()
+---Extends the settings page with our own controls
+---@param settings FHSettings @The settings
+function FHSettingsUI.injectUiSettings(settings)
+
+    local inGameMenu = g_gui.screenControllers[InGameMenu]
+    local settingsPage = inGameMenu.pageSettings
+
+    if settingsPage.forestryHelperSettings ~= nil then
         return
     end
 
     local fhSettingsUI = FHSettingsUI.new()
 
-    -- Create a text for the title and configure it as subtitle
-    local groupTitle = TextElement.new()
-    groupTitle:applyProfile("settingsMenuSubtitle", true)
-    groupTitle:setText(g_i18n:getText(FHSettingsUI.I18N_IDS.GROUP_TITLE))
-    generalSettingsPage.boxLayout:addElement(groupTitle)
-    fhSettingsUI.groupTitle = groupTitle
+    -- Create a text for the title
+    fhSettingsUI.groupTitle = UIHelper.createSection(settingsPage, FHSettingsUI.I18N_IDS.GROUP_TITLE)
 
     -- Create a UI element for chosing the length factor mode
     fhSettingsUI.lengthFactorMode = UIHelper.createChoiceElement(
-        generalSettingsPage,
+        settingsPage,
         "fh_lengthFactorMode",
         FHSettingsUI.I18N_IDS.LENGTH_FACTOR_MODE,
         FHSettingsUI.LENGTH_FACTOR_MODE_I18N_IDS,
@@ -49,7 +47,7 @@ function FHSettingsUI.onFrameOpen(generalSettingsPage)
 
     -- Create two UI elements for the length factor, those will be switched out later in accordance with the selected mode
     fhSettingsUI.lengthFactorAbs = UIHelper.createRangeElement(
-        generalSettingsPage,
+        settingsPage,
         "fh_lengthFactorAbs",
         FHSettingsUI.I18N_IDS.LENGTH_FACTOR_ABS,
         FHSettings.LENGTH_FACTOR_ABS_MIN, FHSettings.LENGTH_FACTOR_ABS_MAX, FHSettings.LENGTH_FACTOR_ABS_STEP,
@@ -57,7 +55,7 @@ function FHSettingsUI.onFrameOpen(generalSettingsPage)
         fhSettingsUI,
         "onAbsFactorChanged")
     fhSettingsUI.lengthFactorRel = UIHelper.createRangeElement(
-        generalSettingsPage,
+        settingsPage,
         "fh_lengthFactorRel",
         FHSettingsUI.I18N_IDS.LENGTH_FACTOR_REL,
         FHSettings.LENGTH_FACTOR_REL_MIN, FHSettings.LENGTH_FACTOR_REL_MAX, FHSettings.LENGTH_FACTOR_REL_STEP,
@@ -66,27 +64,34 @@ function FHSettingsUI.onFrameOpen(generalSettingsPage)
         "onRelFactorChanged")
 
     -- Apply the initial values
-    fhSettingsUI.settings = g_currentMission.forestryHelperSettings
+    fhSettingsUI.settings = settings
     fhSettingsUI:updateUiElements()
 
+    settingsPage.generalSettingsLayout:invalidateLayout()
+
     -- Remember values for future calls
-    generalSettingsPage.forestryHelperSettings = fhSettingsUI
-    generalSettingsPage.forestryHelperInitialized = true
+    settingsPage.forestryHelperSettings = fhSettingsUI
 end
---InGameMenuGeneralSettingsFrame.onFrameOpen = Utils.appendedFunction(InGameMenuGeneralSettingsFrame.onFrameOpen, FHSettingsUI.onFrameOpen)
+
+InGameMenuSettingsFrame.onFrameOpen = Utils.appendedFunction(InGameMenuSettingsFrame.onFrameOpen, function()
+    local settingsPage = g_gui.screenControllers[InGameMenu].pageSettings
+    if settingsPage.forestryHelperSettings then
+        settingsPage.forestryHelperSettings:updateUiElements()
+    end
+end)
 
 ---Updates the UI elements to the reflect the current settings
 function FHSettingsUI:updateUiElements()
     print(MOD_NAME .. ": Updating UI elements")
-    -- Reflect the current settings state in the UI
-    self.lengthFactorMode:setState(self.settings.lengthFactorMode)
+        -- Reflect the current settings state in the UI
+    self.lengthFactorMode.elements[1]:setState(self.settings.lengthFactorMode)
     local isAbsMode = self.settings.lengthFactorMode == FHSettings.LENGTH_FACTOR_TYPE_ABS
 
-    self.lengthFactorAbs:setDisabled(not isAbsMode)
-    self.lengthFactorAbs:setState(self.settings.lengthFactorAbsIndex)
+    self.lengthFactorAbs.elements[1]:setDisabled(not isAbsMode)
+    self.lengthFactorAbs.elements[1]:setState(self.settings.lengthFactorAbsIndex)
 
-    self.lengthFactorRel:setDisabled(isAbsMode)
-    self.lengthFactorRel:setState(self.settings.lengthFactorRelIndex)
+    self.lengthFactorRel.elements[1]:setDisabled(isAbsMode)
+    self.lengthFactorRel.elements[1]:setState(self.settings.lengthFactorRelIndex)
 end
 
 ---Reacts to changes of the length factor mode
