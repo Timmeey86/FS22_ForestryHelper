@@ -476,7 +476,13 @@ function CutPositionIndicator:after_updateRingSelector(chainsaw, shape, ...)
             else
                 self.chainsawIsSnapped = false
             end
+        else
+            -- Chainsaw can't be snapped if the ring is not visible
+            self.chainsawIsSnapped = false
         end
+    else
+        -- Chainsaw can't be snapped if the cut indicator shall not be shown
+        self.chainsawIsSnapped = false
     end
 end
 
@@ -636,6 +642,7 @@ function CutPositionIndicator:adaptCutIfNecessary(superFunc, shapeId, x,y,z, xx,
         g_currentMission:showBlinkingWarning(g_i18n:getText("fh_cut_not_possible", 2000))
     else
         print(("%s: Shape %d was split into %d parts"):format(MOD_NAME, shapeId, #ChainsawUtil.curSplitShapes))
+        self.chainsawIsSnapped = false
     end
 end
 
