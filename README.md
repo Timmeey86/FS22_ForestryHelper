@@ -1,5 +1,11 @@
 # FS25 Forestry Helper
 
+## Acknowledgements
+
+The modhub icon was built by using these icons:
+- [Chainsaw icons created by Good Ware - Flaticon](https://www.flaticon.com/free-icons/chainsaw)
+- [Construction and tools icons created by juicy_fish - Flaticon](https://www.flaticon.com/free-icons/construction-and-tools)
+
 ## Mod description
 
 This mod provides helpful information on trees and logs and helps in making cuts at precise length intervals.
@@ -8,16 +14,12 @@ Detailed info on quality, value and wood chip potential. Visible with or without
 ![](screenshots/screen1.png)
 Feedback on factors which reduce the sell price:
 ![](screenshots/screen2.png)
-Compatibility with [Info Display Extension](https://github.com/Achimobil/FS22_InfoDisplayExtension):
+Compatibility with [Info Display Extension](https://github.com/Achimobil/FS25_InfoDisplayExtension):
 ![](screenshots/screen3.png)
 Indicator which helps cutting at desired lengths (it also snaps the chainsaw to it when close):
 ![](screenshots/screen4.png)
 Info displayed in wood harvesters: (no quality info since that will change when cutting anyway).
 ![](screenshots/screen5.png)
-
-The modhub icon is built from:
-- [Chainsaw icons created by Good Ware - Flaticon](https://www.flaticon.com/free-icons/chainsaw)
-- [Construction and tools icons created by juicy_fish - Flaticon](https://www.flaticon.com/free-icons/construction-and-tools)
 
 ## How to install
 
