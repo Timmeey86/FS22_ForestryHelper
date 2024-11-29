@@ -1,6 +1,10 @@
 ---This file allows configuring the Forestry Helper settings within the ingame settings menu
 ---@class FHSettingsUI
 ---@field private settings FHSettings @The settings object
+---@field groupTitle table @The group title in the settings UI
+---@field lengthFactorMode table @The UI control for the length factor mode
+---@field lengthFactorAbs table @The UI control for the absolute length factor value
+---@field lengthFactorRel table @The UI control for the relative length factor value
 FHSettingsUI = {
     I18N_IDS = {
         GROUP_TITLE = "fh_group_title",

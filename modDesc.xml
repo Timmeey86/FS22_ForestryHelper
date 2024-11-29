@@ -24,7 +24,7 @@ The help window displays information which can help with deciding whether or not
 Note that in order to get the maximum quality possible in base game (which is 120%), a piece of wood needs to be a near perfect frustum of a cone, between 6-11m in length (about 20-36 feet) and may not have any branches still attached.
 It isn't always possible to achieve the maximum quality.
 
-Realism players may also add an absolute or relative additional length to the cut indication length in the general settings.
+Realism players may also add an absolute or relative additional length buffer to the cut indication length in the general settings.
 
 This mod is of course compatible with the lumberjack mod.
 
@@ -69,7 +69,6 @@ https://github.com/Timmeey86/FS25_ForestryHelper
     <extraSourceFiles>
         <sourceFile filename="scripts/CutPositionIndicator.lua" />
         <sourceFile filename="scripts/WoodPriceCalculation.lua" />
-        <sourceFile filename="scripts/WoodHarvesterInjection.lua" />
         <sourceFile filename="scripts/lib/UIHelper.lua" />
         <sourceFile filename="scripts/settings/FHSettings.lua" />
         <sourceFile filename="scripts/settings/FHSettingsRepository.lua" />
