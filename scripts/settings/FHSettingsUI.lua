@@ -19,6 +19,8 @@ FHSettingsUI = {
 }
 
 local FHSettingsUI_mt = Class(FHSettingsUI)
+---Creates the UI part of the Forestry Helper settings
+---@return FHSettingsUI @The new instance
 function FHSettingsUI.new()
 	local self = setmetatable({}, FHSettingsUI_mt)
 	return self
@@ -80,7 +82,12 @@ end
 InGameMenuSettingsFrame.onFrameOpen = Utils.appendedFunction(InGameMenuSettingsFrame.onFrameOpen, function()
 	local settingsPage = g_gui.screenControllers[InGameMenu].pageSettings
 	if settingsPage.forestryHelperSettings then
-		settingsPage.forestryHelperSettings:updateUiElements()
+		local fhSettingsUI = settingsPage.forestryHelperSettings
+		fhSettingsUI:updateUiElements()
+		local focusMapping = FocusManager.currentFocusData.idToElementMapping
+		if not focusMapping[fhSettingsUI.groupTitle.focusId] then
+			Logging.error("3 Settings title has lost its focus mapping")
+		end
 	end
 end)
 
@@ -91,10 +98,11 @@ function FHSettingsUI:updateUiElements()
 	self.lengthFactorMode.elements[1]:setState(self.settings.lengthFactorMode)
 	local isAbsMode = self.settings.lengthFactorMode == FHSettings.LENGTH_FACTOR_TYPE_ABS
 
-	self.lengthFactorAbs.elements[1]:setDisabled(not isAbsMode)
+	-- TODO: Disabling messes with the focus manager too much
+	--self.lengthFactorAbs:setDisabled(not isAbsMode)
 	self.lengthFactorAbs.elements[1]:setState(self.settings.lengthFactorAbsIndex)
 
-	self.lengthFactorRel.elements[1]:setDisabled(isAbsMode)
+	--self.lengthFactorRel:setDisabled(isAbsMode)
 	self.lengthFactorRel.elements[1]:setState(self.settings.lengthFactorRelIndex)
 end
 
@@ -118,3 +126,15 @@ function FHSettingsUI:onRelFactorChanged(newState)
 	self.settings.lengthFactorRelIndex = newState
 	self.settings.cutPositionIndicator:updateF1MenuTexts()
 end
+
+FocusManager.setGui = Utils.appendedFunction(FocusManager.setGui, function(_, gui)
+	if gui == "ingameMenuSettings" then
+		local settingsPage = g_gui.screenControllers[InGameMenu].pageSettings
+		local fhSettingsUI = settingsPage.forestryHelperSettings
+		if fhSettingsUI then
+			UIHelper.registerFocusControls({fhSettingsUI.groupTitle, fhSettingsUI.lengthFactorMode, fhSettingsUI.lengthFactorAbs, fhSettingsUI.lengthFactorRel})
+		end
+		-- Invalidate the layout in order to relink items properly
+		settingsPage.generalSettingsLayout:invalidateLayout()
+	end
+end)
