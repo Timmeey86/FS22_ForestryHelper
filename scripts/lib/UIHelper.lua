@@ -131,17 +131,20 @@ function UIHelper.createRangeElement(generalSettingsPage, id, i18nTextId, minVal
 	return rangeElementBox
 end
 
----Lets the focus manager know there are additional controls it should handle
+---Hooks into the focus manager at just the right point in time to register any relevant controls.
+---Make sure you also supply your section headers here!
 ---@param controls table @A list of controls
 function UIHelper.registerFocusControls(controls)
-	for _, control in ipairs(controls) do
-		if not control.focusId or not FocusManager.currentFocusData.idToElementMapping[control.focusId] then
-			if not FocusManager:loadElementFromCustomValues(control, nil, nil, false, false) then
-				print(("Failed loading focus element for %s"):format(control.id or control.name))
-			else
-				print((">>> %s has focus ID %s"):format( control.id or control.name, control.focusId))
-				print(">>> Mapping is " .. tostring(FocusManager.currentFocusData.idToElementMapping[control.focusId]))
+	FocusManager.setGui = Utils.appendedFunction(FocusManager.setGui, function(_, gui)
+		for _, control in ipairs(controls) do
+			if not control.focusId or not FocusManager.currentFocusData.idToElementMapping[control.focusId] then
+				if not FocusManager:loadElementFromCustomValues(control, nil, nil, false, false) then
+					Logging.warning("Failed loading focus element for %s. Keyboard/controller menu navigation might be bugged.", control.id or control.name)
+				end
 			end
 		end
-	end
+		local settingsPage = g_gui.screenControllers[InGameMenu].pageSettings
+		-- Invalidate the layout in order to relink items properly
+		settingsPage.generalSettingsLayout:invalidateLayout()
+	end)
 end
