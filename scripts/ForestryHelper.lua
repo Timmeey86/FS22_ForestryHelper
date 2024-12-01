@@ -308,6 +308,9 @@ local settingsRepository = FHSettingsRepository.new(settings)
 HandToolChainsaw.updateRingSelector = Utils.appendedFunction(HandToolChainsaw.updateRingSelector, function(chainsaw, shape, ...) cutPositionIndicator:after_updateRingSelector(chainsaw, shape, ...) end)
 HandToolChainsaw.updateRingSelector = Utils.overwrittenFunction(HandToolChainsaw.updateRingSelector, onChainsawUpdateRingSelector)
 
+settingsRepository:restoreSettings()
+FHSettingsUI.injectUiSettings(settings)
+
 -- Register our overrides as late as possible in order to not be affected by mods which override the same methods, but don't call superFunc
 Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00Finished, function(mission, node)
     -- We use local functions so we can supply different parameters, e.g. cutPositionIndicator as first argument (by calling the function with : instead of .))
@@ -336,7 +339,4 @@ Mission00.loadMission00Finished = Utils.appendedFunction(Mission00.loadMission00
     end)
 
     g_currentMission.forestryHelperSettings = settings
-    settingsRepository:restoreSettings()
-    FHSettingsUI.injectUiSettings(g_currentMission.forestryHelperSettings)
-
 end)
