@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<l10n>
+    <translationContributors>Shi974</translationContributors>
+    <texts>
+        <text name="fh_volume" text="Volume" />
+        <text name="fh_current_value" text="Valeur actuelle" />
+        <text name="fh_total_quality" text="Qualité totale (max. 120%)" />
+        <text name="fh_liters_if_chipped" text="Volume en copeaux" />
+        <text name="fh_current_value_if_chipped" text="Valeur des copeaux (actuelle)" />
+        <text name="fh_potential_value_if_chipped" text="Valeur des copeaux (maximale)" />
+        <text name="fh_shape" text="Forme" />
+        <text name="fh_length" text="Longueur" />
+        <text name="fh_attachments" text="Nombre de branches" />
+        <text name="fh_perfect" text="parfait" />
+        <text name="fh_good" text="bon" />
+        <text name="fh_acceptable" text="acceptable" />
+        <text name="fh_bad" text="mauvais" />
+        <text name="fh_desired_length" text="Longueur souhaitée" />
+        <text name="fh_weight_limit" text="Limite de poids" />
+        <text name="fh_indicator_mode" text="Mode d'indicateur" />
+        <text name="fh_mode_off" text="Désactivé" />
+        <text name="fh_mode_length" text="Longueur" />
+        <text name="fh_mode_weight" text="Poids" />
+        <text name="input_CYCLE_LENGTH_INDICATOR" text="Changer la longueur souhaitée" />
+        <text name="input_CYCLE_WEIGHT_INDICATOR" text="Changer la limite de poids" />
+        <text name="input_SWITCH_INDICATOR_MODE" text="Changer le mode d'indicateur" />
+        <text name="fh_cut_not_possible" text="Échec de la coupe. Retirez les branches ou essayez à un autre endroit." />
+        <!-- Paramètres de l'interface utilisateur -->
+        <text name="fh_group_title" text="Aide à la sylviculture" />
+        <text name="fh_length_factor_mode_short" text="Ajustement de la longueur" />
+        <text name="fh_length_factor_mode_long" text="Définit le mode d'ajustement automatique de la longueur lors de la coupe à la longueur souhaitée." />
+        <text name="fh_length_factor_mode_abs" text="Absolu" />
+        <text name="fh_length_factor_mode_rel" text="Relatif" />
+        <text name="fh_length_factor_abs_short" text="Longueur supplémentaire" />
+        <text name="fh_length_factor_abs_long" text="Définit le nombre de mètres ajoutés à la longueur souhaitée." />
+        <text name="fh_length_factor_rel_short" text="Multiplicateur de longueur" />
+        <text name="fh_length_factor_rel_long" text="Définit le pourcentage ajouté à la longueur souhaitée." />
+    </texts>
+</l10n>

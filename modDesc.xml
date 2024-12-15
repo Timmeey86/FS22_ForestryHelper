@@ -7,6 +7,7 @@
         <de>Forstwirtschaftshelfer</de>
         <ru>Помощник Лесоруба</ru>
         <pl>Pomocnik Pilarza</pl>
+        <fr>Aide à la sylviculture</fr>
     </title>
     
     <description>
@@ -60,6 +61,31 @@ Tastenkombinationen:
 GitHub link:
 https://github.com/Timmeey86/FS25_ForestryHelper
 ]]></de>
+        <fr><![CDATA[
+Description :
+Ce mod affiche des informations utiles pour les troncs d'arbres et aide à les découper à la longueur ou au poids désiré.
+
+Vous pouvez utiliser les raccourcis clavier affichés dans le menu F1 pour passer du mode longueur au mode poids, et pour sélectionner la longueur ou le poids cible.
+Notez que le mode longueur est exact, tandis que le mode poids est approximatif. Le mode poids n'est pas disponible en multijoueur.
+
+La tronçonneuse s'aligne automatiquement à l'emplacement indiqué à une distance maximale de 20 cm. Cependant, l'angle doit être ajusté manuellement.
+
+La fenêtre d'aide affiche des informations utiles pour décider si abattre un arbre ou le couper davantage est rentable.
+
+Pour atteindre la qualité maximale possible dans le jeu de base (soit 120 %), un morceau de bois doit être un tronc conique presque parfait, mesurer entre 6 et 11 m et ne plus avoir de branches attachées.
+Il n'est pas toujours possible d'atteindre la qualité maximale.
+
+Les joueurs adeptes du réalisme peuvent ajouter une marge de longueur absolue ou relative à la longueur indiquée dans les paramètres généraux.
+
+Ce mod est bien sûr compatible avec le mod Bûcheron (Lumberjack).
+
+Raccourcis :
+[ C ] Alterne entre le mode longueur, le mode poids ou désactive cette fonctionnalité.
+[ W ] Permet de parcourir les longueurs et poids cibles possibles.
+
+Lien GitHub :
+https://github.com/Timmeey86/FS25_ForestryHelper
+]]></fr>
     </description>
     
     <multiplayer supported="true" />
